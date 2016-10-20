@@ -71,11 +71,25 @@ def interleave_lists(pandas_df, cols, id1, id2):
 
     return interleaved
 
-def process_data(args):
+def output_cluster_stats(args, fname, annotations):
+    ''' output to file various cluster statistics given a seed '''
+
+    part_file = args.incsv.replace('-cluster-annotations.csv', '.csv')
+    seed_id = pd.read_csv(part_file).loc[0]['seed_unique_id']
+    for idx, cluster in enumerate(annotations['unique_ids']):
+        ids = cluster.split(':')
+        if seed_id in ids:
+            with open(fname+'-cluster-stats.csv', 'wb') as stats:
+                stats.write('seed_id,n_clones,cluster_id,clone_ids\n')
+                stats.write('{},{},{},{}\n'.format(seed_id, len(ids),
+                        args.cluster_base+str(idx), cluster))
+
+def process_data(args, output_base):
     ''' read data and interleave lists '''
 
     # Read data
     annotations = pd.read_csv(args.incsv)
+    output_cluster_stats(args, output_base, annotations)
 
     # TODO
     #if args.select_clustering > 0:
@@ -90,6 +104,8 @@ def process_data(args):
     nrow = annotations.shape[0]
     blanks = [''] * nrow
     cluster_ids = ['>>'+args.cluster_base+str(row) for row in range(nrow)]
+
+    # get naive seqs
     naive_ids = ['>naive'+str(row) for row in range(nrow)]
     naive_seq = annotations['naive_seq'].tolist()
 
@@ -137,7 +153,7 @@ def main():
 
     output_base = create_dir(args)
 
-    interleaved = process_data(args)
+    interleaved = process_data(args, output_base)
 
     write_file(args, output_base, interleaved)
 
