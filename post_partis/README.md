@@ -11,8 +11,8 @@ Create a flag and handle this case (say: `--select_clustering *int*`) using part
 
 #### Problem
 
-This is fine for outputting clusters, but as far as I can tell there is no way to get the naive sequence in this case.
-Perhaps this is not functionality we want just yet.
+This is fine for outputting clusters, but we do not have the naive sequence directly at-hand.
+We can get this from `./bin/partis --naive-vsearch --other-args`, and the `.log` file has the function call used to generate the data.
 
 ### Output cluster statistics
 
