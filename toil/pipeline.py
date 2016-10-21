@@ -1,4 +1,22 @@
 #!/usr/bin/env python
+"""
+Demonstration of a simple Toil pipeline
+to convert FASTA files into SVG tree file.
+
+Usage:
+  $ python pipeline.py file:JobStore sample_dedup.fa sample_dedup.fa sample_dedup.fa sample_dedup.fa sample_dedup.fa sample_dedup.fa
+
+Please see the README.md in the same directory
+Tree Structure of pipeline (per sample)
+
+fasttree -> figtree -> cleanup
+Dependencies
+FastTree:       module load FastTree
+Figtree:        module load matsengrp-local
+Toil:           module load matsengrp-anaconda
+				source activate toil
+
+"""
 from __future__ import print_function
 
 import argparse
@@ -20,41 +38,50 @@ log = logging.getLogger(__name__)
 class Fasttree(Job):
 
     def __init__(self, inputid):
-        log.info("inside Fasttree init()")
         Job.__init__(self,  memory="2G", cores=1, disk="100M")
         self.inputid = inputid
 
     def run(self, fileStore):
-        log.info("inside Fasttree run()")
+        fileStore.logToMaster("inside Fasttree run()")
         input_file = fileStore.readGlobalFile(
             self.inputid, cache=False)
 
-        work_dir = fileStore.getLocalTempDir()
-        with open(os.path.join(work_dir, 'output.tree'), "wb") as stdout:
-            cmd = ["fasttree", input_file]
-            subprocess.check_call(cmd, stdout=stdout)
-            log.info(cmd)
+        with fileStore.writeGlobalFileStream() as (fileHandle, output_id):
+            cmd = ["FastTree", input_file]
+            fileStore.logToMaster(" ".join(cmd))
+            subprocess.check_call(cmd, stdout=fileHandle)
 
-        return fileStore.writeGlobalFile(os.path.join(work_dir, 'output.tree'))
+        return output_id
+
+
+def which(executable):
+    paths = (os.path.join(p, executable)
+             for p in os.environ['PATH'].split(':'))
+    values = (p for p in paths if os.path.isfile(p) and os.access(p, os.X_OK))
+    try:
+        return next(values)
+    except StopIteration:
+        raise OSError("{0} not found in PATH".format(executable))
+
+
+def guess_figtree_jar_path():
+    """
+    Try to guess the path to the figtree jar.
+
+    Should be in $(which figtree)/../lib/figtree.jar
+
+    raises OSError if path cannot be found.
+    """
+    figtree_path = which('figtree')
+
+    jar_path = os.path.abspath(os.path.join(os.path.dirname(figtree_path),
+                                            '..', 'lib', 'figtree.jar'))
+    if os.path.exists(jar_path):
+        return jar_path
+    raise OSError("FigTree jar could not be found.")
 
 
 class Figtree(Job):
-
-    def guess_figtree_jar_path():
-        """
-        Try to guess the path to the figtree jar.
-
-        Should be in $(which figtree)/../lib/figtree.jar
-
-        raises OSError if path cannot be found.
-        """
-        figtree_path = which('figtree')
-
-        jar_path = os.path.abspath(os.path.join(os.path.dirname(figtree_path),
-                                                '..', 'lib', 'figtree.jar'))
-        if os.path.exists(jar_path):
-            return jar_path
-        raise OSError("FigTree jar could not be found.")
 
     def __init__(self, inputid, width=800, height=600):
         Job.__init__(self,  memory="2G", cores=1, disk="100M")
@@ -64,35 +91,56 @@ class Figtree(Job):
         self.height = height
 
     def run(self, fileStore):
-        log.info("inside Fasttree run()")
-        input_file = fileStore.readGlobalFile(
+        fileStore.logToMaster("inside Fasttree run()")
+        tree_file = fileStore.readGlobalFile(
             self.inputid, cache=False)
 
         work_dir = fileStore.getLocalTempDir()
-        tree_path = os.path.join(work_dir, 'output.tree')
-        svg_path = os.path.join(work_dir, 'output.svg')
-        with open(os.path.join(work_dir, 'output.tree'), "wb") as stdout:
-            cmd = ['java', '-client', '-Djava.awt.headless=true', '-Xms64m', '-Xmx512m',
-                   '-jar', self.figtree_path,
-                   '-graphic', 'SVG', '-width', str(self.width), '-height', str(self.height),
-                   tree_path, svg_path]
+        svg_file = os.path.join(work_dir, 'output.svg')
+        cmd = ['java', '-client', '-Djava.awt.headless=true', '-Xms64m', '-Xmx512m',
+               '-jar', self.figtree_path,
+               '-graphic', 'SVG', '-width', str(
+                   self.width), '-height', str(self.height),
+               tree_file, svg_file]
+        fileStore.logToMaster(" ".join(cmd))
+        subprocess.check_call(cmd)
 
-            subprocess.check_call(cmd, stdout=stdout)
-            log.info(cmd)
-
-        return fileStore.writeGlobalFile(os.path.join(work_dir, 'output.svg'))
+        return fileStore.writeGlobalFile(svg_file)
 
 
 def start_batch(job, datafiles, input_args):
     """
     Dispatch a fasttree job for each input file.
     """
+    job.fileStore.logToMaster("start_batch")
     for input_file in datafiles:
-        input_filestore_id = job.fileStore.writeGlobalFile(input_file, True)
+        input_id = job.fileStore.writeGlobalFile(input_file, True)
         job.fileStore.logToMaster(" Starting the run fasttree")
 
-        log.info("creating FastTree object for {}".format(input_file))
-        job.addChild(Fasttree(input_filestore_id))
+        job.fileStore.logToMaster(
+            "creating FastTree object for {}".format(input_file))
+        fasttree = Fasttree(input_id)
+        treefile = job.addChild(fasttree).rv()
+
+        figtree = Figtree(treefile)
+        figfile = fasttree.addChild(figtree).rv()
+
+        root, _ = os.path.splitext(input_file)
+        svgfile = root + ".svg"
+        job.addFollowOnJobFn(cleanup,
+                             figfile,
+                             svgfile)
+
+
+def cleanup(job, temp_output_id, output_file):
+    """Copies back the temporary file to input once we've successfully sorted the temporary file.
+    """
+    job.fileStore.logToMaster("inside cleanup job")
+    tempFile = job.fileStore.readGlobalFile(temp_output_id)
+    job.fileStore.logToMaster("Copying {} to {}".format(tempFile, output_file))
+    shutil.copyfile(tempFile, output_file)
+    job.fileStore.logToMaster(
+        "Finished copying sorted file to output: %s" % output_file)
 
 
 def main():
