@@ -31,6 +31,7 @@ import subprocess
 import logging
 
 from toil.job import Job
+from toil.common import Toil, jobStoreLocatorHelp, Config
 
 log = logging.getLogger(__name__)
 
@@ -55,6 +56,8 @@ class Fasttree(Job):
 
 
 def which(executable):
+    log.info("PATH = {}".format( os.environ['PATH']))
+    log.info("ENV = {}".format( os.environ))
     paths = (os.path.join(p, executable)
              for p in os.environ['PATH'].split(':'))
     values = (p for p in paths if os.path.isfile(p) and os.access(p, os.X_OK))
@@ -168,12 +171,19 @@ def main():
                         help='FASTA input', type=existing_file)
 
     args = parser.parse_args()
+
+    assert args.jobStore is not None
+    config = Config()
+    config.setOptions(args)
+
     # Store inputs from argparse
     inputs = {'sudo': args.sudo}
     datafiles = [os.path.abspath(d) for d in args.datafiles]
     # Start Pipeline
+    options = Job.Runner.getDefaultOptions("./toilWorkflow")
+
     Job.Runner.startToil(
-        Job.wrapJobFn(start_batch, datafiles, inputs), args)
+        Job.wrapJobFn(start_batch, datafiles, inputs), options)
 
 
 if __name__ == '__main__':
