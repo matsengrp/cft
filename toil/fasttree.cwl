@@ -1,3 +1,19 @@
+#!/usr/bin/env cwl-runner
+#
+# usage: (all are equivalent)
+#   fasttree.cwl sample.yml
+#
+# also:  (all are equivalent)
+#   cwl_runner fasttree.cwl sample.yml
+#   cwl_toil fasttree.cwl sample.yml
+#   cwl_tool fasttree.cwl sample.yml
+#
+# where sample.yml contains - 
+#       treefile:
+#         class: File
+#         path: sample_dedup.nwk
+#       svgfile: sample_dedup.svg
+#
 cwlVersion: v1.0
 class: CommandLineTool
 requirements:
