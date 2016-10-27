@@ -1,0 +1,3 @@
+fasta:
+  class: File
+  path: sample_dedup.fa
