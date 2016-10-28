@@ -1,7 +1,15 @@
 #!/usr/bin/env cwl-runner
 
-# single-step workflow
-# run with $ cwltoil --preserve-environment LD_LIBRARY_PATH PATH --no-container  workflow.cwl workflow.yml
+# workflow for making trees form fasta files
+# run with,
+#     $ cwltoil --preserve-environment LD_LIBRARY_PATH PATH --no-container  workflow.cwl workflow.yml
+#
+# Expects a yaml file to configure input variables as follows,
+#    fasta:
+#      class: File
+#      path: sample_dedup.fa
+#    svgfile: sample_dedup.svg
+
 
 cwlVersion: cwl:v1.0
 
@@ -11,13 +19,14 @@ requirements:
 inputs:
   fasta:
     type: File?
-    inputBinding:
-      position: 1
+  svgfile:
+    type: string
+    doc: "name of SVG output file."
 
 outputs:
-  nwkout:
+  svgfile:
     type: File
-    outputSource: fasttree/output
+    outputSource: figtree/svgout
 
 steps:
   fasttree:
@@ -25,5 +34,12 @@ steps:
       fasta: fasta
     out: [output]
     run: fasttree.cwl
+    
+  figtree:
+    in:
+      treefile: fasttree/output
+      svgfile: svgfile
+    out: [svgout]
+    run: figtree.cwl
     
 
