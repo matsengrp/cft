@@ -49,7 +49,7 @@ def output_clusters(pandas_df, col, id1, id2):
             clus.split(':') for idx, clus in enumerate(pandas_df[col])]
     return sum(nested, [])
 
-def interleave_lists(pandas_df, cols, id1, id2):
+def interleave_lists(pandas_df, cols, id1, id2, seed_id):
     ''' interleave two lists and prepend '>' to headers '''
 
     # we'll only have two lists (headers and sequences) so concatenate
@@ -63,35 +63,38 @@ def interleave_lists(pandas_df, cols, id1, id2):
     # never know
     assert len(out_list[0]) == len(out_list[1])
 
-    interleaved = [singlet for two_tuple in zip(out_list[0], out_list[1]) \
-        for singlet in two_tuple]
+    interleaved = [singleton for two_tuple in zip(out_list[0], out_list[1]) \
+        for singleton in two_tuple]
 
     # add '>' to headers for fasta files
-    interleaved[::2] = ['>'+item for item in interleaved[::2]]
+    interleaved[::2] = ['>'+('seed_'+item if item==seed_id else item) \
+            for item in interleaved[::2]]
 
     return interleaved
 
-def output_cluster_stats(args, fname, annotations):
+def output_cluster_stats(args, fname, annotations, seed_id):
     ''' output to file various cluster statistics given a seed '''
 
-    part_file = args.incsv.replace('-cluster-annotations.csv', '.csv')
-    seed_id = pd.read_csv(part_file).loc[0]['seed_unique_id']
     for idx, cluster in enumerate(annotations['unique_ids']):
         ids = cluster.split(':')
         if seed_id in ids:
+            seed_cluster = idx
             with open(fname+'-cluster-stats.csv', 'wb') as stats:
                 stats.write('seed_id,n_clones,cluster_id,clone_ids\n')
                 stats.write('{},{},{},{}\n'.format(seed_id, len(ids),
-                        args.cluster_base+str(idx), cluster))
+                        args.cluster_base+str(seed_cluster), cluster))
+    return seed_cluster
 
 def process_data(args, output_base):
     ''' read data and interleave lists '''
 
     # Read data
     annotations = pd.read_csv(args.incsv)
-    output_cluster_stats(args, output_base, annotations)
+    part_file = args.incsv.replace('-cluster-annotations.csv', '.csv')
+    seed_id = pd.read_csv(part_file).loc[0]['seed_unique_id']
+    seed_cluster = \
+            output_cluster_stats(args, output_base, annotations, seed_id)
 
-    # TODO
     #if args.select_clustering > 0:
     #    # we'll need to do a little poking at the partition file and to
     #    # reassign columns 'unique_ids', 'seqs' and 'naive_seq' to their
@@ -103,7 +106,8 @@ def process_data(args, output_base):
     # define headers for clusters
     nrow = annotations.shape[0]
     blanks = [''] * nrow
-    cluster_ids = ['>>'+args.cluster_base+str(row) for row in range(nrow)]
+    cluster_ids = ['>>'+('seed_' if row==seed_cluster else '')+ \
+            args.cluster_base+str(row) for row in range(nrow)]
 
     # get naive seqs
     naive_ids = ['>naive'+str(row) for row in range(nrow)]
@@ -113,7 +117,8 @@ def process_data(args, output_base):
     return interleave_lists(annotations,
             ['unique_ids', 'seqs'],
             [cluster_ids, blanks],
-            [naive_ids, naive_seq])
+            [naive_ids, naive_seq],
+            seed_id)
 
 def write_file(args, fname, in_list):
     '''
