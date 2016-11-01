@@ -146,8 +146,9 @@ def write_file(args, fname, in_list):
                 open(current_file, 'wb').close()
             elif item is not '':
                 # '' are placeholders
+                line = '%s\n' % item
                 with open(current_file, 'a') as seqs:
-                    seqs.write('%s\n' % item)
+                    seqs.write(line.replace('>>', '>'))
 
 def main():
     ''' run and save cluster file processing '''
