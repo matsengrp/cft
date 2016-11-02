@@ -1,0 +1,5 @@
+treefile:
+  class: File
+  path: sample_dedup.nwk
+svgfile: sample_dedup.svg
+  
