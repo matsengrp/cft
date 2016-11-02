@@ -26,6 +26,8 @@ def parse_args():
             help='directory for fasta files', type=str)
     parser.add_argument('--baseline', action='store_true', dest='baseline',
             help='output fasta files in baseline format', default=False)
+    parser.add_argument('--separate', action='store_true', dest='separate',
+            help='output to per-cluster fasta files', default=False)
     #parser.add_argument('--select_clustering', dest='select_clustering',
     #        help='choose a row from partition file for a different cluster',
     #        default=0, type=int)
@@ -130,25 +132,33 @@ def write_file(args, fname, in_list):
     Output 2: Separate fasta files for each group for tree building and all.
     '''
 
-    if args.baseline:
-        # baseline-style output
-        with open(fname+'-all-seqs.fa', 'wb') as seqs:
-            for item in in_list:
-                if item is not '':
-                    # '' are placeholders
-                    seqs.write('%s\n' % item)
-    else:
+    line = lambda item: item.replace('>>', '>')
+    check = lambda item: (item is not '')
+    if args.separate:
         # separate fastas
         for item in in_list:
             if item.startswith('>>>'):
                 # '>>>' denotes start of a separate cluster
                 current_file = '-'.join([fname, item[3:], 'seqs.fa'])
                 open(current_file, 'wb').close()
-            elif item is not '':
+            elif check(item):
                 # '' are placeholders
-                line = '%s\n' % item
                 with open(current_file, 'a') as seqs:
-                    seqs.write(line.replace('>>', '>'))
+                    seqs.write(line('%s\n' % item))
+    else:
+        if args.baseline:
+            suffix = 'baseline'
+            line = lambda item: item
+        else:
+            suffix = 'all'
+            check = lambda item: (item is not '' and \
+                    not item.startswith('>>>'))
+        # baseline-style output
+        with open('-'.join([fname, suffix, 'seqs.fa']), 'wb') as seqs:
+            for item in in_list:
+                if check(item):
+                    # '' are placeholders
+                    seqs.write(line('%s\n' % item))
 
 def main():
     ''' run and save cluster file processing '''
