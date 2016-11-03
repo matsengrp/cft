@@ -122,6 +122,7 @@ def process_data(args, output_base):
             [naive_ids, naive_seq],
             seed_id)
 
+
 def write_file(args, fname, in_list):
     '''
     Output 1: Kleinstein lab--style fasta files. Group names are given as
@@ -147,13 +148,15 @@ def write_file(args, fname, in_list):
                     seqs.write(line('%s\n' % item))
     else:
         if args.baseline:
+            # baseline-style output
             suffix = 'baseline'
             line = lambda item: item
         else:
+            # fasta with all sequences
             suffix = 'all'
             check = lambda item: (item is not '' and \
                     not item.startswith('>>>'))
-        # baseline-style output
+
         with open('-'.join([fname, suffix, 'seqs.fa']), 'wb') as seqs:
             for item in in_list:
                 if check(item):
