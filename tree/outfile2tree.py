@@ -1,7 +1,5 @@
 #! /bin/env python
 
-import argparse
-
 def outfile2seqs(outfile='outfile'):
     """
     give me a phylip dnaml outfile and I''ll give you a dictionary of sequences,
@@ -50,7 +48,8 @@ def outfile2seqs(outfile='outfile'):
     return sequences, parents
 
 def main():
-    from ete3 import PhyloTree
+    import argparse
+    from ete3 import Tree, NodeStyle
     parser = argparse.ArgumentParser(description='give me a phylip dnaml outfile and I''ll give you an alignment (including ancestral sequences) and a tree')
     parser.add_argument('--outfile', type=str, default='outfile', help='dnaml outfile (verbose output with inferred ancestral sequences, option 5). Perhaps confusingly, this is the input file to this program')
     parser.add_argument('--naive', type=str, default= None, help='name of naive (germline) sequence')
@@ -68,7 +67,7 @@ def main():
 
     # build an ete tree
     # first a dictionary of disconnected nodes
-    nodes = {name:PhyloTree(name=name, dist=parents[name][1] if name in parents else None, format=1) for name in sequences}
+    nodes = {name:Tree(name=name, dist=parents[name][1] if name in parents else None, format=1) for name in sequences}
     # connect the nodes using the parent data
     orphan_nodes = 0
     for name in sequences:
@@ -91,10 +90,23 @@ def main():
         tree = nodes[args.naive]
 
     if args.seed is not None:
-        # need code here to color path from naive to seed and extract sequences along that sequence
-
-    tree.link_to_alignment(alignment=aln, alg_format='fasta')
-    tree.render(args.outfile+'.tree.png')
+        with open(args.outfile+'.seedLineage.fa', 'w') as f:
+            # traverse up from seed, coloring the path
+            node = nodes[args.seed]
+            while node is not None:
+                nstyle = NodeStyle()
+                nstyle['fgcolor'] = 'red'
+                nstyle['hz_line_color'] = 'red'
+                #nstyle['vt_line_color'] = 'red'
+                nstyle['hz_line_width'] = 5
+                #nstyle['vt_line_width'] = 5
+                nstyle['size'] = 20
+                node.set_style(nstyle)
+                f.write('>'+node.name+'\n')
+                f.write(sequences[node.name]+'\n')
+                node = node.up
+    #tree.link_to_alignment(alignment=aln, alg_format='fasta')
+    tree.render(args.outfile+'.tree.svg')
 
 if __name__ == "__main__":
     main()
