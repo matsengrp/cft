@@ -93,11 +93,8 @@ def get_seed_clusters(args, fname, annotations, seed_ids):
     return seed_clusters
 
 
-def process_data(args, output_base):
+def process_data(args, output_base, annotations):
     ''' read data and interleave lists '''
-
-    # Read data
-    annotations = pd.read_csv(args.incsv)
 
     part_file = args.incsv.replace('-cluster-annotations.csv', '.csv')
     seed_ids = pd.read_csv(part_file).loc[0]['seed_unique_id'].split(':')
@@ -148,7 +145,7 @@ def get_json(args, fname, cluster, data, seed_ids):
            }
 
 
-def write_file(args, fname, in_list, seed_ids):
+def write_file(args, fname, in_list, seed_ids, annotations):
     '''
     Currently only output files in either separate fasta files per cluster
     or have all sequences in one single fasta.
@@ -161,7 +158,6 @@ def write_file(args, fname, in_list, seed_ids):
     yet.
     '''
 
-    annotations = pd.read_csv(args.incsv)
     cluster_id = -1
 
     list_of_dicts = []
@@ -195,6 +191,33 @@ def write_file(args, fname, in_list, seed_ids):
                 write_naive = header.startswith('>>>seed')
 
 
+def melt_partis(args, fname, annotations, seed_ids):
+    '''
+    Cassie and other Overbaugh group members sometimes prefer output
+    in a csv file with cluster assignments so they can be sorted by other
+    metadata related to the read.
+
+    Here we'll just scrape out the cluster information and read IDs and
+    output them into a flattened csv file.
+    '''
+
+    output_df = pd.DataFrame()
+    for idx, cluster in annotations.iterrows():
+        current_df = pd.DataFrame()
+        seq_ids = cluster['unique_ids'].split(':')
+        current_df['unique_ids'] = seq_ids
+        current_df['cluster'] = str(idx)
+        current_df['has_seed'] = any(seed_id in seq_ids for seed_id in \
+                seed_ids)
+        current_df['v_gene'] = cluster['v_gene']
+        current_df['d_gene'] = cluster['d_gene']
+        current_df['j_gene'] = cluster['j_gene']
+        current_df['cdr3_length'] = cluster['cdr3_length']
+        output_df = pd.concat([output_df, current_df])
+
+    output_df.to_csv('-'.join([fname, 'melted.csv']), index=False)
+
+
 def main():
     ''' run and save cluster file processing '''
 
@@ -202,11 +225,15 @@ def main():
     if not os.path.isfile(args.incsv):
         raise ValueError('Invalid file: ' + str(args.incsv))
 
+    annotations = pd.read_csv(args.incsv)
+
     output_base = create_dir(args)
 
-    interleaved, seed_ids = process_data(args, output_base)
+    interleaved, seed_ids = process_data(args, output_base, annotations)
 
-    write_file(args, output_base, interleaved, seed_ids)
+    write_file(args, output_base, interleaved, seed_ids, annotations)
+
+    melt_partis(args, output_base, annotations, seed_ids)
 
 
 if __name__ == '__main__':
