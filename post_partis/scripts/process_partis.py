@@ -12,6 +12,8 @@ import argparse
 import os
 import os.path
 import itertools
+import json
+
 
 def parse_args():
     ''' parse input arguments '''
@@ -35,6 +37,7 @@ def parse_args():
 
     return parser.parse_args()
 
+
 def create_dir(args):
     ''' create directories if they don't exist '''
     input_base = args.incsv[:args.incsv.index('-cluster-annotations.csv')]
@@ -46,11 +49,13 @@ def create_dir(args):
 
     return output_base
 
+
 def output_clusters(pandas_df, col, id1, id2):
     ''' split clusters and unnest them '''
     nested = [[id1[idx]] + [id2[idx]] + \
             clus.split(':') for idx, clus in enumerate(pandas_df[col])]
     return sum(nested, [])
+
 
 def interleave_lists(pandas_df, cols, id1, id2, seed_id):
     ''' interleave two lists and prepend '>' to headers '''
@@ -75,6 +80,7 @@ def interleave_lists(pandas_df, cols, id1, id2, seed_id):
 
     return interleaved
 
+
 def output_cluster_stats(args, fname, annotations, seed_id):
     ''' output to file various cluster statistics given a seed '''
 
@@ -88,11 +94,13 @@ def output_cluster_stats(args, fname, annotations, seed_id):
                         args.cluster_base+str(seed_cluster), cluster))
     return seed_cluster
 
+
 def process_data(args, output_base):
     ''' read data and interleave lists '''
 
     # Read data
     annotations = pd.read_csv(args.incsv)
+
     part_file = args.incsv.replace('-cluster-annotations.csv', '.csv')
     seed_id = pd.read_csv(part_file).loc[0]['seed_unique_id']
     seed_cluster = \
@@ -121,10 +129,25 @@ def process_data(args, output_base):
             ['unique_ids', 'seqs'],
             [cluster_ids, blanks],
             [naive_ids, naive_seq],
-            seed_id)
+            seed_id), seed_id
+
+def get_json(args, fname, cluster, data, seed_id):
+    ''' get metatdata for writing json file '''
+
+    # this only works for heavy chain data, though currently partis
+    # does not take light chains, right?
+    return {'file': '-'.join([fname, cluster, 'seqs.fa']),
+            'cluster_id': cluster,
+            'v-gene': data['v_gene'],
+            'd-gene': data['d_gene'],
+            'j-gene': data['j_gene'],
+            'cdr3-length': data['cdr3_length'],
+            'seed': seed_id,
+            'has_seed': cluster.startswith('seed_')
+           }
 
 
-def write_file(args, fname, in_list):
+def write_file(args, fname, in_list, seed_id):
     '''
     Output 1: Kleinstein lab--style fasta files. Group names are given as
     '>>>GROUPNAME', naive seqs are given as '>>NAIVE' and usual sequence
@@ -134,17 +157,26 @@ def write_file(args, fname, in_list):
     Output 2: Separate fasta files for each group for tree building and all.
     '''
 
-    line = lambda item: item.replace('>>', '>')
+    annotations = pd.read_csv(args.incsv)
+    cluster_id = -1
+
+    list_of_dicts = []
     if args.separate:
         # separate fastas
         for header, seq in itertools.izip(in_list[::2], in_list[1::2]):
             if header.startswith('>>>'):
                 # '>>>' denotes start of a separate cluster
+                cluster_id += 1
                 current_file = '-'.join([fname, header[3:], 'seqs.fa'])
                 open(current_file, 'wb').close()
+                cluster_dict = get_json(args, fname, header[3:],
+                        annotations.iloc[cluster_id], seed_id)
+                list_of_dicts.append(cluster_dict)
             else:
                 with open(current_file, 'a') as seqs:
-                    seqs.write(line('%s\n%s\n' % (header, seq)))
+                    seqs.write('%s\n%s\n' % (header, seq))
+        with open('-'.join([fname, 'data.json']), 'wb') as outfile:
+            json.dump(list_of_dicts, outfile)
     else:
         # baseline or all in one
         write_naive = False
@@ -154,8 +186,9 @@ def write_file(args, fname, in_list):
                 flag = (not header.startswith('>>>') and not \
                         header.startswith('>>') or write_naive)
                 if flag:
-                    seqs.write(line('%s\n%s\n' % (header, seq)))
+                    seqs.write('%s\n%s\n' % (header, seq))
                 write_naive = header.startswith('>>>seed')
+
 
 def main():
     ''' run and save cluster file processing '''
@@ -166,9 +199,10 @@ def main():
 
     output_base = create_dir(args)
 
-    interleaved = process_data(args, output_base)
+    interleaved, seed_id = process_data(args, output_base)
 
-    write_file(args, output_base, interleaved)
+    write_file(args, output_base, interleaved, seed_id)
+
 
 if __name__ == '__main__':
     main()
