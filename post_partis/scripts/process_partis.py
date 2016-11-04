@@ -82,7 +82,7 @@ def interleave_lists(pandas_df, cols, id1, id2, seed_ids):
     return interleaved
 
 
-def output_cluster_stats(args, fname, annotations, seed_ids):
+def get_seed_clusters(args, fname, annotations, seed_ids):
     ''' output to file various cluster statistics given a seed '''
 
     seed_clusters = []
@@ -100,9 +100,9 @@ def process_data(args, output_base):
     annotations = pd.read_csv(args.incsv)
 
     part_file = args.incsv.replace('-cluster-annotations.csv', '.csv')
-    seed_ids = pd.read_csv(part_file).loc[0]['seed_unique_id']
+    seed_ids = pd.read_csv(part_file).loc[0]['seed_unique_id'].split(':')
     seed_clusters = \
-            output_cluster_stats(args, output_base, annotations, seed_ids)
+            get_seed_clusters(args, output_base, annotations, seed_ids)
 
     #if args.select_clustering > 0:
     #    # we'll need to do a little poking at the partition file and to
@@ -133,8 +133,8 @@ def process_data(args, output_base):
 def get_json(args, fname, cluster, data, seed_ids):
     ''' get metatdata for writing json file '''
 
-    # this only works for heavy chain data, though currently partis
-    # does not take light chains, right?
+    # this currently only works for output obtained from heavy
+    # chain data
     mod_date = os.path.getmtime(args.incsv)
     return {'file': '-'.join([fname, cluster, 'seqs.fa']),
             'cluster_id': cluster,
@@ -142,7 +142,7 @@ def get_json(args, fname, cluster, data, seed_ids):
             'd_gene': data['d_gene'],
             'j_gene': data['j_gene'],
             'cdr3_length': data['cdr3_length'],
-            'seed': seed_ids,
+            'seed': ':'.join(seed_ids),
             'has_seed': cluster.startswith('seed_'),
             'last_modified': time.ctime(mod_date)
            }
@@ -150,12 +150,15 @@ def get_json(args, fname, cluster, data, seed_ids):
 
 def write_file(args, fname, in_list, seed_ids):
     '''
-    Output 1: Kleinstein lab--style fasta files. Group names are given as
-    '>>>GROUPNAME', naive seqs are given as '>>NAIVE' and usual sequence
-    headers are given as '>SEQUENCENAME'.
-    This file can be read directly into BASELINe.
+    Currently only output files in either separate fasta files per cluster
+    or have all sequences in one single fasta.
 
-    Output 2: Separate fasta files for each group for tree building and all.
+    Write a json stats file only in the case of separate fasta files for now
+    as I'm not sure what type of information one would want out of a single
+    massive fasta.
+
+    BASELINe format does not work yet, though this is not something we need
+    yet.
     '''
 
     annotations = pd.read_csv(args.incsv)
@@ -180,7 +183,7 @@ def write_file(args, fname, in_list, seed_ids):
         with open('-'.join([fname, 'data.json']), 'wb') as outfile:
             json.dump(list_of_dicts, outfile)
     else:
-        # baseline or all in one
+        # all files output to single fasta
         write_naive = False
         with open('-'.join([fname, 'all-seqs.'+ \
                 ('bl' if args.baseline else 'fa')]), 'wb') as seqs:
