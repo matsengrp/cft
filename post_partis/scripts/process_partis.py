@@ -151,8 +151,9 @@ def write_file(args, fname, in_list):
         with open('-'.join([fname, 'all-seqs.'+ \
                 ('bl' if args.baseline else 'fa')]), 'wb') as seqs:
             for header, seq in itertools.izip(in_list[::2], in_list[1::2]):
-                if not header.startswith('>>>') and not \
-                        header.startswith('>>') or write_naive:
+                flag = (not header.startswith('>>>') and not \
+                        header.startswith('>>') or write_naive)
+                if flag:
                     seqs.write(line('%s\n%s\n' % (header, seq)))
                 write_naive = header.startswith('>>>seed')
 
