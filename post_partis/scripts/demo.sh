@@ -1,32 +1,31 @@
 #!/usr/bin/bash
 
 # Run processing on annotations file
+seed1="QA255.006-Vh"
+seed2="QB850.424-Vk"
+seed3="QB850.043-Vk"
+
+datapath="data/seeds/"
 
 # Separate fasta files for each cluster
 python scripts/process_partis.py \
-    --incsv data/seeds/QA255.006-Vh/Hs-LN2-5RACE-IgG-new-cluster-annotations.csv \
+    --incsv $datapath/$seed2/Hs-LN1-5RACE-IgK-100k-cluster-annotations.csv \
     --cluster_base cluster \
-    --input_dir data/seeds/ \
+    --input_dir $datapath \
     --output_dir _output/seeds/ \
     --separate
 
+# Separate fasta files with multiple seeds
 python scripts/process_partis.py \
-    --incsv data/seeds/QB850.424-Vk/Hs-LN1-5RACE-IgK-100k-cluster-annotations.csv \
+    --incsv $datapath/$seed2:$seed3/Hs-LN1-5RACE-IgK-100k-cluster-annotations.csv \
     --cluster_base cluster \
-    --input_dir data/seeds/ \
-    --output_dir _output/seeds/ \
-    --separate
-
-python scripts/process_partis.py \
-    --incsv data/seeds/QB850.043-Vk/Hs-LN1-5RACE-IgK-100k-cluster-annotations.csv \
-    --cluster_base cluster \
-    --input_dir data/seeds/ \
+    --input_dir $datapath \
     --output_dir _output/seeds/ \
     --separate
 
 # Aggregated fasta file with all seqs
 python scripts/process_partis.py \
-    --incsv data/seeds/QA255.006-Vh/Hs-LN2-5RACE-IgG-new-cluster-annotations.csv \
+    --incsv $datapath/$seed1/Hs-LN2-5RACE-IgG-new-cluster-annotations.csv \
     --cluster_base cluster \
     --input_dir data/seeds/ \
     --output_dir _output/seeds/
