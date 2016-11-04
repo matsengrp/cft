@@ -58,7 +58,7 @@ def output_clusters(pandas_df, col, id1, id2):
     return sum(nested, [])
 
 
-def interleave_lists(pandas_df, cols, id1, id2, seed_id):
+def interleave_lists(pandas_df, cols, id1, id2, seed_ids):
     ''' interleave two lists and prepend '>' to headers '''
 
     # we'll only have two lists (headers and sequences) so concatenate
@@ -76,24 +76,21 @@ def interleave_lists(pandas_df, cols, id1, id2, seed_id):
         for singleton in two_tuple]
 
     # add '>' to headers for fasta files
-    interleaved[::2] = ['>'+('seed_'+item if item==seed_id else item) \
+    interleaved[::2] = ['>'+('seed_'+item if item in seed_ids else item) \
             for item in interleaved[::2]]
 
     return interleaved
 
 
-def output_cluster_stats(args, fname, annotations, seed_id):
+def output_cluster_stats(args, fname, annotations, seed_ids):
     ''' output to file various cluster statistics given a seed '''
 
+    seed_clusters = []
     for idx, cluster in enumerate(annotations['unique_ids']):
         ids = cluster.split(':')
-        if seed_id in ids:
-            seed_cluster = idx
-            with open(fname+'-cluster-stats.csv', 'wb') as stats:
-                stats.write('seed_id,n_clones,cluster_id,clone_ids\n')
-                stats.write('{},{},{},{}\n'.format(seed_id, len(ids),
-                        args.cluster_base+str(seed_cluster), cluster))
-    return seed_cluster
+        if any(seed_id in ids for seed_id in seed_ids):
+            seed_clusters.append(idx)
+    return seed_clusters
 
 
 def process_data(args, output_base):
@@ -103,9 +100,9 @@ def process_data(args, output_base):
     annotations = pd.read_csv(args.incsv)
 
     part_file = args.incsv.replace('-cluster-annotations.csv', '.csv')
-    seed_id = pd.read_csv(part_file).loc[0]['seed_unique_id']
-    seed_cluster = \
-            output_cluster_stats(args, output_base, annotations, seed_id)
+    seed_ids = pd.read_csv(part_file).loc[0]['seed_unique_id']
+    seed_clusters = \
+            output_cluster_stats(args, output_base, annotations, seed_ids)
 
     #if args.select_clustering > 0:
     #    # we'll need to do a little poking at the partition file and to
@@ -118,7 +115,7 @@ def process_data(args, output_base):
     # define headers for clusters
     nrow = annotations.shape[0]
     blanks = [''] * nrow
-    cluster_ids = ['>>'+('seed_' if row==seed_cluster else '')+ \
+    cluster_ids = ['>>'+('seed_' if row in seed_clusters else '')+ \
             args.cluster_base+str(row) for row in range(nrow)]
 
     # get naive seqs
@@ -130,9 +127,10 @@ def process_data(args, output_base):
             ['unique_ids', 'seqs'],
             [cluster_ids, blanks],
             [naive_ids, naive_seq],
-            seed_id), seed_id
+            seed_ids), seed_ids
 
-def get_json(args, fname, cluster, data, seed_id):
+
+def get_json(args, fname, cluster, data, seed_ids):
     ''' get metatdata for writing json file '''
 
     # this only works for heavy chain data, though currently partis
@@ -144,13 +142,13 @@ def get_json(args, fname, cluster, data, seed_id):
             'd_gene': data['d_gene'],
             'j_gene': data['j_gene'],
             'cdr3_length': data['cdr3_length'],
-            'seed': seed_id,
+            'seed': seed_ids,
             'has_seed': cluster.startswith('seed_'),
             'last_modified': time.ctime(mod_date)
            }
 
 
-def write_file(args, fname, in_list, seed_id):
+def write_file(args, fname, in_list, seed_ids):
     '''
     Output 1: Kleinstein lab--style fasta files. Group names are given as
     '>>>GROUPNAME', naive seqs are given as '>>NAIVE' and usual sequence
@@ -172,8 +170,9 @@ def write_file(args, fname, in_list, seed_id):
                 cluster_id += 1
                 current_file = '-'.join([fname, header[3:], 'seqs.fa'])
                 open(current_file, 'wb').close()
+
                 cluster_dict = get_json(args, fname, header[3:],
-                        annotations.iloc[cluster_id], seed_id)
+                        annotations.iloc[cluster_id], seed_ids)
                 list_of_dicts.append(cluster_dict)
             else:
                 with open(current_file, 'a') as seqs:
@@ -202,9 +201,9 @@ def main():
 
     output_base = create_dir(args)
 
-    interleaved, seed_id = process_data(args, output_base)
+    interleaved, seed_ids = process_data(args, output_base)
 
-    write_file(args, output_base, interleaved, seed_id)
+    write_file(args, output_base, interleaved, seed_ids)
 
 
 if __name__ == '__main__':
