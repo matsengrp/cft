@@ -13,6 +13,7 @@ import os
 import os.path
 import itertools
 import json
+import time
 
 
 def parse_args():
@@ -136,14 +137,16 @@ def get_json(args, fname, cluster, data, seed_id):
 
     # this only works for heavy chain data, though currently partis
     # does not take light chains, right?
+    mod_date = os.path.getmtime(args.incsv)
     return {'file': '-'.join([fname, cluster, 'seqs.fa']),
             'cluster_id': cluster,
-            'v-gene': data['v_gene'],
-            'd-gene': data['d_gene'],
-            'j-gene': data['j_gene'],
-            'cdr3-length': data['cdr3_length'],
+            'v_gene': data['v_gene'],
+            'd_gene': data['d_gene'],
+            'j_gene': data['j_gene'],
+            'cdr3_length': data['cdr3_length'],
             'seed': seed_id,
-            'has_seed': cluster.startswith('seed_')
+            'has_seed': cluster.startswith('seed_'),
+            'last_modified': time.ctime(mod_date)
            }
 
 
