@@ -1,0 +1,17 @@
+{% extends "base.jinja" %}
+{% block content %}
+<div class="row">
+  <div class="span12">
+
+    <table>
+    {%- for key, value in clusters.iteritems() -%}
+      <tr>
+	<td><a href="{{url_for('cluster_page',id=key)}}">{{key}}</a></td>
+      </tr>
+    {%-endfor-%}
+    </table>
+      
+  </div>
+</div>
+  {% endblock %}
+
