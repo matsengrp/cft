@@ -97,6 +97,11 @@ def process_data(args, output_base, annotations):
     ''' read data and interleave lists '''
 
     part_file = args.incsv.replace('-cluster-annotations.csv', '.csv')
+    if not os.path.isfile(part_file):
+        # Eventually this will be modified to continue on without
+        # requiring a seed, as partis doesn't *require* seeding.
+        # For now just quit.
+        raise ValueError('Invalid file: ' + str(part_file))
     seed_ids = pd.read_csv(part_file).loc[0]['seed_unique_id'].split(':')
     seed_clusters = \
             get_seed_clusters(args, output_base, annotations, seed_ids)
@@ -212,10 +217,12 @@ def melt_partis(args, fname, annotations, seed_ids):
         current_df['v_gene'] = cluster['v_gene']
         current_df['d_gene'] = cluster['d_gene']
         current_df['j_gene'] = cluster['j_gene']
-        current_df['cdr3_length'] = cluster['cdr3_length']
+        current_df['cdr3_length'] = str(cluster['cdr3_length'])
         output_df = pd.concat([output_df, current_df])
 
-    output_df.to_csv('-'.join([fname, 'melted.csv']), index=False)
+    output_df.to_csv('-'.join([fname, 'melted.csv']), index=False,
+            cols=['unique_ids', 'v_gene', 'd_gene', 'j_gene',
+                  'cdr3_length', 'cluster', 'has_seed'])
 
 
 def main():
