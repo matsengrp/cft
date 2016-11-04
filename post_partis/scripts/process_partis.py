@@ -11,6 +11,7 @@ import pandas as pd
 import argparse
 import os
 import os.path
+import itertools
 
 def parse_args():
     ''' parse input arguments '''
@@ -134,34 +135,26 @@ def write_file(args, fname, in_list):
     '''
 
     line = lambda item: item.replace('>>', '>')
-    check = lambda item: (item is not '')
     if args.separate:
         # separate fastas
-        for item in in_list:
-            if item.startswith('>>>'):
+        for header, seq in itertools.izip(in_list[::2], in_list[1::2]):
+            if header.startswith('>>>'):
                 # '>>>' denotes start of a separate cluster
-                current_file = '-'.join([fname, item[3:], 'seqs.fa'])
+                current_file = '-'.join([fname, header[3:], 'seqs.fa'])
                 open(current_file, 'wb').close()
-            elif check(item):
-                # '' are placeholders
+            else:
                 with open(current_file, 'a') as seqs:
-                    seqs.write(line('%s\n' % item))
+                    seqs.write(line('%s\n%s\n' % (header, seq)))
     else:
-        if args.baseline:
-            # baseline-style output
-            suffix = 'baseline'
-            line = lambda item: item
-        else:
-            # fasta with all sequences
-            suffix = 'all'
-            check = lambda item: (item is not '' and \
-                    not item.startswith('>>>'))
-
-        with open('-'.join([fname, suffix, 'seqs.fa']), 'wb') as seqs:
-            for item in in_list:
-                if check(item):
-                    # '' are placeholders
-                    seqs.write(line('%s\n' % item))
+        # baseline or all in one
+        write_naive = False
+        with open('-'.join([fname, 'all-seqs.'+ \
+                ('bl' if args.baseline else 'fa')]), 'wb') as seqs:
+            for header, seq in itertools.izip(in_list[::2], in_list[1::2]):
+                if not header.startswith('>>>') and not \
+                        header.startswith('>>') or write_naive:
+                    seqs.write(line('%s\n%s\n' % (header, seq)))
+                write_naive = header.startswith('>>>seed')
 
 def main():
     ''' run and save cluster file processing '''
