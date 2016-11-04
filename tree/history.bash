@@ -4,14 +4,19 @@
 fasta=$1
 # optional output dir
 outdir=$2
+# optional naive name
+naive=$3
+#optional seed name
+seed=$4
 
 # fasta data to phylip
 phylip=${outdir}/`basename ${fasta}`.phylip
+module load seqmagick
 seqmagick convert $fasta $phylip
 
 echo -n "computing ML tree... "
 # run phylip's dnaml, producing new outfile and outtree
-dnaml <<STDIN 1> /dev/null
+dnaml <<STDIN
 `pwd`/${fasta}.phylip
 O
 1
@@ -22,9 +27,9 @@ Y
 STDIN
 echo "done"
 
-# parse outfile to extract all sequences
-python outfile2tree.py > ${phylip}.outfile.extracted_sequences.fa
-
 # move dnaml files to output directory
 mv outfile ${phylip}.outfile.txt
 mv outtree ${phylip}.outtree.txt
+
+# parse outfile to extract all sequences
+python outfile2tree.py --outfile ${phylip}.outfile.txt --naive $naive --seed $seed
