@@ -8,11 +8,12 @@ from flask import Flask, g
 from cluster import Cluster
 
 import os.path
-os.environ['IGDBWEB_SETTINGS'] = os.path.join(
+os.environ['CFTWEB_SETTINGS'] = os.path.join(
         os.path.abspath(os.path.dirname(__file__)), 'config.py')
 
 app = Flask(__name__)
-app.config.from_envvar('IGDBWEB_SETTINGS')
+app.config.from_envvar('CFTWEB_SETTINGS')
+app.config['DEBUG'] = True
 
 # iterate through json files under`dir`
 def content_file_iterator(dir):
@@ -52,5 +53,10 @@ def before_first_request():
         file_handler.setLevel(logging.INFO)
         app.logger.addHandler(file_handler)
         app.logger.addHandler(mail_handler)
+
+# @app.errorhandler(Exception)
+# def all_exception_handler(error):
+#    return 'Error', 500
+
 
 import views

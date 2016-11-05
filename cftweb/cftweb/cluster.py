@@ -13,12 +13,15 @@ import os
 import uuid
 import sys
 import json
+import pprint
 from jinja2 import Environment, FileSystemLoader
 
 from Bio.Seq import Seq
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import IUPAC
+
+pp = pprint.PrettyPrinter(indent=4)
 
 def load_template(name):
     # Capture parent directory above where this script lives.  
@@ -50,7 +53,7 @@ class Cluster(object):
             with open(filename, 'rb') as fp:
                 print("fromfile reading {}".format(filename))
                 array = json.load(fp)
-
+                pp.pprint(array)
             c = [cls(data, dir) for data in array if type(data) is dict]
         except ValueError as e:
             print("Missing or improperly formatted JSON file \"{}\" - ignored.".format(filename))
@@ -62,10 +65,11 @@ class Cluster(object):
         print("creating cluster")
         super(Cluster, self).__init__()
         self.__dict__.update(data)
-        self.svg = os.path.join(dir, self.svg)
-        self.tree = os.path.join(dir, self.tree)
-        self.fasta = os.path.join(dir, self.fasta)
-        self.id = str(uuid.uuid4())
+        self.svg = os.path.join(dir, self.svg) if hasattr(self, 'svg')  else ""
+        self.tree = os.path.join(dir, self.tree)  if hasattr(self, 'tree')  else ""
+
+        self.fasta = os.path.join(dir, os.path.basename(self.file)) if hasattr(self, 'file')  else ""
+        self.id = self.cluster_id
 
     def fasta(self):
         # return a string containing the fasta sequences
@@ -84,8 +88,11 @@ class Cluster(object):
     def svgstr(self):
         # return the svg tree associated with this cluster
         svgstr = ""
-        with open(self.svg, 'rb') as fh:
-            svgstr = fh.read()
+        try:
+            with open(self.svg, 'rb') as fh:
+                svgstr = fh.read()
+        except Exception as e:
+            svgstr = "%s".format(str(e))
         return svgstr
 
     def seeds(self):
