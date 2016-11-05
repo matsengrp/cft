@@ -1,9 +1,13 @@
 #! /bin/env python
 
+import argparse
+from ete3 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
+
+
 def outfile2seqs(outfile='outfile'):
     """
-    give me a phylip dnaml outfile and I''ll give you a dictionary of sequences,
-    including ancestral, and a dictionary of parent assignments with branch length
+    Give me a phylip dnaml outfile and I''ll give you a dictionary of sequences,
+    including ancestral, and a dictionary of parent assignments with branch length.
     """
     # parse all sequences from phylip outfile
     outfiledat = [block.split('\n\n\n')[0].split('\n\n')[1:] for block in open(outfile, 'r').read().split('Probable sequences at interior nodes:\n')[1:]]
@@ -47,9 +51,8 @@ def outfile2seqs(outfile='outfile'):
 
     return sequences, parents
 
+
 def main():
-    import argparse
-    from ete3 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
     parser = argparse.ArgumentParser(description='give me a phylip dnaml outfile and I''ll give you an alignment (including ancestral sequences) and a tree')
     parser.add_argument('--outfile', type=str, default='outfile', help='dnaml outfile (verbose output with inferred ancestral sequences, option 5). Perhaps confusingly, this is the input file to this program')
     parser.add_argument('--naive', type=str, default= None, help='name of naive (germline) sequence')
@@ -75,7 +78,7 @@ def main():
             nodes[parents[name][0]].add_child(nodes[name])
         else:
             # identify this node as the root
-            tree = nodes[name] 
+            tree = nodes[name]
             orphan_nodes += 1
     # there can only be one root
     assert orphan_nodes == 1
@@ -114,6 +117,6 @@ def main():
     # render tree image
     tree.render(args.outfile+'.outfile2tree.svg', tree_style=ts)
 
+
 if __name__ == "__main__":
     main()
-

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Python modules for processing partis output.
 
 Input annotations csv file and output fasta files.
-'''
+"""
 
 import pandas as pd
 import argparse
@@ -17,8 +17,6 @@ import time
 
 
 def parse_args():
-    ''' parse input arguments '''
-
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--incsv', dest='incsv',
             help='input cluter annotations csv', type=str)
@@ -40,7 +38,9 @@ def parse_args():
 
 
 def create_dir(args):
-    ''' create directories if they don't exist '''
+    """
+    Create output directory if it doesn't exist.
+    """
     input_base = args.incsv[:args.incsv.index('-cluster-annotations.csv')]
     output_base = os.path.join(args.output_dir,
             input_base.replace(args.input_dir, ''))
@@ -52,24 +52,26 @@ def create_dir(args):
 
 
 def output_clusters(pandas_df, col, id1, id2):
-    ''' split clusters and unnest them '''
+    """
+    Split clusters and unnest them.
+    """
     nested = [[id1[idx]] + [id2[idx]] + \
             clus.split(':') for idx, clus in enumerate(pandas_df[col])]
     return sum(nested, [])
 
 
 def interleave_lists(pandas_df, cols, id1, id2, seed_ids):
-    ''' interleave two lists and prepend '>' to headers '''
-
-    # we'll only have two lists (headers and sequences) so concatenate
-    # headers and then dummy sequences
+    """
+    Interleave two lists and prepend '>' to headers.
+    """
+    # We'll only have two lists (headers and sequences) so concatenate
+    # headers and then dummy sequences.
     out_list = []
     for item in range(2):
         out_list += [output_clusters(pandas_df, cols[item],
             id1[item], id2[item])]
 
-    # we hope that the lists constructed are of the same length, but you
-    # never know
+    # Make sure the lists constructed are of the same length.
     assert len(out_list[0]) == len(out_list[1])
 
     interleaved = [singleton for two_tuple in zip(out_list[0], out_list[1]) \
@@ -83,8 +85,9 @@ def interleave_lists(pandas_df, cols, id1, id2, seed_ids):
 
 
 def get_seed_clusters(args, fname, annotations, seed_ids):
-    ''' output to file various cluster statistics given a seed '''
-
+    """
+    Output to file various cluster statistics given a seed.
+    """
     seed_clusters = []
     for idx, cluster in enumerate(annotations['unique_ids']):
         ids = cluster.split(':')
@@ -94,7 +97,9 @@ def get_seed_clusters(args, fname, annotations, seed_ids):
 
 
 def process_data(args, output_base, annotations):
-    ''' read data and interleave lists '''
+    """
+    Read data and interleave lists.
+    """
 
     part_file = args.incsv.replace('-cluster-annotations.csv', '.csv')
     if not os.path.isfile(part_file):
@@ -133,7 +138,9 @@ def process_data(args, output_base, annotations):
 
 
 def get_json(args, fname, cluster, data, seed_ids):
-    ''' get metatdata for writing json file '''
+    """
+    Get metatdata for writing json file.
+    """
 
     # this currently only works for output obtained from heavy
     # chain data
@@ -151,7 +158,7 @@ def get_json(args, fname, cluster, data, seed_ids):
 
 
 def write_file(args, fname, in_list, seed_ids, annotations):
-    '''
+    """
     Currently only output files in either separate fasta files per cluster
     or have all sequences in one single fasta.
 
@@ -161,7 +168,7 @@ def write_file(args, fname, in_list, seed_ids, annotations):
 
     BASELINe format does not work yet, though this is not something we need
     yet.
-    '''
+    """
 
     cluster_id = -1
 
@@ -197,14 +204,14 @@ def write_file(args, fname, in_list, seed_ids, annotations):
 
 
 def melt_partis(args, fname, annotations, seed_ids):
-    '''
+    """
     Cassie and other Overbaugh group members sometimes prefer output
     in a csv file with cluster assignments so they can be sorted by other
     metadata related to the read.
 
     Here we'll just scrape out the cluster information and read IDs and
     output them into a flattened csv file.
-    '''
+    """
 
     output_df = pd.DataFrame()
     for idx, cluster in annotations.iterrows():
@@ -226,7 +233,9 @@ def melt_partis(args, fname, annotations, seed_ids):
 
 
 def main():
-    ''' run and save cluster file processing '''
+    """
+    Run and save cluster file processing.
+    """
 
     args = parse_args()
     if not os.path.isfile(args.incsv):
@@ -245,4 +254,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

@@ -136,7 +136,8 @@ def start_batch(job, datafiles, input_args):
 
 
 def cleanup(job, temp_output_id, output_file):
-    """Copies back the temporary file to input once we've successfully sorted the temporary file.
+    """
+    Copies back the temporary file to input once we've successfully sorted the temporary file.
     """
     job.fileStore.logToMaster("inside cleanup job")
     tempFile = job.fileStore.readGlobalFile(temp_output_id)

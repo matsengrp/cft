@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
+"""
 Description
-   A cluster instance holds al the information associated with a cluster of 
-   b-cell receiptors.  This would include the sequences and the tree built from those
+   A cluster instance holds all the information associated with a cluster of
+   b-cell receptors.  This would include the sequences and the tree built from those
    sequences.
 
-'''
+"""
 from __future__ import print_function
 
 import os
@@ -24,7 +24,7 @@ from Bio.Alphabet import IUPAC
 pp = pprint.PrettyPrinter(indent=4)
 
 def load_template(name):
-    # Capture parent directory above where this script lives.  
+    # Capture parent directory above where this script lives.
     parent = os.path.abspath(os.path.join(os.path.dirname(__file__)))
     print("__file__ = {}".format(__file__))
     print("os.path.dirname(__file__) = {}".format(os.path.dirname(__file__)))
@@ -57,10 +57,10 @@ class Cluster(object):
             c = [cls(data, dir) for data in array if type(data) is dict]
         except ValueError as e:
             print("Missing or improperly formatted JSON file \"{}\" - ignored.".format(filename))
-            
+
 
         return c
-    
+
     def __init__(self, data, dir):
         print("creating cluster")
         super(Cluster, self).__init__()
@@ -84,7 +84,7 @@ class Cluster(object):
         with open(self.fasta, "rU") as fh:
             records = list(SeqIO.parse(fh, "fasta"))
         return records
-    
+
     def svgstr(self):
         # return the svg tree associated with this cluster
         svgstr = ""
