@@ -37,15 +37,13 @@ log = logging.getLogger(__name__)
 
 
 class Fasttree(Job):
-
     def __init__(self, inputid):
-        Job.__init__(self,  memory="2G", cores=1, disk="100M")
+        Job.__init__(self, memory="2G", cores=1, disk="100M")
         self.inputid = inputid
 
     def run(self, fileStore):
         fileStore.logToMaster("inside Fasttree run()")
-        input_file = fileStore.readGlobalFile(
-            self.inputid, cache=False)
+        input_file = fileStore.readGlobalFile(self.inputid, cache=False)
 
         with fileStore.writeGlobalFileStream() as (fileHandle, output_id):
             cmd = ["FastTree", input_file]
@@ -56,8 +54,8 @@ class Fasttree(Job):
 
 
 def which(executable):
-    log.info("PATH = {}".format( os.environ['PATH']))
-    log.info("ENV = {}".format( os.environ))
+    log.info("PATH = {}".format(os.environ['PATH']))
+    log.info("ENV = {}".format(os.environ))
     paths = (os.path.join(p, executable)
              for p in os.environ['PATH'].split(':'))
     values = (p for p in paths if os.path.isfile(p) and os.access(p, os.X_OK))
@@ -77,17 +75,17 @@ def guess_figtree_jar_path():
     """
     figtree_path = which('figtree')
 
-    jar_path = os.path.abspath(os.path.join(os.path.dirname(figtree_path),
-                                            '..', 'lib', 'figtree.jar'))
+    jar_path = os.path.abspath(
+        os.path.join(
+            os.path.dirname(figtree_path), '..', 'lib', 'figtree.jar'))
     if os.path.exists(jar_path):
         return jar_path
     raise OSError("FigTree jar could not be found.")
 
 
 class Figtree(Job):
-
     def __init__(self, inputid, width=800, height=600):
-        Job.__init__(self,  memory="2G", cores=1, disk="100M")
+        Job.__init__(self, memory="2G", cores=1, disk="100M")
         self.figtree_path = guess_figtree_jar_path()
         self.inputid = inputid
         self.width = width
@@ -95,16 +93,15 @@ class Figtree(Job):
 
     def run(self, fileStore):
         fileStore.logToMaster("inside Fasttree run()")
-        tree_file = fileStore.readGlobalFile(
-            self.inputid, cache=False)
+        tree_file = fileStore.readGlobalFile(self.inputid, cache=False)
 
         work_dir = fileStore.getLocalTempDir()
         svg_file = os.path.join(work_dir, 'output.svg')
-        cmd = ['java', '-client', '-Djava.awt.headless=true', '-Xms64m', '-Xmx512m',
-               '-jar', self.figtree_path,
-               '-graphic', 'SVG', '-width', str(
-                   self.width), '-height', str(self.height),
-               tree_file, svg_file]
+        cmd = [
+            'java', '-client', '-Djava.awt.headless=true', '-Xms64m',
+            '-Xmx512m', '-jar', self.figtree_path, '-graphic', 'SVG', '-width',
+            str(self.width), '-height', str(self.height), tree_file, svg_file
+        ]
         fileStore.logToMaster(" ".join(cmd))
         subprocess.check_call(cmd)
 
@@ -120,8 +117,8 @@ def start_batch(job, datafiles, input_args):
         input_id = job.fileStore.writeGlobalFile(input_file, True)
         job.fileStore.logToMaster(" Starting the run fasttree")
 
-        job.fileStore.logToMaster(
-            "creating FastTree object for {}".format(input_file))
+        job.fileStore.logToMaster("creating FastTree object for {}".format(
+            input_file))
         fasttree = Fasttree(input_id)
         treefile = job.addChild(fasttree).rv()
 
@@ -130,9 +127,7 @@ def start_batch(job, datafiles, input_args):
 
         root, _ = os.path.splitext(input_file)
         svgfile = root + ".svg"
-        job.addFollowOnJobFn(cleanup,
-                             figfile,
-                             svgfile)
+        job.addFollowOnJobFn(cleanup, figfile, svgfile)
 
 
 def cleanup(job, temp_output_id, output_file):
@@ -143,8 +138,8 @@ def cleanup(job, temp_output_id, output_file):
     tempFile = job.fileStore.readGlobalFile(temp_output_id)
     job.fileStore.logToMaster("Copying {} to {}".format(tempFile, output_file))
     shutil.copyfile(tempFile, output_file)
-    job.fileStore.logToMaster(
-        "Finished copying sorted file to output: %s" % output_file)
+    job.fileStore.logToMaster("Finished copying sorted file to output: %s" %
+                              output_file)
 
 
 def main():
@@ -153,6 +148,7 @@ def main():
 
     Data is pulled down with Genetorrent and transferred to S3 via S3AM.
     """
+
     # Define Parser object and add to toil
     def existing_file(fname):
         """
@@ -163,13 +159,18 @@ def main():
         return fname
 
     parser = argparse.ArgumentParser(
-        description=main.__doc__, formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('--sudo', dest='sudo', default=None, action='store_true',
-                        help='Docker usually needs sudo to execute locally, but not when running Mesos or when '
-                             'the user is a member of a Docker group.')
+        description=main.__doc__,
+        formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument(
+        '--sudo',
+        dest='sudo',
+        default=None,
+        action='store_true',
+        help='Docker usually needs sudo to execute locally, but not when running Mesos or when '
+        'the user is a member of a Docker group.')
     Job.Runner.addToilOptions(parser)
-    parser.add_argument('datafiles', nargs='+',
-                        help='FASTA input', type=existing_file)
+    parser.add_argument(
+        'datafiles', nargs='+', help='FASTA input', type=existing_file)
 
     args = parser.parse_args()
 

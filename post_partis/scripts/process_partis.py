@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
 """
 Python modules for processing partis output.
 
@@ -18,18 +17,33 @@ import time
 
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--incsv', dest='incsv',
-            help='input cluter annotations csv', type=str)
-    parser.add_argument('--cluster_base', dest='cluster_base',
-            help='basename for clusters', default='cluster', type=str)
-    parser.add_argument('--input_dir', dest='input_dir',
-            help='directory with data', type=str)
-    parser.add_argument('--output_dir', dest='output_dir',
-            help='directory for fasta files', type=str)
-    parser.add_argument('--baseline', action='store_true', dest='baseline',
-            help='output fasta files in baseline format', default=False)
-    parser.add_argument('--separate', action='store_true', dest='separate',
-            help='output to per-cluster fasta files', default=False)
+    parser.add_argument(
+        '--incsv', dest='incsv', help='input cluter annotations csv', type=str)
+    parser.add_argument(
+        '--cluster_base',
+        dest='cluster_base',
+        help='basename for clusters',
+        default='cluster',
+        type=str)
+    parser.add_argument(
+        '--input_dir', dest='input_dir', help='directory with data', type=str)
+    parser.add_argument(
+        '--output_dir',
+        dest='output_dir',
+        help='directory for fasta files',
+        type=str)
+    parser.add_argument(
+        '--baseline',
+        action='store_true',
+        dest='baseline',
+        help='output fasta files in baseline format',
+        default=False)
+    parser.add_argument(
+        '--separate',
+        action='store_true',
+        dest='separate',
+        help='output to per-cluster fasta files',
+        default=False)
     #parser.add_argument('--select_clustering', dest='select_clustering',
     #        help='choose a row from partition file for a different cluster',
     #        default=0, type=int)
@@ -43,7 +57,7 @@ def create_dir(args):
     """
     input_base = args.incsv[:args.incsv.index('-cluster-annotations.csv')]
     output_base = os.path.join(args.output_dir,
-            input_base.replace(args.input_dir, ''))
+                               input_base.replace(args.input_dir, ''))
     dirname = os.path.dirname(output_base)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
@@ -68,8 +82,9 @@ def interleave_lists(pandas_df, cols, id1, id2, seed_ids):
     # headers and then dummy sequences.
     out_list = []
     for item in range(2):
-        out_list += [output_clusters(pandas_df, cols[item],
-            id1[item], id2[item])]
+        out_list += [
+            output_clusters(pandas_df, cols[item], id1[item], id2[item])
+        ]
 
     # Make sure the lists constructed are of the same length.
     assert len(out_list[0]) == len(out_list[1])
@@ -126,15 +141,13 @@ def process_data(args, output_base, annotations):
             args.cluster_base+str(row) for row in range(nrow)]
 
     # get naive seqs
-    naive_ids = ['>naive'+str(row) for row in range(nrow)]
+    naive_ids = ['>naive' + str(row) for row in range(nrow)]
     naive_seq = annotations['naive_seq'].tolist()
 
     # combine lists
-    return interleave_lists(annotations,
-            ['unique_ids', 'seqs'],
-            [cluster_ids, blanks],
-            [naive_ids, naive_seq],
-            seed_ids), seed_ids
+    return interleave_lists(annotations, ['unique_ids', 'seqs'],
+                            [cluster_ids, blanks], [naive_ids, naive_seq],
+                            seed_ids), seed_ids
 
 
 def get_json(args, fname, cluster, data, seed_ids):
@@ -145,16 +158,17 @@ def get_json(args, fname, cluster, data, seed_ids):
     # this currently only works for output obtained from heavy
     # chain data
     mod_date = os.path.getmtime(args.incsv)
-    return {'file': '-'.join([fname, cluster, 'seqs.fa']),
-            'cluster_id': cluster,
-            'v_gene': data['v_gene'],
-            'd_gene': data['d_gene'],
-            'j_gene': data['j_gene'],
-            'cdr3_length': data['cdr3_length'],
-            'seed': ':'.join(seed_ids),
-            'has_seed': cluster.startswith('seed_'),
-            'last_modified': time.ctime(mod_date)
-           }
+    return {
+        'file': '-'.join([fname, cluster, 'seqs.fa']),
+        'cluster_id': cluster,
+        'v_gene': data['v_gene'],
+        'd_gene': data['d_gene'],
+        'j_gene': data['j_gene'],
+        'cdr3_length': data['cdr3_length'],
+        'seed': ':'.join(seed_ids),
+        'has_seed': cluster.startswith('seed_'),
+        'last_modified': time.ctime(mod_date)
+    }
 
 
 def write_file(args, fname, in_list, seed_ids, annotations):
@@ -183,7 +197,7 @@ def write_file(args, fname, in_list, seed_ids, annotations):
                 open(current_file, 'wb').close()
 
                 cluster_dict = get_json(args, fname, header[3:],
-                        annotations.iloc[cluster_id], seed_ids)
+                                        annotations.iloc[cluster_id], seed_ids)
                 list_of_dicts.append(cluster_dict)
             else:
                 with open(current_file, 'a') as seqs:
@@ -227,9 +241,13 @@ def melt_partis(args, fname, annotations, seed_ids):
         current_df['cdr3_length'] = str(cluster['cdr3_length'])
         output_df = pd.concat([output_df, current_df])
 
-    output_df.to_csv('-'.join([fname, 'melted.csv']), index=False,
-            cols=['unique_ids', 'v_gene', 'd_gene', 'j_gene',
-                  'cdr3_length', 'cluster', 'has_seed'])
+    output_df.to_csv(
+        '-'.join([fname, 'melted.csv']),
+        index=False,
+        cols=[
+            'unique_ids', 'v_gene', 'd_gene', 'j_gene', 'cdr3_length',
+            'cluster', 'has_seed'
+        ])
 
 
 def main():

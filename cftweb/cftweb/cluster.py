@@ -23,6 +23,7 @@ from Bio.Alphabet import IUPAC
 
 pp = pprint.PrettyPrinter(indent=4)
 
+
 def load_template(name):
     # Capture parent directory above where this script lives.
     parent = os.path.abspath(os.path.join(os.path.dirname(__file__)))
@@ -30,12 +31,12 @@ def load_template(name):
     print("os.path.dirname(__file__) = {}".format(os.path.dirname(__file__)))
     print("parent = {}".format(parent))
     templatedir = os.path.join(parent, 'templates')
-    env = Environment(loader=FileSystemLoader(templatedir),
-                          trim_blocks=True)
+    env = Environment(loader=FileSystemLoader(templatedir), trim_blocks=True)
     # Alias str.format to strformat in template
     env.filters['strformat'] = str.format
     template = env.get_template(name)
     return template
+
 
 # Cluster is a container for the json definition of a cluster.
 # each json attribute will become an attribute of the Cluster instance.
@@ -56,8 +57,9 @@ class Cluster(object):
                 pp.pprint(array)
             c = [cls(data, dir) for data in array if type(data) is dict]
         except ValueError as e:
-            print("Missing or improperly formatted JSON file \"{}\" - ignored.".format(filename))
-
+            print(
+                "Missing or improperly formatted JSON file \"{}\" - ignored.".
+                format(filename))
 
         return c
 
@@ -65,10 +67,12 @@ class Cluster(object):
         print("creating cluster")
         super(Cluster, self).__init__()
         self.__dict__.update(data)
-        self.svg = os.path.join(dir, self.svg) if hasattr(self, 'svg')  else ""
-        self.tree = os.path.join(dir, self.tree)  if hasattr(self, 'tree')  else ""
+        self.svg = os.path.join(dir, self.svg) if hasattr(self, 'svg') else ""
+        self.tree = os.path.join(dir, self.tree) if hasattr(self,
+                                                            'tree') else ""
 
-        self.fasta = os.path.join(dir, os.path.basename(self.file)) if hasattr(self, 'file')  else ""
+        self.fasta = os.path.join(dir, os.path.basename(self.file)) if hasattr(
+            self, 'file') else ""
         self.id = self.cluster_id
 
     def fasta(self):
@@ -98,4 +102,3 @@ class Cluster(object):
     def seeds(self):
         # return the set of seed sequences (if any ) associated with this cluster.
         pass
-

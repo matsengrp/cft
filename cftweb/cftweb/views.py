@@ -27,6 +27,7 @@ from Bio.Alphabet import IUPAC
 
 from cftweb import app
 
+
 @app.route('/index')
 @app.route("/")
 def index():
@@ -39,7 +40,7 @@ def index():
         'user': getpass.getuser(),
         'title': 'CFT Cluster Visualization',
         'clusters': clusters
-        }
+    }
 
     return render_template('index.html', **renderdict)
 
@@ -52,51 +53,47 @@ def cluster_page(id=None):
     print(id)
 
     cluster = clusters[id]
-    
+
     renderdict = {
         'id': id,
         'svg': cluster.svgstr(),
         'records': cluster.sequences(),
+    }
 
-        }
-    
     return render_template('cluster.html', **renderdict)
-            
+
+
 @app.route("/cluster/<id>/tree.html")
 def cluster_tree(id=None):
     print("generating tree page for {}".format(id))
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
-    renderdict = {
-        'svg': cluster.svgstr(),
-        }
-    
+    renderdict = {'svg': cluster.svgstr(), }
+
     return render_template('tree.html', **renderdict)
-            
+
+
 @app.route("/cluster/<id>/sequences.html")
 def cluster_sequences(id=None):
     print("generating sequences page for {}".format(id))
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
-    
-    renderdict = {
-        'records': cluster.sequences(),
-        }
-    
+
+    renderdict = {'records': cluster.sequences(), }
+
     return render_template('sequences.html', **renderdict)
-            
+
+
 @app.route("/test.html")
 def cluster_test(id=None):
     print("generating sequences page for {}".format(id))
     clusters = app.config['CLUSTERS']
     for v in clusters.values():
         print(v)
-        renderdict = {
-            'records': v.sequences(),
-            }
-    
+        renderdict = {'records': v.sequences(), }
+
         return render_template('sequences.html', **renderdict)
-            
+
 
 @app.route("/download/fasta/<id>.fa")
 def cluster_fasta(id=None):
@@ -113,6 +110,7 @@ def cluster_fasta(id=None):
 
     fasta = to_fasta(cluster.sequences())
     return Response(fasta, mimetype="application/octet-stream")
+
 
 @app.route("/download/phylip/<id>.phy")
 def cluster_phylip(id=None):
@@ -131,7 +129,3 @@ def cluster_phylip(id=None):
     phylip = to_phylip(cluster.sequences())
 
     return Response(phylip, mimetype="application/octet-stream")
-
-
-            
-

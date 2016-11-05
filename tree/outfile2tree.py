@@ -10,7 +10,11 @@ def outfile2seqs(outfile='outfile'):
     including ancestral, and a dictionary of parent assignments with branch length.
     """
     # parse all sequences from phylip outfile
-    outfiledat = [block.split('\n\n\n')[0].split('\n\n')[1:] for block in open(outfile, 'r').read().split('Probable sequences at interior nodes:\n')[1:]]
+    outfiledat = [
+        block.split('\n\n\n')[0].split('\n\n')[1:]
+        for block in open(outfile, 'r').read().split(
+            'Probable sequences at interior nodes:\n')[1:]
+    ]
 
     # only one tree in outfile
     assert len(outfiledat) == 1
@@ -34,7 +38,12 @@ def outfile2seqs(outfile='outfile'):
                 sequences[name] += seq
 
     # now a second pass to get the parent data
-    outfiledat = [block.split('\n\n\n')[0].split('\n\n')[1] for block in open(outfile, 'r').read().split('Between        And            Length      Approx. Confidence Limits\n')[1:]]
+    outfiledat = [
+        block.split('\n\n\n')[0].split('\n\n')[1]
+        for block in open(outfile, 'r').read().split(
+            'Between        And            Length      Approx. Confidence Limits\n'
+        )[1:]
+    ]
 
     # only one tree in outfile
     assert len(outfiledat) == 1
@@ -53,24 +62,42 @@ def outfile2seqs(outfile='outfile'):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='give me a phylip dnaml outfile and I''ll give you an alignment (including ancestral sequences) and a tree')
-    parser.add_argument('--outfile', type=str, default='outfile', help='dnaml outfile (verbose output with inferred ancestral sequences, option 5). Perhaps confusingly, this is the input file to this program')
-    parser.add_argument('--naive', type=str, default= None, help='name of naive (germline) sequence')
-    parser.add_argument('--seed', type=str, default= None, help='name of seed sequence')
+    parser = argparse.ArgumentParser(
+        description='give me a phylip dnaml outfile and I'
+        'll give you an alignment (including ancestral sequences) and a tree')
+    parser.add_argument(
+        '--outfile',
+        type=str,
+        default='outfile',
+        help='dnaml outfile (verbose output with inferred ancestral sequences, option 5). Perhaps confusingly, this is the input file to this program'
+    )
+    parser.add_argument(
+        '--naive',
+        type=str,
+        default=None,
+        help='name of naive (germline) sequence')
+    parser.add_argument(
+        '--seed', type=str, default=None, help='name of seed sequence')
     args = parser.parse_args()
 
     sequences, parents = outfile2seqs(args.outfile)
 
     # write alignment to fasta
-    aln = args.outfile+'.outfile2tree.fa'
+    aln = args.outfile + '.outfile2tree.fa'
     with open(aln, 'w') as f:
         for name in sequences:
-            f.write('>'+name+'\n')
-            f.write(sequences[name]+'\n')
+            f.write('>' + name + '\n')
+            f.write(sequences[name] + '\n')
 
     # build an ete tree
     # first a dictionary of disconnected nodes
-    nodes = {name:Tree(name=name, dist=parents[name][1] if name in parents else None, format=1) for name in sequences}
+    nodes = {
+        name: Tree(
+            name=name,
+            dist=parents[name][1] if name in parents else None,
+            format=1)
+        for name in sequences
+    }
     # connect the nodes using the parent data
     orphan_nodes = 0
     for name in sequences:
@@ -93,7 +120,7 @@ def main():
         tree = nodes[args.naive]
 
     if args.seed is not None:
-        with open(args.outfile+'.outfile2tree.seedLineage.fa', 'w') as f:
+        with open(args.outfile + '.outfile2tree.seedLineage.fa', 'w') as f:
             # traverse up from seed, coloring the path
             node = nodes[args.seed]
             while node is not None:
@@ -101,21 +128,23 @@ def main():
                 nstyle['fgcolor'] = 'red'
                 nstyle['size'] = 10
                 node.set_style(nstyle)
-                f.write('>'+node.name+'\n')
-                f.write(sequences[node.name]+'\n')
+                f.write('>' + node.name + '\n')
+                f.write(sequences[node.name] + '\n')
                 node = node.up
 
     # write newick file
-    tree.write(format=1, outfile=args.outfile+'.outfile2tree.newick')
+    tree.write(format=1, outfile=args.outfile + '.outfile2tree.newick')
 
     ts = TreeStyle()
     ts.show_leaf_name = False
+
     def my_layout(node):
         F = TextFace(node.name)
         add_face_to_node(F, node, column=0, position='branch-right')
+
     ts.layout_fn = my_layout
     # render tree image
-    tree.render(args.outfile+'.outfile2tree.svg', tree_style=ts)
+    tree.render(args.outfile + '.outfile2tree.svg', tree_style=ts)
 
 
 if __name__ == "__main__":
