@@ -49,7 +49,7 @@ def outfile2seqs(outfile='outfile'):
 
 def main():
     import argparse
-    from ete3 import Tree, NodeStyle
+    from ete3 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
     parser = argparse.ArgumentParser(description='give me a phylip dnaml outfile and I''ll give you an alignment (including ancestral sequences) and a tree')
     parser.add_argument('--outfile', type=str, default='outfile', help='dnaml outfile (verbose output with inferred ancestral sequences, option 5). Perhaps confusingly, this is the input file to this program')
     parser.add_argument('--naive', type=str, default= None, help='name of naive (germline) sequence')
@@ -59,7 +59,7 @@ def main():
     sequences, parents = outfile2seqs(args.outfile)
 
     # write alignment to fasta
-    aln = args.outfile+'.tree.fa'
+    aln = args.outfile+'.outfile2tree.fa'
     with open(aln, 'w') as f:
         for name in sequences:
             f.write('>'+name+'\n')
@@ -90,23 +90,29 @@ def main():
         tree = nodes[args.naive]
 
     if args.seed is not None:
-        with open(args.outfile+'.seedLineage.fa', 'w') as f:
+        with open(args.outfile+'.outfile2tree.seedLineage.fa', 'w') as f:
             # traverse up from seed, coloring the path
             node = nodes[args.seed]
             while node is not None:
                 nstyle = NodeStyle()
                 nstyle['fgcolor'] = 'red'
-                nstyle['hz_line_color'] = 'red'
-                #nstyle['vt_line_color'] = 'red'
-                nstyle['hz_line_width'] = 5
-                #nstyle['vt_line_width'] = 5
-                nstyle['size'] = 20
+                nstyle['size'] = 10
                 node.set_style(nstyle)
                 f.write('>'+node.name+'\n')
                 f.write(sequences[node.name]+'\n')
                 node = node.up
-    #tree.link_to_alignment(alignment=aln, alg_format='fasta')
-    tree.render(args.outfile+'.tree.svg')
+
+    # write newick file
+    tree.write(format=1, outfile=args.outfile+'.outfile2tree.newick')
+
+    ts = TreeStyle()
+    ts.show_leaf_name = False
+    def my_layout(node):
+        F = TextFace(node.name)
+        add_face_to_node(F, node, column=0, position='branch-right')
+    ts.layout_fn = my_layout
+    # render tree image
+    tree.render(args.outfile+'.outfile2tree.svg', tree_style=ts)
 
 if __name__ == "__main__":
     main()
