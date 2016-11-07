@@ -17,7 +17,8 @@ python scripts/process_partis.py \
     --output_dir _output/seeds/ \
     --separate
 
-## Separate fasta files with multiple seeds
+## Separate fasta files with multiple seeds.
+## Currently still running partis to get output for this.
 #python scripts/process_partis.py \
 #    --incsv $datapath/$seed2:$seed3/Hs-LN1-5RACE-IgK-100k-cluster-annotations.csv \
 #    --cluster_base cluster \
