@@ -56,8 +56,9 @@ def create_dir(args):
     Create output directory if it doesn't exist.
     """
     input_base = args.incsv[:args.incsv.index('-cluster-annotations.csv')]
-    output_base = os.path.join(args.output_dir,
-                               input_base.replace(args.input_dir, ''))
+    rel_input = input_base.replace(os.path.normpath(args.input_dir)+'/', '')
+    output_base = os.path.join(args.output_dir, rel_input)
+
     dirname = os.path.dirname(output_base)
     if not os.path.exists(dirname):
         os.makedirs(dirname)
