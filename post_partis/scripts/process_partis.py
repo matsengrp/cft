@@ -245,7 +245,7 @@ def melt_partis(args, fname, annotations, seed_ids):
     output_df.to_csv(
         '-'.join([fname, 'melted.csv']),
         index=False,
-        cols=[
+        columns=[
             'unique_ids', 'v_gene', 'd_gene', 'j_gene', 'cdr3_length',
             'cluster', 'has_seed'
         ])
