@@ -39,7 +39,6 @@ $phylip
 O
 $naiveLine
 5
-.
 Y
 
 STDIN

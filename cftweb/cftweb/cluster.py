@@ -39,8 +39,8 @@ def load_template(name):
 
 
 # Cluster is a container for the json definition of a cluster.
-# each json attribute will become an attribute of the Cluster instance.
-# potentially this will cause problems if a JSON attribute conflicts with an existing
+# Each json attribute will become an attribute of the Cluster instance.
+# Potentially this will cause problems if a JSON attribute conflicts with an existing
 # instance attribute.
 class Cluster(object):
     @classmethod
@@ -54,7 +54,6 @@ class Cluster(object):
             with open(filename, 'rb') as fp:
                 print("fromfile reading {}".format(filename))
                 array = json.load(fp)
-                pp.pprint(array)
             c = [cls(data, dir) for data in array if type(data) is dict]
         except ValueError as e:
             print(
@@ -67,13 +66,22 @@ class Cluster(object):
         print("creating cluster")
         super(Cluster, self).__init__()
         self.__dict__.update(data)
-        self.svg = os.path.join(dir, self.svg) if hasattr(self, 'svg') else ""
+        print(json.dumps(data, sort_keys=True,
+                  indent=4, separators=(',', ': ')))
+        self.svg = os.path.join(dir, self.svg) if hasattr(self, 'svg') else "'svg' json attribute missing"
         self.tree = os.path.join(dir, self.tree) if hasattr(self,
-                                                            'tree') else ""
+                                                            'tree') else "'tree' json attribute missing"
+        self.fasta = os.path.join(dir, self.fasta) if hasattr(self,
+                                                            'fasta') else "'fasta' json attribute missing"
 
-        self.fasta = os.path.join(dir, os.path.basename(self.file)) if hasattr(
-            self, 'file') else ""
-        self.id = self.cluster_id
+        print(self.fasta)
+
+        # Generate a unique identifier.  This id is used to index into a dict
+        # of clusters and it will be visible in URLs.  Generating ids in this
+        # way means that the resulting URLs are not persistent; they will
+        # change every time this server is restarted. 
+        
+        self.id = uuid.uuid4().hex
 
     def fasta(self):
         # return a string containing the fasta sequences

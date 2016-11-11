@@ -40,29 +40,23 @@ if __name__ == "__main__":
         default=False,
         action="store_true",
         help='turn on debugging output')
-
-    parser.add_argument(
-        '-t',
-        '--template',
-        default='template.jinja',
-        help="""Jinja2 Tempate file[default: %(default)s]""")
-    parser.add_argument(
-        '-c',
-        '--content',
-        default="content",
-        help="""Directory where content can be found: [default "%(default)s"]"""
-    )
-    parser.add_argument(
-        '-n',
-        '--dryrun',
-        action='store_true',
-        help="""do everythign short of writing to the filesystem.""")
     parser.add_argument(
         '-v',
         '--verbose',
         action='store_true',
         default=False,
         help='verbose output')
+    
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        '--file',
+        help="""Name of metadata file: [default "%(default)s"]"""
+    )
+    group.add_argument(
+        '--dir',
+        help="""Directory where content can be found: [default "%(default)s"]"""
+    )
+    
 
     global options
     options = parser.parse_args()
