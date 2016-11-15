@@ -101,7 +101,7 @@ def process_data(annot_file, part_file):
     return output_df
 
 
-def write_json(df, fname, mod_date, cluster_base):
+def write_json(df, fname, mod_date, cluster_base, annotations, partition):
     """
     Write metatdata to json file from dataframe
     """
@@ -120,7 +120,9 @@ def write_json(df, fname, mod_date, cluster_base):
             'cdr3_length': data['cdr3_length'],
             'seed': data['seed_ids'],
             'has_seed': str(data['has_seed']),
-            'last_modified': time.ctime(mod_date)
+            'last_modified': time.ctime(mod_date),
+            'annotation_file': annotations,
+            'partition_file': partition
         }
 
     arr = [jsonify(g, k, mod_date, cluster_base) for k,g in df.groupby(['cluster'])]
@@ -178,19 +180,22 @@ def main():
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    melted_annotations = process_data(args.annotations, args.partition)
+    melted_annotations = process_data(args.annotations,
+                                      args.partition)
 
     write_separate_fasta(melted_annotations,
                          args.output_dir,
                          args.cluster_base)
 
-    write_melted_partis(melted_annotations, os.path.join(args.output_dir,
-                        'melted.csv'))
+    write_melted_partis(melted_annotations,
+                        os.path.join(args.output_dir, 'melted.csv'))
 
-    write_json(melted_annotations, os.path.join(args.output_dir,
-                        'metadata.json'),
-                        os.path.getmtime(args.annotations),
-                        args.cluster_base)
+    write_json(melted_annotations,
+               os.path.join(args.output_dir, 'metadata.json'),
+               os.path.getmtime(args.annotations),
+               args.cluster_base,
+               args.annotations,
+               args.partition)
 
 
 
