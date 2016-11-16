@@ -32,7 +32,6 @@ from cftweb import app
 @app.route("/")
 def index():
     clusters = app.config['CLUSTERS']
-    print("generating index page for {}".format(clusters))
     renderdict = {
         'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         'command': " ".join(sys.argv),
@@ -47,11 +46,7 @@ def index():
 
 @app.route("/cluster/<id>/overview.html")
 def cluster_page(id=None):
-    print("generating gene page for {}".format(id))
     clusters = app.config['CLUSTERS']
-    print(clusters.keys())
-    print(id)
-
     cluster = clusters[id]
 
     renderdict = {
@@ -65,7 +60,6 @@ def cluster_page(id=None):
 
 @app.route("/cluster/<id>/tree.html")
 def cluster_tree(id=None):
-    print("generating tree page for {}".format(id))
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
     renderdict = {'svg': cluster.svgstr(), }
@@ -75,7 +69,6 @@ def cluster_tree(id=None):
 
 @app.route("/cluster/<id>/sequences.html")
 def cluster_sequences(id=None):
-    print("generating sequences page for {}".format(id))
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
 
@@ -84,20 +77,8 @@ def cluster_sequences(id=None):
     return render_template('sequences.html', **renderdict)
 
 
-@app.route("/test.html")
-def cluster_test(id=None):
-    print("generating sequences page for {}".format(id))
-    clusters = app.config['CLUSTERS']
-    for v in clusters.values():
-        print(v)
-        renderdict = {'records': v.sequences(), }
-
-        return render_template('sequences.html', **renderdict)
-
-
 @app.route("/download/fasta/<id>.fa")
 def cluster_fasta(id=None):
-    print("generating fasta page for {}".format(id))
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
 
@@ -114,7 +95,6 @@ def cluster_fasta(id=None):
 
 @app.route("/download/phylip/<id>.phy")
 def cluster_phylip(id=None):
-    print("generating phylip page for {}".format(id))
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
 

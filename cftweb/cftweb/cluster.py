@@ -27,9 +27,6 @@ pp = pprint.PrettyPrinter(indent=4)
 def load_template(name):
     # Capture parent directory above where this script lives.
     parent = os.path.abspath(os.path.join(os.path.dirname(__file__)))
-    print("__file__ = {}".format(__file__))
-    print("os.path.dirname(__file__) = {}".format(os.path.dirname(__file__)))
-    print("parent = {}".format(parent))
     templatedir = os.path.join(parent, 'templates')
     env = Environment(loader=FileSystemLoader(templatedir), trim_blocks=True)
     # Alias str.format to strformat in template
@@ -63,18 +60,13 @@ class Cluster(object):
         return c
 
     def __init__(self, data, dir):
-        print("creating cluster")
         super(Cluster, self).__init__()
         self.__dict__.update(data)
-        print(json.dumps(data, sort_keys=True,
-                  indent=4, separators=(',', ': ')))
         self.svg = os.path.join(dir, self.svg) if hasattr(self, 'svg') else "'svg' json attribute missing"
         self.tree = os.path.join(dir, self.tree) if hasattr(self,
                                                             'tree') else "'tree' json attribute missing"
         self.fasta = os.path.join(dir, self.fasta) if hasattr(self,
                                                             'fasta') else "'fasta' json attribute missing"
-
-        print(self.fasta)
 
         # Generate a unique identifier.  This id is used to index into a dict
         # of clusters and it will be visible in URLs.  Generating ids in this
