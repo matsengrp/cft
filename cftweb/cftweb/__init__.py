@@ -29,9 +29,16 @@ def content_file_iterator(dir):
 def before_first_request():
     options = app.config['OPTIONS']
 
-    print("content = {}".format(options.content))
-    objects = itertools.chain.from_iterable(
-        [Cluster.fromfile(f) for f in content_file_iterator(options.content)])
+    print(options)
+    if options.dir:
+        print("content = {}".format(options.dir))
+        print([ f for f in content_file_iterator(options.dir)])
+
+        objects = [Cluster.fromfile(f) for f in content_file_iterator(options.dir)]
+    else:
+        objects = [Cluster.fromfile(options.file)]
+        
+    objects = itertools.chain.from_iterable(objects)
     objects = [o for o in objects if o is not None]
     objects = dict([(g.id, g) for g in objects])
     app.config['CLUSTERS'] = objects

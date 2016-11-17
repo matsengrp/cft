@@ -1,17 +1,37 @@
 {% extends "base.jinja" %}
+{% block page_css %}
+<style>
+ tr.clickableRow { cursor: pointer; } 
+</style>
+<script>
+jQuery(document).ready(function($) {
+    $(".clickable-row").click(function() {
+        window.location = $(this).data("href");
+    });
+  });
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="row">
-  <div class="span12">
-
-    <table>
-    {%- for key, value in clusters.iteritems() -%}
-      <tr>
-	<td><a href="{{url_for('cluster_page',id=key)}}">{{key}}</a></td>
+  <div class="col-md-6">
+    <table class="table  table-striped table-hover">
+      <thead>
+      </thead>
+      <tbody>
+      {%- for key, c in clusters.iteritems() -%}
+      <tr class='clickable-row' data-href='{{url_for('cluster_page',id=key)}}'>
+	<td>{{key}}</td>
+	<td>{{c.__dict__['seed']}}</td>
+	<td>{{c.__dict__['v-gene']}}</td>
+	<td>{{c.__dict__['d-gene']}}</td>
+	<td>{{c.__dict__['j-gene']}}</td>
       </tr>
-    {%-endfor-%}
+      {%-endfor-%}
+      </tbody>
     </table>
-      
+    
   </div>
 </div>
-  {% endblock %}
+{% endblock %}
 
