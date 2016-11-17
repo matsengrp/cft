@@ -9,8 +9,6 @@ A pipeline for digesting partis clusters and inferring clonal family trees.
 
 ## Setting up the environment
 
-
-
 The pipeline is specified as python, but it relies upon some tools
 that are available as modules.  Load these modules before you create
 you virtual environment.
@@ -23,8 +21,10 @@ you virtual environment.
 ```
 
 Now create a virtual environment.  These instructios assume you will
-operating in a virtual environment, specifically using conda.  You can
-also mimic these isnstructions using `virtualenv` and `pip`.
+operating in a virtual environment using `conda`.  Use `module load
+matsengrp-anaconda` if the `conda` command is not available in your
+path.  You can also mimic these instructions using `virtualenv` and
+`pip` if you would prefer.
 
 ```
 	$ conda create -n cft
