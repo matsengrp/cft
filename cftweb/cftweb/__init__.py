@@ -6,6 +6,7 @@ import json
 from flask import Flask, g
 
 from cluster import Cluster
+import filters
 
 import os.path
 os.environ['CFTWEB_SETTINGS'] = os.path.join(
@@ -27,13 +28,11 @@ def content_file_iterator(dir):
 # Initiate engine before the first request
 @app.before_first_request
 def before_first_request():
+    filters.register(app)
+
     options = app.config['OPTIONS']
 
-    print(options)
     if options.dir:
-        print("content = {}".format(options.dir))
-        print([ f for f in content_file_iterator(options.dir)])
-
         objects = [Cluster.fromfile(f) for f in content_file_iterator(options.dir)]
     else:
         objects = [Cluster.fromfile(options.file)]
@@ -42,7 +41,6 @@ def before_first_request():
     objects = [o for o in objects if o is not None]
     objects = dict([(g.id, g) for g in objects])
     app.config['CLUSTERS'] = objects
-    print("In __init__ before_first_request, objects={}".format(objects))
 
     # Configure logging
     if not app.debug:
