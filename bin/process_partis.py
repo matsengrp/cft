@@ -16,6 +16,11 @@ import time
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+import sys
+partis_path = '/home/dshaw/.local/partis/'
+sys.path.insert(1, partis_path + '/python')
+import utils
+import glutils
 
 
 def parse_args():
@@ -55,6 +60,10 @@ def parse_args():
         action='store_true',
         help='output to per-cluster fasta files',
         default=False)
+    parser.add_argument(
+        '--chain',
+        help='type of chain data used (h, k, l)',
+        default='h')
     #parser.add_argument('--select_clustering', dest='select_clustering',
     #        help='choose a row from partition file for a different cluster',
     #        default=0, type=int)
@@ -62,7 +71,14 @@ def parse_args():
     return parser.parse_args()
 
 
-def process_data(annot_file, part_file):
+def calculate_cdr3_bounds(line, glfo):
+    utils.process_input_line(line)
+    line['v_gene'] = line['v_gene'].split('+')[0]
+    utils.add_implicit_info(glfo, line, existing_implicit_keys=('aligned_d_seqs', 'aligned_j_seqs', 'aligned_v_seqs', 'cdr3_length', 'naive_seq', 'in_frames', 'mutated_invariants', 'stops', 'mut_freqs'))
+    return line['codon_positions']['v']
+
+
+def process_data(annot_file, part_file, chain):
     """
     Melt data into dataframe from annotations and partition files
     """
@@ -78,8 +94,9 @@ def process_data(annot_file, part_file):
     #    annotations = select_different_cluster(args, annotations)
 
     output_df = pd.DataFrame()
-    annotations = pd.read_csv(annot_file)
-    for idx, cluster in annotations.iterrows():
+    annotations = pd.read_csv(annot_file, dtype=object)
+    glfo = glutils.read_glfo(partis_path + '/data/germlines/human', chain=chain)
+    for idx, cluster in annotations.fillna('').iterrows():
         current_df = pd.DataFrame()
         seq_ids = cluster['unique_ids'].split(':')
         unique_ids = [('seed_' if seq_id in seed_ids else '')+seq_id for seq_id in seq_ids]
@@ -96,6 +113,7 @@ def process_data(annot_file, part_file):
         current_df['j_gene'] = cluster['j_gene']
         current_df['cdr3_length'] = str(cluster['cdr3_length'])
         current_df['seed_ids'] = ':'.join(seed_ids)
+        current_df['cdr3_start'] = calculate_cdr3_bounds(cluster.to_dict(), glfo)
         output_df = pd.concat([output_df, current_df])
 
     return output_df
@@ -118,6 +136,7 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition):
             'd_gene': data['d_gene'],
             'j_gene': data['j_gene'],
             'cdr3_length': data['cdr3_length'],
+            'cdr3_start': data['cdr3_start'],
             'seed': data['seed_ids'],
             'has_seed': str(data['has_seed']),
             'last_modified': time.ctime(mod_date),
@@ -181,7 +200,8 @@ def main():
         os.makedirs(args.output_dir)
 
     melted_annotations = process_data(args.annotations,
-                                      args.partition)
+                                      args.partition,
+                                      args.chain)
 
     write_separate_fasta(melted_annotations,
                          args.output_dir,
