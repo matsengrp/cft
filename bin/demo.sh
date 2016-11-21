@@ -42,7 +42,8 @@ do
 	       --partition ${partition} \
 	       --cluster_base cluster \
 	       --output_dir ${outdir}/$seed/$basename \
-	       --separate
+	       --separate \
+           --chain "${seed: -1}"
     done
 done
 
