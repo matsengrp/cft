@@ -11,7 +11,7 @@ A pipeline for digesting partis clusters and inferring clonal family trees.
 
 The pipeline is specified as python, but it relies upon some tools
 that are available as modules.  Load these modules before you create
-you virtual environment.
+your virtual environment.
 
 ```
 	$ module use ~matsengrp/modules

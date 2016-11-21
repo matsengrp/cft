@@ -9,6 +9,7 @@ Description
 """
 from __future__ import print_function
 
+import re
 import os
 import uuid
 import sys
@@ -68,10 +69,52 @@ class Cluster(object):
         self.fasta = os.path.join(dir, self.fasta) if hasattr(self,
                                                             'fasta') else "'fasta' json attribute missing"
 
-        # Generate a unique identifier.  This id is used to index into a dict
-        # of clusters and it will be visible in URLs.  Generating ids in this
-        # way means that the resulting URLs are not persistent; they will
-        # change every time this server is restarted. 
+        # TEMPORARY HACK!
+        #
+        # We want to know the individual (patient) identifier, the
+        # timepoint (when sampled), the seed sequence name, and the
+        # gene name.  Ideally this would be explicitly provided in the
+        # json data, but instead we must extract it from any of the
+        # paths provided in the json data.
+        #
+        # Given a partial path like, "QA255.016-Vh/Hs-LN2-5RACE-IgG-new"
+        # "QA255" 	- individual (patient) identification
+        # ".016" 	- seed sequence name
+        # "Vh" 		- gene name.  Vh and Vk are the V heavy chain (IgG) vs. V kappa (there is also Vl which mean V lambda)
+        # "LN2" 	- timepoint.  LN1 and LN2 are early timepoints and LN3 and LN4 are late timepoints.
+        #
+        # "Hs-LN2-5RACE-IgG-new" is the name of the sequencing run,
+        # 
+
+        path = self.seedlineage
+        regex = re.compile(r'^(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
+        m = regex.match(path)
+        if m:
+            self.pid = m.group('pid')
+            self.seedid = m.group('seedid')
+            self.gene = m.group('gene')
+            self.timepoint = m.group('timepoint')
+
+        
+        # Generate a unique identifier.  This id is used to index into
+        # a dict of clusters and it will be visible in URLs.
+        # Generating ids in this way means that the resulting URLs are
+        # not persistent; they will change every time this server is
+        # restarted.
+        #
+        # Whatever id is used here, it must be unique across all the
+        # clusters being managed by the web interface.  If the id is
+        # persistent across time, all the better!
+        #
+        # One alternative would be generate an id by
+        # concatenating parts of the cluster data, something like
+        # "<individual> + <timepoint> + <seed>", but it is hard to
+        # guarantee that would actually be unique.  Researchers might
+        # rerun the exact same run again because of some sequencing
+        # error (happens all the time!).
+        #
+        # Another alternative would be to use random unique ids like uuid.uuid4().hex,
+        # but generate them earlier in the pipeline and stick them in the json file.
         
         self.id = uuid.uuid4().hex
 

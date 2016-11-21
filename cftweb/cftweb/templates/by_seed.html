@@ -1,0 +1,43 @@
+{% extends "base.jinja" %}
+{% block page_css %}
+<style>
+ tr.clickableRow { cursor: pointer; } 
+</style>
+<script>
+jQuery(document).ready(function($) {
+    $(".clickable-row").click(function() {
+        window.location = $(this).data("href");
+    });
+  });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-6">
+    <table class="table  table-striped table-hover">
+      <thead>
+	<tr>
+	<th>Patient ID</th>
+	<th>Timepoint</th>
+	<th>Seed</th>
+	<th>total clusters</th>
+	</tr>
+      </thead>
+      <tbody>
+	
+	{% for group in clusters|groupby('seedid') %}
+	<tr class='clickable-row' data-href='{{ url_for('by_cluster', pid=pid, timepoint=timepoint, seedid=group.grouper) }}'>
+	  <td>{{ pid }}</td>
+	  <td>{{ timepoint }}</td>
+	  <td>{{ group.grouper }}</td>
+	  <td>{{ group.list| length}} clusters</td>
+	</tr>
+	{%-endfor-%}
+      </tbody>
+    </table>
+    
+  </div>
+</div>
+{% endblock %}
+

@@ -6,7 +6,6 @@ import json
 from flask import Flask, g
 
 from cluster import Cluster
-import filters
 
 import os.path
 os.environ['CFTWEB_SETTINGS'] = os.path.join(
@@ -28,8 +27,6 @@ def content_file_iterator(dir):
 # Initiate engine before the first request
 @app.before_first_request
 def before_first_request():
-    filters.register(app)
-
     options = app.config['OPTIONS']
 
     if options.dir:

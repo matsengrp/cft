@@ -1,8 +1,18 @@
+"""
+Custom Jinja filters for use in CFT templates.
 
+Learn more about Jinja filters at,
+http://jinja.pocoo.org/docs/dev/api/#writing-filters
+
+Also see typical usage in `templates/individuals.html` and `templates/index.html`
+
+"""
 
 from __future__ import print_function
+import collections
+from cftweb import app
 
-
+@app.template_filter()
 def clustersort(value, by=['run', 'seed', 'v_gene', 'd_gene', 'j_gene'],reverse=False):
     """Sort a dict of cluster objects by attributes supplied in `by`.
 
@@ -22,8 +32,19 @@ def clustersort(value, by=['run', 'seed', 'v_gene', 'd_gene', 'j_gene'],reverse=
 
     return sorted(value.items(), key=sort_func, reverse=reverse)
 
-def register(app):
-    """
-    Register all filters with an application
-    """
-    app.jinja_env.filters['clustersort'] = clustersort
+
+# unique Jinja filter cribbed from ansible,
+# https://github.com/ansible/ansible/blob/6787fc70a643fb6e2bdd2c6a6202072d21db72ef/lib/ansible/plugins/filter/mathstuff.py#L28
+#
+@app.template_filter()
+def unique(a):
+    if isinstance(a,collections.Hashable):
+        c = set(a)
+    else:
+        c = []
+        for x in a:
+            if x not in c:
+                c.append(x)
+    return c
+
+
