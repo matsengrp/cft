@@ -117,7 +117,7 @@ if not GetOption('no_exec'):
 def valid_fasta(f):
     ok = False
     for i,_ in enumerate(SeqIO.parse(str(f), "fasta")):
-        ok = i > 2
+        ok = i >= 2
         if ok:
             break
     return ok
@@ -173,7 +173,7 @@ for m in iter_meta(datapath):
     newick = senv.Command(
         [ os.path.join("$outdir", "fasttree.nwk") ],
         [ padn ],
-        "FastTree -quiet $SOURCE >$TARGET")
+        "FastTree -nt -quiet $SOURCE >$TARGET")
 
     # calculate list of sequences to be pruned
     pruned_ids = senv.Command(
