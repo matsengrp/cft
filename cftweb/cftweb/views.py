@@ -18,7 +18,8 @@ import getpass
 import hashlib
 from cStringIO import StringIO
 from jinja2 import Environment, FileSystemLoader
-from flask import render_template, abort, Response, redirect, url_for, request, g, jsonify
+from flask import render_template, abort, Response, url_for, request, g, jsonify
+from flask_breadcrumbs import register_breadcrumb
 
 from Bio.Seq import Seq
 from Bio import SeqIO
@@ -30,8 +31,9 @@ import filters
 
 @app.route('/index')
 @app.route("/")
+@register_breadcrumb(app, '.', 'Index')
 def index():
-    clusters = app.config['CLUSTERS']
+    clusters = app.config['CLUSTERS'].values()
     renderdict = {
         'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         'command': " ".join(sys.argv),
@@ -41,10 +43,11 @@ def index():
         'clusters': clusters
     }
 
-    return render_template('index.html', **renderdict)
+    return render_template('by_cluster.html', **renderdict)
 
 @app.route("/individuals.html")
-def individuals():
+@register_breadcrumb(app, '.', 'By Patient')
+def by_pid():
     clusters = app.config['CLUSTERS'].values()
     renderdict = {
         'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -57,8 +60,15 @@ def individuals():
 
     return render_template('by_pid.html', **renderdict)
 
+def pid_bc():
+    pid = request.view_args['pid']
+    return [{'text': pid, 'url': url_for('by_timepoint', pid=pid)}]
+
+
 @app.route("/<pid>/timepoints.html")
-def timepoints(pid):
+@register_breadcrumb(app, '.pid', '<ignored>',
+                     dynamic_list_constructor=pid_bc)
+def by_timepoint(pid):
     clusters = app.config['CLUSTERS'].values()
     clusters = [c for c in clusters if c.pid == pid]
     renderdict = {
@@ -73,8 +83,15 @@ def timepoints(pid):
 
     return render_template('by_timepoint.html', **renderdict)
 
+def timepoint_bc():
+    pid = request.view_args['pid']
+    timepoint = request.view_args['timepoint']
+    return [{'text': timepoint, 'url': url_for('by_seed', pid=pid, timepoint=timepoint)}]
+
 @app.route("/<pid>/<timepoint>/seeds.html")
-def seeds(pid, timepoint):
+@register_breadcrumb(app, '.pid.timepoint', '<ignored>',
+                     dynamic_list_constructor=timepoint_bc)
+def by_seed(pid, timepoint):
     clusters = app.config['CLUSTERS'].values()
     clusters = [c for c in clusters if c.pid == pid]
     clusters = [c for c in clusters if c.timepoint == timepoint]
@@ -93,7 +110,15 @@ def seeds(pid, timepoint):
 
     return render_template('by_seed.html', **renderdict)
 
+def seed_bc():
+    pid = request.view_args['pid']
+    timepoint = request.view_args['timepoint']
+    seedid = request.view_args['seedid']
+    return [{'text': seedid, 'url': url_for('by_seed', pid=pid, timepoint=timepoint, seedid=seedid)}]
+
 @app.route("/<pid>/<timepoint>/<seedid>/clusters.html")
+@register_breadcrumb(app, '.pid.timepoint.seed', '<ignored>',
+                     dynamic_list_constructor=seed_bc)
 def by_cluster(pid, timepoint, seedid):
     clusters = app.config['CLUSTERS'].values()
     clusters = [c for c in clusters if c.pid == pid]

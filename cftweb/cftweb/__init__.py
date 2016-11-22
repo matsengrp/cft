@@ -4,6 +4,7 @@ import itertools
 import logging
 import json
 from flask import Flask, g
+from flask_breadcrumbs import Breadcrumbs
 
 from cluster import Cluster
 
@@ -15,6 +16,8 @@ app = Flask(__name__)
 app.config.from_envvar('CFTWEB_SETTINGS')
 app.config['DEBUG'] = True
 
+# Initialize Flask-Breadcrumbs
+Breadcrumbs(app=app)
 
 # iterate through json files under`dir`
 def content_file_iterator(dir):

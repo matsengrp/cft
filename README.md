@@ -31,16 +31,18 @@ path.  You can also mimic these instructions using `virtualenv` and
 	$ source activate cft
 ```
 
-Now load the python packages.  Again these are mostly speciofic using
-`conda` commands, but you can do something similar with `pip`.
+Now load the python packages.  Again these are mostly specified using
+`conda` commands; `pip` is used if the package is not yet available
+via conda.
 
 ```
 	$ conda install pandas
 	$ conda install biopython
 	$ conda install flask
+	$ conda install nestly
 	$ conda install -c etetoolkit ete3 ete3_external_apps
 	$ pip install scons
-	$ pip install nestly
+	$ pip install flask-breadcrumbs
 ```
 
 Your mileage may vary, but I have found it necessary to 
