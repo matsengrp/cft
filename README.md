@@ -4,7 +4,9 @@ A pipeline for digesting partis clusters and inferring clonal family trees.
 
 * Input: FASTA file, partis clustering file
 * Intermediate step: tree building, which gets a per-clonal-family FASTA file, and an inferred naive sequence
-* Output: Trees and mutation maps
+* Output: Trees, mutation maps, and a summary `metadata.json`
+
+Additionally, the `cftweb` directory has a web application for serving up the results of these analyses as a web app.
 
 
 ## Setting up the environment
@@ -15,12 +17,10 @@ your virtual environment.
 
 ```
 	$ module use ~matsengrp/modules
-	$ module load phylip
-	$ module load seqmagick
-	$ module load FastTree
+	$ module load phylip seqmagick FastTree
 ```
 
-Now create a virtual environment.  These instructios assume you will
+Now create a virtual environment.  These instructions assume you will
 operating in a virtual environment using `conda`.  Use `module load
 matsengrp-anaconda` if the `conda` command is not available in your
 path.  You can also mimic these instructions using `virtualenv` and
@@ -54,3 +54,22 @@ installing `scons` and `nestly`.
 	$ source activate cft
 	$ hash -r
 ```
+
+## Running
+
+Build using `scons`.
+You can specify the datapath to be built using the `--datapath` flag.
+
+```
+scons --datapath path/to/yer/data/
+```
+
+Currently, all data is placed in an `output` subdirectory of your current working directory.
+
+Before exiting, the build will prompt you with the directions for how to execute the cftweb server given the output `metadata.json` file.
+This should look something like
+
+```
+cd cftweb && python -m cftweb -d output/metadata.json
+```
+
