@@ -4,9 +4,9 @@ import itertools
 import logging
 import json
 from flask import Flask, g
+from flask_breadcrumbs import Breadcrumbs
 
 from cluster import Cluster
-import filters
 
 import os.path
 os.environ['CFTWEB_SETTINGS'] = os.path.join(
@@ -16,6 +16,8 @@ app = Flask(__name__)
 app.config.from_envvar('CFTWEB_SETTINGS')
 app.config['DEBUG'] = True
 
+# Initialize Flask-Breadcrumbs
+Breadcrumbs(app=app)
 
 # iterate through json files under`dir`
 def content_file_iterator(dir):
@@ -28,8 +30,6 @@ def content_file_iterator(dir):
 # Initiate engine before the first request
 @app.before_first_request
 def before_first_request():
-    filters.register(app)
-
     options = app.config['OPTIONS']
 
     if options.dir:
