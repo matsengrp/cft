@@ -16,9 +16,22 @@ import time
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+
 import sys
-partis_path = '/home/dshaw/.local/partis/'
-sys.path.insert(1, partis_path + '/python')
+import textwrap
+
+
+partis_path = os.environ['PARTIS']
+if not partis_path or not os.path.exists(partis_path):
+    msh = """
+	Must set PARTIS_PATH to point to an `partis` installation.
+    You can clone the partis repo with,
+	    git clone --depth 1 git@github.com:psathyrella/partis.git
+		export  PARTIS=$PWD/partis
+    """
+    print(textwrap.dedent(msg))
+
+sys.path.insert(1, os.path.join(partis_path, 'python'))
 import utils
 import glutils
 
@@ -37,11 +50,11 @@ def parse_args():
     parser.add_argument(
         '--annotations',
         help='input cluster annotations csv',
-        type=existing_file)
+        type=existing_file, required=True)
     parser.add_argument(
         '--partition',
         help='input cluster partition csv',
-        type=existing_file)
+        type=existing_file, required=True)
     parser.add_argument(
         '--cluster_base',
         help='basename for clusters',
@@ -74,7 +87,7 @@ def parse_args():
 def calculate_cdr3_bounds(line, glfo):
     utils.process_input_line(line)
     line['v_gene'] = line['v_gene'].split('+')[0]
-    utils.add_implicit_info(glfo, line, existing_implicit_keys=('aligned_d_seqs', 'aligned_j_seqs', 'aligned_v_seqs', 'cdr3_length', 'naive_seq', 'in_frames', 'mutated_invariants', 'stops', 'mut_freqs'))
+    utils.add_implicit_info(glfo, line)
     return line['codon_positions']['v']
 
 
