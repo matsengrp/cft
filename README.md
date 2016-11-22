@@ -61,7 +61,7 @@ Build using `scons`.
 You can specify the datapath to be built using the `--datapath` flag.
 
 ```
-scons --datapath path/to/yer/data/
+scons --datapath=path/to/yer/data/
 ```
 
 Currently, all data is placed in an `output` subdirectory of your current working directory.
