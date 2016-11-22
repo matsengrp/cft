@@ -40,7 +40,8 @@ via conda.
 	$ conda install biopython
 	$ conda install flask
 	$ conda install nestly
-	$ conda install -c etetoolkit ete3 ete3_external_apps
+	$ conda install pyqt
+	$ pip install ete3
 	$ pip install scons
 	$ pip install flask-breadcrumbs
 ```
