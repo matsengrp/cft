@@ -25,20 +25,26 @@
     <![endif]-->
 
     <style>
-      .svg-container { 
-	display: inline-block;
-	position: relative;
-	width: 100%;
-	padding-bottom: 100%; 
-	vertical-align: middle; 
-	overflow: hidden; 
+    .ascii-art {
+      float: right;
+
+	    white-space: pre;
+	    font-family: monospace;
+	    overflow-x: scroll;
+    }
+    .sequence-tbl {
+      white-space: nowrap;
+	    font-family: monospace;
+	    overflow-x: scroll;
+    }
+    .vertical-center {
+      min-height: 100%;  /* Fallback for browsers do NOT support vh unit */
+      min-height: 100vh; /* These two lines are counted as one :-)       */
+      
+      display: flex;
+      align-items: center;
       }
-      .svg-content { 
-	display: inline-block;
-	position: absolute;
-	top: 0;
-	left: 0;
-}
+
     </style>
   </head>
 
@@ -82,8 +88,8 @@
       <!-- Page Header -->
       <div class="row">
         <div class="col-lg-12">
-          <h1 class="page-header">Page Heading
-            <small>Secondary Text</small>
+          <h1 class="page-header">
+            <small>{{cluster.newick}}</small>
           </h1>
         </div>
       </div>
@@ -92,12 +98,13 @@
       <!-- Projects Row -->
       <div class="row">
       	<div class="col-md-6" >
-	  <figure class="svg-container w80">
-	    {{svg|safe}}
-	  </figure>
+	  <div class="ascii-art">
+	    {{asciiart|safe}}
+	 </div>
 	</div>
-	<div class="col-md-6" style="overflow-x: scroll;">
-	  <table>
+	<div class="col-md-6" >
+	  <table class="sequence-tbl">
+	    <tr><td>&nbsp;</td></tr><tr><td>&nbsp;</td></tr>
 	    {%- for rec in records %}
 	    <tr><td>> {{rec.id}}</td><td>{{rec.seq}}</td></tr>
 	    {% endfor -%}

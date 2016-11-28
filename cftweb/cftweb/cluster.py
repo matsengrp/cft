@@ -15,7 +15,9 @@ import uuid
 import sys
 import json
 import pprint
+from ete3 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
 from jinja2 import Environment, FileSystemLoader
+from utils import iter_names_inorder, find_node, fake_seq
 
 from Bio.Seq import Seq
 from Bio import SeqIO
@@ -63,23 +65,34 @@ class Cluster(object):
     def __init__(self, data, dir):
         super(Cluster, self).__init__()
         self.__dict__.update(data)
+
+
+        # Paths that come in via json are relative to the directory in
+        # which the json file is found.  Make relative paths
+        # absolute so we can access these paths later.
+        #
+        # As the json format has evolved we have added more
+        # attributes.  Test for the presence of the attribute before
+        # accessing in case we are working with an older version of
+        # the json file.
+        
         self.svg = os.path.join(dir, self.svg) if hasattr(self, 'svg') else "'svg' json attribute missing"
-        self.tree = os.path.join(dir, self.tree) if hasattr(self,
-                                                            'tree') else "'tree' json attribute missing"
         self.fasta = os.path.join(dir, self.fasta) if hasattr(self,
                                                             'fasta') else "'fasta' json attribute missing"
+        self.newick = os.path.join(dir, self.newick) if hasattr(self,
+                                                            'newick') else "'newick' json attribute missing"
 
         # TEMPORARY HACK!
         #
         # We want to know the individual (patient) identifier, the
         # timepoint (when sampled), the seed sequence name, and the
         # gene name.  Ideally this would be explicitly provided in the
-        # json data, but instead we must extract it from any of the
+        # json data, but instead we must extract it from the
         # paths provided in the json data.
         #
         # Given a partial path like, "QA255.016-Vh/Hs-LN2-5RACE-IgG-new"
         # "QA255" 	- individual (patient) identification
-        # ".016" 	- seed sequence name
+        # "016" 	- seed sequence name
         # "Vh" 		- gene name.  Vh and Vk are the V heavy chain (IgG) vs. V kappa (there is also Vl which mean V lambda)
         # "LN2" 	- timepoint.  LN1 and LN2 are early timepoints and LN3 and LN4 are late timepoints.
         #
@@ -118,6 +131,12 @@ class Cluster(object):
         
         self.id = uuid.uuid4().hex
 
+        self.nseq = 0
+        with open(self.fasta, "rU") as fh:
+            self.nseq = len(list(SeqIO.parse(fh, 'fasta')))
+
+
+        
     def fasta(self):
         # return a string containing the fasta sequences
         fasta = ""
@@ -126,11 +145,21 @@ class Cluster(object):
         return fasta
 
     def sequences(self):
-        # return the sequences associated with this cluster
+        # return the sequences records associated with this cluster
         records = []
-        with open(self.fasta, "rU") as fh:
-            records = list(SeqIO.parse(fh, "fasta"))
+        with open(self.fasta, "rU") as fh: 
+            tree = self.tree()
+            record_dict = SeqIO.to_dict(SeqIO.parse(fh, "fasta"))
+            records = [record_dict[id] if id in record_dict else fake_seq() for id in iter_names_inorder(tree)]
         return records
+
+    def tree(self):
+        # return the sequences records associated with this cluster
+        tree = Tree(self.newick, format=1)
+        naive_node = find_node(tree, '.*naive.*')
+        if naive_node:
+            tree.set_outgroup(naive_node)
+        return tree
 
     def svgstr(self):
         # return the svg tree associated with this cluster

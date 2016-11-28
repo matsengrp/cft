@@ -82,38 +82,42 @@ def cmd_exists(cmd):
 
 # check if dependencies commands are available, but only if we aren't in a dry-run.
 if not GetOption('no_exec'):
+    # Exit if any of the prerequisites are missing.
+    msg = ""
     if not cmd_exists('dnaml'):
-        msg = '''
+        msg += '''
            Required dependency command, 
            `dnaml` not found on PATH
            Consider using,
                 $ module use ~matsengrp/modules
                 $ module load phylip
             '''
-        warn(msg)
-        sys.exit(1)
 
     if not cmd_exists('seqmagick'):
-        msg = '''
+        msg += '''
            Required dependency command, 
            `seqmagick` not found on PATH
            Consider using,
                 $ module load seqmagick
             '''
-        warn(msg)
-        sys.exit(1)
         
     if not cmd_exists('FastTree'):
-        msg = '''
+        msg += '''
            Required dependency command, 
            `FastTree` not found on PATH
            Consider using,
                 $ module load FastTree
             '''
+        
+    if len(msg):
         warn(msg)
         sys.exit(1)
 
 
+# Return True if `f` (scons File object) is a "valid" fasta file.
+# "valid" in this case means the file exists, is readable, has the expected fasta format, and
+# includes 2 or more sequences.
+# This test is necessary to filter out short fasta files that will cause `dnaml` to crash.
 def valid_fasta(f):
     ok = False
     for i,_ in enumerate(SeqIO.parse(str(f), "fasta")):
@@ -220,7 +224,8 @@ for m in iter_meta(datapath):
         [ # targets
             os.path.join("$outdir", "dnaml.svg"),
             os.path.join("$outdir", "dnaml.fa"),
-            os.path.join("$outdir", "dnaml.seedLineage.fa")
+            os.path.join("$outdir", "dnaml.seedLineage.fa"),
+            os.path.join("$outdir", "dnaml.newick")
         ],
         [dnaml],
         "xvfb-run -a bin/dnaml2tree.py --dnaml ${SOURCES[1]} --outdir ${TARGETS[0].dir} --basename dnaml")
@@ -228,6 +233,7 @@ for m in iter_meta(datapath):
     m['svg'] = os.path.relpath(str(svg[0]), senv.subst('${build}'))
     m['fasta'] = os.path.relpath(str(svg[1]), senv.subst('${build}'))
     m['seedlineage'] = os.path.relpath(str(svg[2]), senv.subst('${build}'))
+    m['newick'] = os.path.relpath(str(svg[3]), senv.subst('${build}'))
     del m['file']
     metadata.append(m)
     svgfiles.append(svg[0])
@@ -249,9 +255,9 @@ AlwaysBuild(metafile)
 import textwrap
 
 def print_hints(target, source, env):
-    msg = """
+    msg = """\
 		hint: to run the cft web interface,
-			$ cd cftweb && python -m cftweb -d {}
+			$ cd cftweb && python -m cftweb --file {}
 	""".format(os.path.abspath(str(source[0])))
     print(textwrap.dedent(msg))
 
