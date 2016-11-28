@@ -142,7 +142,7 @@ def by_cluster(pid, timepoint, seedid):
 
 
 @app.route("/cluster/<id>/overview.html")
-def cluster_page(id=None):
+def cluster_svgpage(id=None):
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
 
@@ -153,7 +153,6 @@ def cluster_page(id=None):
     }
 
     return render_template('cluster.html', **renderdict)
-
 
 @app.route("/cluster/<id>/tree.html")
 def cluster_tree(id=None):
@@ -181,9 +180,7 @@ def cluster_fasta(id=None):
 
     def to_fasta(seqs):
         fp = StringIO()
-        for seq in seqs:
-            record = SeqRecord(seq)
-            SeqIO.write(record, fp, 'fasta')
+        SeqIO.write(seqs, fp, 'fasta')
         return fp.getvalue()
 
     fasta = to_fasta(cluster.sequences())
@@ -206,3 +203,18 @@ def cluster_phylip(id=None):
     phylip = to_phylip(cluster.sequences())
 
     return Response(phylip, mimetype="application/octet-stream")
+
+@app.route("/cluster/<id>/asciiart.html")
+def cluster_page(id=None):
+    clusters = app.config['CLUSTERS']
+    cluster = clusters[id]
+
+    renderdict = {
+        'cluster': cluster,
+        'asciiart': cluster.tree().get_ascii(),
+        'records': cluster.sequences(),
+    }
+
+    return render_template('asciiart.html', **renderdict)
+
+

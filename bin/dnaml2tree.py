@@ -197,7 +197,8 @@ def main():
     tree = build_tree(sequences, parents)
     
     # reroot on germline outgroup, if available.
-    tree = reroot_tree(tree, '.*naive.*')
+    # [csw] don't reroot for now while we experiment with ascii-art trees.
+    # tree = reroot_tree(tree, '.*naive.*')
 
     # highlight lineage from seed to root.
     highlight_lineage(tree, 'seed.*')
@@ -209,7 +210,7 @@ def main():
 
     # write newick file
     fname = outbase + '.newick'
-    tree.write(format=1, outfile=fname)
+    tree.write(format=1, format_root_node=True, outfile=fname)
 
     # render tree SVG
     ts = TreeStyle()
