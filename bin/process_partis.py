@@ -24,7 +24,7 @@ import textwrap
 partis_path = os.environ.get('PARTIS')
 if not partis_path or not os.path.exists(partis_path):
     msg = """\
-    Must set PARTIS_PATH to point to an `partis` installation.
+    Must set environment variable PARTIS to point to an `partis` installation.
     You can clone the partis repo with,
         git clone --depth 1 git@github.com:psathyrella/partis.git
         export  PARTIS=$PWD/partis
@@ -97,7 +97,10 @@ def process_data(annot_file, part_file, chain):
     Melt data into dataframe from annotations and partition files
     """
 
-    seed_ids = pd.read_csv(part_file).loc[0]['seed_unique_id'].split(':')
+    seed_ids = []
+    part_df = pd.read_csv(part_file, converters={'seed_unique_id':str})
+    if 'seed_unique_id' in part_df.columns:
+        seed_ids = part_df.loc[0]['seed_unique_id'].split(':')
 
     #if args.select_clustering > 0:
     #    # we'll need to do a little poking at the partition file and to
