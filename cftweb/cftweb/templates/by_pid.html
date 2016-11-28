@@ -21,7 +21,8 @@ jQuery(document).ready(function($) {
 	<tr>
 	<th>Patient ID</th>
 	<th>timepoints</th>
-	<th>total clusters</th>
+	<th>seeds</th>
+	<th>clusters</th>
 	</tr>
       </thead>
       <tbody>
@@ -29,10 +30,15 @@ jQuery(document).ready(function($) {
 	{% for group in clusters|groupby('pid') %}
 	{% set tplist = group.list| map(attribute='timepoint')| list| unique -%}
 	{% set ntp = tplist | length -%}
+	{% set slist = group.list| map(attribute='seedid')| list| unique -%}
+	{% set ns = slist | length -%}
+	{% set nc = group.list | length -%}
 
 	<tr class='clickable-row' data-href='{{ url_for('by_timepoint', pid=group.grouper) }}'>
 	  <td>{{ group.grouper }}</td>
 	  <td>{{ ntp }} timepoint{{ "s" if ntp > 1 else ""}}</td>
+	  <td>{{ ns }} seed{{ "s" if ns > 1 else ""}}</td>
+	  <td>{{ nc }} cluster{{ "s" if nc > 1 else ""}}</td>
 	</tr>
 	{%-endfor-%}
       </tbody>

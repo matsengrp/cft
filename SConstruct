@@ -89,38 +89,42 @@ def cmd_exists(cmd):
 
 # check if dependencies commands are available, but only if we aren't in a dry-run.
 if not GetOption('no_exec'):
+    # Exit if any of the prerequisites are missing.
+    msg = ""
     if not cmd_exists('dnaml'):
-        msg = '''
+        msg += '''
            Required dependency command, 
            `dnaml` not found on PATH
            Consider using,
                 $ module use ~matsengrp/modules
                 $ module load phylip
             '''
-        warn(msg)
-        sys.exit(1)
 
     if not cmd_exists('seqmagick'):
-        msg = '''
+        msg += '''
            Required dependency command, 
            `seqmagick` not found on PATH
            Consider using,
                 $ module load seqmagick
             '''
-        warn(msg)
-        sys.exit(1)
         
     if not cmd_exists('FastTree'):
-        msg = '''
+        msg += '''
            Required dependency command, 
            `FastTree` not found on PATH
            Consider using,
                 $ module load FastTree
             '''
+        
+    if len(msg):
         warn(msg)
         sys.exit(1)
 
 
+# Return True if `f` (scons File object) is a "valid" fasta file.
+# "valid" in this case means the file exists, is readable, has the expected fasta format, and
+# includes 2 or more sequences.
+# This test is necessary to filter out short fasta files that will cause `dnaml` to crash.
 def valid_fasta(f):
     ok = False
     for i,_ in enumerate(SeqIO.parse(str(f), "fasta")):
@@ -193,6 +197,7 @@ def padn(outdir, c):
         c['cluster']['fasta'],
         "python bin/padseq.py  $SOURCE >$TARGET")
 
+# use fasttree to make newick tree from sequences
 @w.add_target()
 def newick(outdir, c):
     return env.Command(
@@ -200,6 +205,7 @@ def newick(outdir, c):
         c['padn'],
         "FastTree -nt -quiet $SOURCE > $TARGET")
 
+# calculate list of sequences to be pruned
 @w.add_target()
 def pruned_ids(outdir, c):
     return env.Command(
@@ -207,6 +213,7 @@ def pruned_ids(outdir, c):
         c['newick'],
         "python bin/prune.py $SOURCE > $TARGET")
 
+# prune out sequences to reduce taxa
 @w.add_target()
 def fasta(outdir, c):
     return env.Command(
@@ -230,6 +237,7 @@ def dnaml_config(outdir, c):
 
 @w.add_target()
 def dnaml(outdir, c):
+    "run dnaml (from phylip package) to create tree with inferred sequences at internal nodes"
     return env.Command(
         map(lambda x: path.join(outdir, x), ["outtree", "outfile", "dnaml.log"]),
         c['dnaml_config'],
@@ -241,15 +249,17 @@ def extended_metadata(metadata, dnaml_tree_tgt):
     m['svg'] = path.relpath(str(dnaml_tree_tgt[0]), outdir_base)
     m['fasta'] = path.relpath(str(dnaml_tree_tgt[1]), outdir_base)
     m['seedlineage'] = path.relpath(str(dnaml_tree_tgt[2]), outdir_base)
+    m['newick'] = path.relpath(str(dnaml_tree_tgt[3]), outdir_base)
     del m['file']
     return m
 
 @w.add_target()
 def dnaml_tree(outdir, c):
+    """parse dnaml output into fasta and newick files, and make SVG format tree with ETE package.
+    xvfb-run is needed because of issue https://github.com/etetoolkit/ete/issues/101"""
     tgt = env.Command(
-            [path.join(outdir, "dnaml.svg"),
-                path.join(outdir, "dnaml.fa"),
-                path.join(outdir, "dnaml.seedLineage.fa")],
+            map(lambda x: path.join(outdir, x),
+                ["dnaml.svg", "dnaml.fa", "dnaml.seedLineage.fa", "dnaml.newick"]),
             c['dnaml'],
             "xvfb-run -a bin/dnaml2tree.py --dnaml ${SOURCES[1]} --outdir ${TARGETS[0].dir} --basename dnaml")
     # Do aggregate work
@@ -273,16 +283,16 @@ def metadata(outdir, c):
         [path.join(outdir, "metadata.json")],
         c['svgfiles'],
         write_metadata(c['metadata']))
-    AlwaysBuild(tgt)
+    env.AlwaysBuild(tgt)
     return tgt
 
 import textwrap
 
 def print_hints(target, source, env):
-    msg = """
-        hint: to run the cft web interface,
-            $ cd cftweb && python -m cftweb -d {}
-    """.format(path.abspath(str(source[0])))
+    msg = """\
+		hint: to run the cft web interface,
+			$ cd cftweb && python -m cftweb --file {}
+	""".format(os.path.abspath(str(source[0])))
     print(textwrap.dedent(msg))
 
 @w.add_target()
@@ -291,7 +301,7 @@ def hints(outdir, c):
         None,
         c['metadata'],
         print_hints)
-    AlwaysBuild(hints)
+    env.AlwaysBuild(hints)
     return hints
 
 
