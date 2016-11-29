@@ -1,23 +1,13 @@
 {% extends "base.jinja" %}
 {% block page_css %}
   <style>
+    .alnviz-col {
+      overflow-x: scroll;
+    }
     .ascii-art {
-      float: right;
-
+      /* float: right; */
 	    white-space: pre;
 	    font-family: monospace;
-	    overflow-x: scroll;
-    }
-    .sequence-tbl {
-      white-space: nowrap;
-	    font-family: monospace;
-	    overflow-x: scroll;
-    }
-    .vertical-center {
-      min-height: 100%;  /* Fallback for browsers do NOT support vh unit */
-      min-height: 100vh; /* These two lines are counted as one :-)       */
-      display: flex;
-      align-items: center;
     }
 
   </style>
@@ -34,20 +24,24 @@
 {% block content %}
 
 <div class="row">
-  <div class="col-md-6" >
+  <div class="alnviz-col col-md-6">
     <div class="ascii-art">
       {{asciiart|safe}}
     </div>
   </div>
-  <div class="col-md-6" >
-    <table class="sequence-tbl">
-      <tr><td>&nbsp;</td></tr><tr><td>&nbsp;</td></tr>
-      {%- for rec in records %}
-      <!-- Note... this extra carot is intentional... -->
-      {% endfor %}
-      <tr><td> > {{rec.id}}</td><td>{{rec.seq}}</td></tr>
-      {% endfor -%}
-    </table>
+  <div class="alnviz-col col-md-1">
+    <div>&nbsp;</div><div>&nbsp;</div>
+    {% for rec in records %}
+    <div class="ascii-art"> &gt; {{rec.id}} </div>
+    {% endfor %}
+    <div>&nbsp;</div>
+  </div>
+  <div class="alnviz-col col-md-5">
+    <div>&nbsp;</div><div>&nbsp;</div>
+    {% for rec in records %}
+    <div class="ascii-art"> {{rec.seq}} </div>
+    {% endfor %}
+    <div>&nbsp;</div>
   </div>
 </div>
 
