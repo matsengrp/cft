@@ -1,8 +1,15 @@
 {% extends "base.jinja" %}
 {% block page_css %}
   <style>
-    .alnviz-col {
+    .col-container {
+      width: 100%;
+    }
+    .scrollable {
       overflow-x: scroll;
+    }
+    .resizable {
+      resize: horizontal;
+      float: left;
     }
     .ascii-art {
       /* float: right; */
@@ -23,20 +30,20 @@
 
 {% block content %}
 
-<div class="row">
-  <div class="alnviz-col col-md-6">
+<div class="col-container">
+  <div class="scrollable resizable" style="width: 35%;">
     <div class="ascii-art">
       {{asciiart|safe}}
     </div>
   </div>
-  <div class="alnviz-col col-md-1">
+  <div class="scrollable resizable" style="width: 10%;">
     <div>&nbsp;</div><div>&nbsp;</div>
     {% for rec in records %}
     <div class="ascii-art"> &gt; {{rec.id}} </div>
     {% endfor %}
     <div>&nbsp;</div>
   </div>
-  <div class="alnviz-col col-md-5">
+  <div class="scrollable" style="width: auto;">
     <div>&nbsp;</div><div>&nbsp;</div>
     {% for rec in records %}
     <div class="ascii-art"> {{rec.seq}} </div>
