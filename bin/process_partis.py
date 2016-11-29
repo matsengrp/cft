@@ -162,24 +162,19 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition):
 
     regex = re.compile(r'^(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
     m = regex.match('/'.join(fname.split('/')[-3:-1]))
+    meta = {}
     if m:
-        meta = {
-            'pid': m.group('pid'),
-            'seedid': m.group('seedid'),
-            'gene': m.group('gene'),
-            'timepoint': m.group('timepoint')
-            }
-    else:
-        meta = {
-            'pid': None,
-            'seedid': None,
-            'gene': None,
-            'timepoint': None
-            }
+        meta = m.groupdict()
+
+    def merge_two_dicts(x, y):
+        '''Given two dicts, merge them into a new dict as a shallow copy.'''
+        z = x.copy()
+        z.update(y)
+        return z
 
     def jsonify(df, cluster_id, mod_date, cluster_base, meta):
         data = df.iloc[0]
-        return {
+        return merge_two_dicts({
             'file': cluster_base+cluster_id+'.fa',
             'cluster_id': cluster_id,
             'v_gene': data['v_gene'],
@@ -187,16 +182,12 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition):
             'j_gene': data['j_gene'],
             'cdr3_length': data['cdr3_length'],
             'cdr3_start': data['cdr3_start'],
-            'pid': meta['pid'],
-            'seedid': meta['seedid'],
-            'gene': meta['gene'],
-            'timepoint': meta['timepoint'],
             'seed': data['seed_ids'],
             'has_seed': str(data['has_seed']),
             'last_modified': time.ctime(mod_date),
             'annotation_file': annotations,
             'partition_file': partition
-        }
+        }, meta)
 
     arr = [jsonify(g, k, mod_date, cluster_base, meta) \
             for k,g in df.groupby(['cluster'])]
