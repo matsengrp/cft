@@ -41,9 +41,9 @@ import glutils
 def parse_args():
 
     def existing_file(fname):
-        '''
+        """
         Argparse type for an existing file
-        '''
+        """
         if not os.path.isfile(fname):
             raise ValueError('Invalid file: ' + str(fname))
         return fname
@@ -158,7 +158,7 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition):
     #
     # This currently will only work if the output files are spat into a directory
     # of the form"/path/to/output/QA255.016-Vh/Hs-LN2-5RACE-IgG-new/*.fa"
-    # Otherwise entries will be empty.
+    # Otherwise no new fields will be added.
 
     regex = re.compile(r'^(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
     m = regex.match('/'.join(fname.split('/')[-3:-1]))
@@ -166,11 +166,13 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition):
     if m:
         meta = m.groupdict()
 
-    def merge_two_dicts(x, y):
-        '''Given two dicts, merge them into a new dict as a shallow copy.'''
-        z = x.copy()
-        z.update(y)
-        return z
+    def merge_two_dicts(dict1, dict2):
+        """
+        Merge two dictionaries into a copy
+        """
+        merged_dict = dict1.copy()
+        merged_dict.update(dict2)
+        return merged_dict
 
     def jsonify(df, cluster_id, mod_date, cluster_base, meta):
         data = df.iloc[0]
