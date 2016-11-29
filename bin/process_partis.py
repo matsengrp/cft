@@ -13,6 +13,7 @@ import os.path
 import itertools
 import json
 import time
+import re
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
@@ -141,10 +142,42 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition):
     Write metatdata to json file from dataframe
     """
 
-    # this currently only works for output obtained from heavy
-    # chain data
+    # We want to know the individual (patient) identifier, the
+    # timepoint (when sampled), the seed sequence name, and the
+    # gene name.  Ideally this would be explicitly provided in the
+    # json data, but instead we must extract it from the
+    # paths provided in the json data.
+    #
+    # Given a partial path like, "QA255.016-Vh/Hs-LN2-5RACE-IgG-new"
+    # "QA255"       - individual (patient) identification
+    # "016"         - seed sequence name
+    # "Vh"          - gene name.  Vh and Vk are the V heavy chain (IgG) vs. V kappa (there is also Vl which mean V lambda)
+    # "LN2"         - timepoint.  LN1 and LN2 are early timepoints and LN3 and LN4 are late timepoints.
+    #
+    # "Hs-LN2-5RACE-IgG-new" is the name of the sequencing run,
+    #
+    # This currently will only work if the output files are spat into a directory
+    # of the form"/path/to/output/QA255.016-Vh/Hs-LN2-5RACE-IgG-new/*.fa"
+    # Otherwise entries will be empty.
 
-    def jsonify(df, cluster_id, mod_date, cluster_base):
+    regex = re.compile(r'^(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
+    m = regex.match('/'.join(fname.split('/')[-3:-1]))
+    if m:
+        meta = {
+            'pid': m.group('pid'),
+            'seedid': m.group('seedid'),
+            'gene': m.group('gene'),
+            'timepoint': m.group('timepoint')
+            }
+    else:
+        meta = {
+            'pid': None,
+            'seedid': None,
+            'gene': None,
+            'timepoint': None
+            }
+
+    def jsonify(df, cluster_id, mod_date, cluster_base, meta):
         data = df.iloc[0]
         return {
             'file': cluster_base+cluster_id+'.fa',
@@ -154,6 +187,10 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition):
             'j_gene': data['j_gene'],
             'cdr3_length': data['cdr3_length'],
             'cdr3_start': data['cdr3_start'],
+            'pid': meta['pid'],
+            'seedid': meta['seedid'],
+            'gene': meta['gene'],
+            'timepoint': meta['timepoint'],
             'seed': data['seed_ids'],
             'has_seed': str(data['has_seed']),
             'last_modified': time.ctime(mod_date),
@@ -161,7 +198,8 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition):
             'partition_file': partition
         }
 
-    arr = [jsonify(g, k, mod_date, cluster_base) for k,g in df.groupby(['cluster'])]
+    arr = [jsonify(g, k, mod_date, cluster_base, meta) \
+            for k,g in df.groupby(['cluster'])]
     with open(fname, 'wb') as outfile:
         json.dump(arr,
                   outfile,
