@@ -2,11 +2,14 @@
 
 A pipeline for digesting partis clusters and inferring clonal family trees.
 
+[![wercker status](https://app.wercker.com/status/73265f18b3a63457ecbc79018da52162/s/master "wercker status")](https://app.wercker.com/project/byKey/73265f18b3a63457ecbc79018da52162)
+
 * Input: FASTA file, partis clustering file
 * Intermediate step: tree building, which gets a per-clonal-family FASTA file, and an inferred naive sequence
 * Output: Trees, mutation maps, and a summary `metadata.json`
 
-Additionally, the `cftweb` directory has a web application for serving up the results of these analyses as a web app.
+Additionally, the `cftweb` directory has a web application for serving
+up the results of these analyses in your browser.
 
 
 ## Setting up the environment

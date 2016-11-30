@@ -68,26 +68,12 @@ outdir_base = 'output'
 #env['build'] = 'output'
 
 
-
-def cmd_exists(cmd):
-    return subprocess.call("type " + cmd, shell=True, 
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env['ENV']) == 0
-
-# check if  tools are available, but only if we aren't in a dry-run.
-if not GetOption('no_exec') and not cmd_exists('process_partis.py'):
-    msg = '''
-    `process_partis.py` not found on PATH
-    '''
-    print(msg)
-    sys.exit(1)
-
-
 # 
 def cmd_exists(cmd):
     return subprocess.call("type " + cmd, shell=True, 
         stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
 
-# check if dependencies commands are available, but only if we aren't in a dry-run.
+# check if dependencies are available, but only if we aren't in a dry-run.
 if not GetOption('no_exec'):
     # Exit if any of the prerequisites are missing.
     msg = ""
@@ -115,12 +101,13 @@ if not GetOption('no_exec'):
            Consider using,
                 $ module load FastTree
             '''
-        
+    # if we are missing any prerequisites, print a message and exit
     if len(msg):
         warn(msg)
         sys.exit(1)
 
 
+        
 # Return True if `f` (scons File object) is a "valid" fasta file.
 # "valid" in this case means the file exists, is readable, has the expected fasta format, and
 # includes 2 or more sequences.
@@ -238,11 +225,10 @@ def dnaml_config(outdir, c):
 @w.add_target()
 def dnaml(outdir, c):
     "run dnaml (from phylip package) to create tree with inferred sequences at internal nodes"
-    return env.Command(
+    return env.SRun(
         map(lambda x: path.join(outdir, x), ["outtree", "outfile", "dnaml.log"]),
         c['dnaml_config'],
-        ['srun --time=30 --chdir=' + outdir + ' --output=${TARGETS[2]} dnaml < $SOURCE',
-            Wait("${TARGETS[1]}")])
+        'cd ' + outdir + ' && dnaml < ${SOURCE.file} >${TARGETS[2].file}')
 
 def extended_metadata(metadata, dnaml_tree_tgt):
     m = copy.copy(metadata)

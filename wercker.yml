@@ -1,0 +1,81 @@
+
+box: continuumio/miniconda
+
+# comment
+build:
+  steps:
+    # add github to known hosts
+    # see https://github.com/wercker/support/issues/223#issuecomment-223513004
+    # see https://github.com/wercker/step-add-to-known_hosts
+    - add-to-known_hosts:
+        hostname: github.com
+        fingerprint: 16:27:ac:a5:76:28:2d:36:63:1b:56:4d:eb:df:a6:48
+        type: rsa
+
+    # Build the phylip tools so we can use dnaml.
+    # first we need to install the C compiler...
+    - install-packages:
+        packages: build-essential xvfb FastTree
+
+    # scripts expect fasttree to be in CamelCase.
+    - script:
+        name: Fixup FastTree
+        code: |
+          ln -s /usr/bin/fasttree /usr/bin/FastTree
+
+    # download and build phylip sources.
+    - script:
+        name: Build dnaml
+        code: |
+          wget http://evolution.gs.washington.edu/phylip/download/phylip-3.696.tar.gz
+          tar xzf phylip-3.696.tar.gz && rm phylip-3.696.tar.gz
+          make -C phylip-3.696/src -f Makefile.unx install EXEDIR=/usr/bin
+
+    # now install the other python dependencies
+    - script:
+        name: Install dependencies
+        code: |
+          conda config --add channels conda-forge 
+          conda config --add channels bioconda
+          conda install pandas biopython flask nestly pyqt
+          conda install pip
+          pip install seqmagick
+          pip install ete3 scons flask-breadcrumbs
+
+    # fetch a copy of partis; the pipeline references partis files
+    # when parsing partis output
+    - script:
+        name: Install sourcecode dependencies
+        code: |
+          git clone --depth 1 https://github.com/psathyrella/partis.git
+          export PARTIS=$PWD/partis
+
+
+    # Run Dave's script to parse some sample partis data.
+    # The annotation and partition sample data was copied and renamed from
+    # in the partis repo.
+    # https://github.com/psathyrella/partis/blob/master/test/reference-results/partition-new-simu-cluster-annotations.csv
+    # https://github.com/psathyrella/partis/blob/master/test/reference-results/partition-new-simu.csv
+    - script:
+        name: convert from partis output....
+        code: |
+          bin/process_partis.py \
+             --annotations sampledata/QW333.043-Vk/Hs-LN2-5RACE-IgG-new-cluster-annotations.csv \
+             --partition sampledata/QW333.043-Vk/Hs-LN2-5RACE-IgG-new.csv \
+             --output_dir output_post_partis
+
+    # Run SCons on the output from the previous step
+    # The SConstruct script will product files under "output/"
+    - script:
+        name: run pipeline to prepare data for web site
+        code: |
+          scons --datapath=output_post_partis
+
+    # The next step if you wanted to seed the output on a web server
+    # would be to run the cftweb Flask app,
+    # 	cd cftweb && python -m cftweb --file=../output/metadata.json
+    
+deploy:
+  steps:
+    # There are no deployment steps yet.  Theoretically you would copy
+    # the output to a server that is hosting your web site.
