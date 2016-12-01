@@ -86,11 +86,20 @@ def parse_args():
     return parser.parse_args()
 
 
-def calculate_cdr3_bounds(line, glfo):
+def calculate_bounds(line, glfo):
+    """
+    Calculate index of cdr3 region as well as start and end index
+    for v, d and j genes.
+
+    For light chains, partis outputs bounds for the d region as a zero-length
+    set of bounds starting and ending at the same place (i.e., absent any indels
+    this will mean the v region ends where the j region begins).
+    """
+
     utils.process_input_line(line)
     line['v_gene'] = line['v_gene'].split('+')[0]
     utils.add_implicit_info(glfo, line)
-    return line['codon_positions']['v']
+    return line['codon_positions']['v'], line['regional_bounds']
 
 
 def process_data(annot_file, part_file, chain):
@@ -131,7 +140,12 @@ def process_data(annot_file, part_file, chain):
         current_df['j_gene'] = cluster['j_gene']
         current_df['cdr3_length'] = str(cluster['cdr3_length'])
         current_df['seed_ids'] = ':'.join(seed_ids)
-        current_df['cdr3_start'] = calculate_cdr3_bounds(cluster.to_dict(), glfo)
+        cdr3, region_bounds = \
+                calculate_bounds(cluster.to_dict(), glfo)
+        current_df['cdr3_start'] = cdr3
+        for gene in 'vdj':
+            for pos in ['start', 'end']:
+                current_df[gene+'_'+pos] = region_bounds[gene][pos.startswith('e')]
         output_df = pd.concat([output_df, current_df])
 
     return output_df
@@ -174,14 +188,21 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition):
         merged_dict.update(dict2)
         return merged_dict
 
+
     def jsonify(df, cluster_id, mod_date, cluster_base, meta):
         data = df.iloc[0]
         return merge_two_dicts({
             'file': cluster_base+cluster_id+'.fa',
             'cluster_id': cluster_id,
             'v_gene': data['v_gene'],
+            'v_start': data['v_start'],
+            'v_end': data['v_end'],
             'd_gene': data['d_gene'],
+            'd_start': data['d_start'],
+            'd_end': data['d_end'],
             'j_gene': data['j_gene'],
+            'j_start': data['j_start'],
+            'j_end': data['j_end'],
             'cdr3_length': data['cdr3_length'],
             'cdr3_start': data['cdr3_start'],
             'seed': data['seed_ids'],
