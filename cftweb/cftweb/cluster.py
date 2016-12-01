@@ -17,7 +17,7 @@ import json
 import pprint
 from ete3 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
 from jinja2 import Environment, FileSystemLoader
-from utils import iter_names_inorder, find_node, fake_seq
+from utils import iter_names_inorder, find_node, fake_seq, sort_tree
 
 from Bio.Seq import Seq
 from Bio import SeqIO
@@ -154,11 +154,12 @@ class Cluster(object):
         return records
 
     def tree(self):
-        # return the sequences records associated with this cluster
+        # return ETE tree structure arranged to seed node to the right of all other nodes
         tree = Tree(self.newick, format=1)
         naive_node = find_node(tree, '.*naive.*')
         if naive_node:
             tree.set_outgroup(naive_node)
+        sort_tree(tree, direction=1, predicate=lambda n: 'seed' in n.name)
         return tree
 
     def svgstr(self):
