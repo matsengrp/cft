@@ -5,7 +5,17 @@
 
 /* Move down content because we have a fixed navbar that is 50px tall */
 body {
-  padding-top: 50px;
+  padding-top: 80px;
+}
+
+div.breadcrumbs {
+  margin: 10px 0 15px;
+}
+
+div.build-info {
+  /*background-color: #f9fafc;*/
+  margin-top: 50px;
+  padding-bottom: 20px;
 }
 
 
