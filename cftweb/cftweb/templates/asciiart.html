@@ -16,7 +16,24 @@
 	    white-space: pre;
 	    font-family: monospace;
     }
-
+    span.Vgene {
+      background-color: lightgreen
+    }
+    span.N {
+      background-color: lightgray
+    }
+    span.Dgene {
+      background-color: plum
+    }
+    span.Jgene {
+      background-color: lightblue
+    }
+    span.mutation {
+      color: red
+    }
+    span.CDR3 {
+      font-weight: bold
+    }
   </style>
 {% endblock %}
 
@@ -46,7 +63,7 @@
   <div class="scrollable" style="width: auto;">
     <div>&nbsp;</div><div>&nbsp;</div>
     {% for rec in records %}
-    <div class="ascii-art"> {{rec.seq}} </div>
+    <div class="ascii-art"> {{rec.seq | annotate(cluster) | safe}} </div>
     {% endfor %}
     <div>&nbsp;</div>
   </div>
