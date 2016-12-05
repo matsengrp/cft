@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+set -eux
+shopt -s nullglob
+
+usage() { echo "Usage: $0 <datapath>" 1>&2; exit 1; }
+
+while getopts ":o:" o; do
+    case "${o}" in
+        o)
+            outdir=${OPTARG}
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+shift $((OPTIND-1))
+
+# path where we expect to find the seed directories
+# containing processed partis outpout.
+datapath=${1}
+if [ -z ${datapath} ] || [ ! -d ${datapath} ]; then
+    usage
+fi
+
+# add the current directory to the path.
+# we expect to find process_partis.py
+SCRIPTPATH="$( cd "$(dirname "$0")" >/dev/null ; pwd -P )"
+PATH="${SCRIPTPATH}:${PATH}"
+
+
+outdir="${outdir:-postpartis_out}"
+
+>badfiles
+
+# Separate fasta files for each cluster
+annot_files=($(find ${datapath} -type f -name '*-cluster-annotations.csv'))
+
+for afile in  ${annot_files[@]}
+do
+    # make sure annotation and partition files are both readable.
+    pfile="${afile/%-cluster-annotations.csv/.csv}"
+    if [ -r "${afile}" ] && [ -r "${pfile}" ]; then
+	seed="${afile%/*}"
+	seed="${seed##*/}"
+	basename="${afile##*/}"
+	basename="${basename%-cluster-annotations.csv}"
+	cmd="process_partis.py \
+	       --annotations ${afile} \
+	       --partition ${pfile} \
+	       --cluster_base cluster \
+	       --output_dir ${outdir}/$seed/$basename \
+	       --separate \
+	       --chain \"${seed: -1}\""
+
+	eval ${cmd} || echo "${cmd}" | sed 's/[ \t]\+/ /g' >>badfiles
+	
+    fi
+done
+

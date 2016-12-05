@@ -1,0 +1,23 @@
+# systemd init script for cftweb container.
+#
+# Based on documentation found at
+# https://docs.docker.com/engine/admin/host_integration/#/systemd
+#
+# If you intend to use this as a system service, put this file in the /etc/systemd/system directory,
+# e.g. /etc/systemd/system/docker-cftweb-server.service.
+#
+
+
+[Unit]
+Description=cftweb container
+Requires=docker.service
+After=docker.service
+
+[Service]
+Restart=always
+ExecStart=/usr/bin/docker run -p 5000:5000 -v /home/cftweb/output:/home/cftweb/data --name cftweb_server cftweb
+ExecStop=/usr/bin/docker stop -t 2 cftweb_server
+ExecStopPost=/usr/bin/docker rm -f cftweb_server
+
+[Install]
+WantedBy=default.target
