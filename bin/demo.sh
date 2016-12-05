@@ -14,7 +14,7 @@ which process_partis.py
 # note you can override this with an environment variable,
 #    datapath="/my/home" demo.sh
 
-datapath="${datapath:-/fh/fast/matsen_e/cwarth/seeds}"
+datapath="${datapath:-/fh/fast/matsen_e/processed-data/partis/kate-qrs-2016-09-09/seeds}"
 outdir="${outdir:-output}"
 
 
@@ -37,13 +37,14 @@ do
 	basename="${basename%-cluster-annotations.csv}"
 	
 	partition=${path}/${basename}.csv
+	logfile=${path}/${basename}.log
 	process_partis.py \
 	       --annotations ${annotation} \
 	       --partition ${partition} \
+	       --partis_log ${logfile} \
 	       --cluster_base cluster \
 	       --output_dir ${outdir}/$seed/$basename \
-	       --separate \
-           --chain "${seed: -1}"
+	       --separate
     done
 done
 
