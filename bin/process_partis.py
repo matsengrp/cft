@@ -78,6 +78,7 @@ def parse_args():
     parser.add_argument(
         '--chain',
         help='type of chain data used (h, k, l)',
+        type=str.lower,
         default='h')
     #parser.add_argument('--select_clustering', dest='select_clustering',
     #        help='choose a row from partition file for a different cluster',
