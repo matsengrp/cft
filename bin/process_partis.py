@@ -58,6 +58,10 @@ def parse_args():
         help='input cluster partition csv',
         type=existing_file, required=True)
     parser.add_argument(
+        '--partis_log',
+        help='log file containing relevant information about partis run',
+        type=existing_file, required=True)
+    parser.add_argument(
         '--cluster_base',
         help='basename for clusters',
         default='cluster')
@@ -75,6 +79,8 @@ def parse_args():
         action='store_true',
         help='output to per-cluster fasta files',
         default=False)
+    # deprecated. now obtained from log file, which contains function call,
+    # which further contains chain information
     parser.add_argument(
         '--chain',
         help='type of chain data used (h, k, l)',
@@ -98,12 +104,40 @@ def calculate_bounds(line, glfo):
     """
 
     utils.process_input_line(line)
-    line['v_gene'] = line['v_gene'].split('+')[0]
     utils.add_implicit_info(glfo, line)
     return line['codon_positions']['v'], line['regional_bounds']
 
 
-def process_data(annot_file, part_file, chain):
+def process_log_file(log_file):
+    """
+    Get function call from log file that will include information about
+    location of inferred germlines, which chain we're using, etc.
+    """
+
+    with open(log_file, 'r') as partis_log:
+        # function call is on the third line of the log file
+        for i, line in enumerate(partis_log):
+            if i == 2:
+                call = line
+            elif i > 2:
+                break
+
+    call_args = call.split()
+    # chain and location of inferred germlines
+    if '--parameter-dir' in call_args:
+        params = [call_args[1+call_args.index(cmd_arg)] \
+                for cmd_arg in ['--chain', '--parameter-dir']]
+        # inferred germlines are in hmm directory
+        params[1] += '/hmm/germline-sets'
+    else:
+        # use IMGT germlines if no cached parameters provided
+        params = [call_args[1+call_args.index('--chain')]]
+        params.append(partis_path + '/data/germlines/human')
+
+    return params
+
+
+def process_data(annot_file, part_file, chain, glpath):
     """
     Melt data into dataframe from annotations and partition files
     """
@@ -123,7 +157,7 @@ def process_data(annot_file, part_file, chain):
 
     output_df = pd.DataFrame()
     annotations = pd.read_csv(annot_file, dtype=object)
-    glfo = glutils.read_glfo(partis_path + '/data/germlines/human', chain=chain)
+    glfo = glutils.read_glfo(glpath, chain=chain)
     for idx, cluster in annotations.fillna('').iterrows():
         current_df = pd.DataFrame()
         seq_ids = cluster['unique_ids'].split(':')
@@ -269,9 +303,12 @@ def main():
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
+    chain, inferred_gls = process_log_file(args.partis_log)
+
     melted_annotations = process_data(args.annotations,
                                       args.partition,
-                                      args.chain)
+                                      chain,
+                                      inferred_gls)
 
     write_separate_fasta(melted_annotations,
                          args.output_dir,
