@@ -79,13 +79,6 @@ def parse_args():
         action='store_true',
         help='output to per-cluster fasta files',
         default=False)
-    # deprecated. now obtained from log file, which contains function call,
-    # which further contains chain information
-    parser.add_argument(
-        '--chain',
-        help='type of chain data used (h, k, l)',
-        type=str.lower,
-        default='h')
     #parser.add_argument('--select_clustering', dest='select_clustering',
     #        help='choose a row from partition file for a different cluster',
     #        default=0, type=int)
@@ -114,13 +107,9 @@ def process_log_file(log_file):
     location of inferred germlines, which chain we're using, etc.
     """
 
+    # function call is first line of log file
     with open(log_file, 'r') as partis_log:
-        # function call is on the third line of the log file
-        for i, line in enumerate(partis_log):
-            if i == 2:
-                call = line
-            elif i > 2:
-                break
+        call = partis_log.readline()
 
     call_args = call.split()
     # chain and location of inferred germlines
