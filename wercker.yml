@@ -62,7 +62,7 @@ build:
           bin/process_partis.py \
              --annotations sampledata/QW333.043-Vh/Hs-LN2-5RACE-IgG-new-cluster-annotations.csv \
              --partition sampledata/QW333.043-Vh/Hs-LN2-5RACE-IgG-new.csv \
-             --output_dir output_post_partis --chain'h'
+             --output_dir output_post_partis --chain 'h'
 
     # Run SCons on the output from the previous step
     # The SConstruct script will product files under "output/"
