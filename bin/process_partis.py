@@ -152,7 +152,8 @@ def process_data(annot_file, part_file, chain, glpath):
         seq_ids = cluster['unique_ids'].split(':')
         unique_ids = [('seed_' if seq_id in seed_ids else '')+seq_id for seq_id in seq_ids]
         unique_ids.append('naive'+str(idx))
-        current_df['unique_ids'] = unique_ids
+        # sometimes we'll have duplicate headers???
+        current_df['unique_ids'] = list(set(unique_ids))
         seqs = cluster['seqs'].split(':')
         seqs.append(cluster['naive_seq'])
         current_df['seqs'] = seqs
