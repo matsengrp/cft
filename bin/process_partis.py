@@ -152,9 +152,10 @@ def process_data(annot_file, part_file, chain, glpath):
         seq_ids = cluster['unique_ids'].split(':')
         unique_ids = [('seed_' if seq_id in seed_ids else '')+seq_id for seq_id in seq_ids]
         unique_ids.append('naive'+str(idx))
-        # sometimes we'll have duplicate headers???
+        # sometimes we'll have duplicate IDs, which is a no-no for
+        # FastTree, so we'll group them together with set()
         current_df['unique_ids'] = list(set(unique_ids))
-        seqs = cluster['seqs'].split(':')
+        seqs = list(set(cluster['seqs'].split(':')))
         seqs.append(cluster['naive_seq'])
         current_df['seqs'] = seqs
         current_df['cluster'] = str(idx)
