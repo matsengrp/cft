@@ -47,6 +47,43 @@
 
 {% block content %}
 
+<table class="table table-striped">
+  <tbody>
+    <tr>
+      <th>Patient ID</th>
+      <td>{{ cluster.pid }}</td>
+    </tr>
+    <tr>
+      <th>Timepoint</th>
+      <td>{{ cluster.timepoint }}</td>
+    </tr>
+    <tr>
+      <th>Seed</th>
+      <td>{{ cluster.seed }}</td>
+    </tr>
+    <tr>
+      <th>V-gene</th>
+      <td>{{ cluster.v_gene }}</td>
+    </tr>
+    <tr>
+      <th>D-gene</th>
+      <td>{{ cluster.d_gene }}</td>
+    </tr>
+    <tr>
+      <th>J-gene</th>
+      <td>{{ cluster.j_gene }}</td>
+    </tr>
+    <tr>
+      <th>Sequences</th>
+      <td>{{ cluster.nseq }}</td>
+    </tr>
+    <tr>
+      <th>Download</th>
+      <td><a href='{{ url_for('cluster_fasta', id=cluster.id) }}'>Fasta</a></td>
+    </tr>
+  </tbody>
+</table>
+
 <div class="col-container">
   <div class="scrollable resizable" style="width: 35%;">
     <div class="ascii-art">
