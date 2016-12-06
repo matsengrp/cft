@@ -98,9 +98,9 @@ class Cluster(object):
         #
         # "Hs-LN2-5RACE-IgG-new" is the name of the sequencing run,
         # 
-
+        # "Hs-LN4-5RACE-IgK-100k/QB850.043-Vk/cluster4/dnaml.seedLineage.fa"
         path = self.seedlineage
-        regex = re.compile(r'^(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
+        regex = re.compile(r'^Hs-(?P<timepoint>[^-]*)-[^/]*/(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/')
         m = regex.match(path)
         if m:
             self.pid = m.group('pid')
