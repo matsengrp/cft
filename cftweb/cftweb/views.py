@@ -29,35 +29,28 @@ from Bio.Alphabet import IUPAC
 from cftweb import app
 import filters
 
+def base_renderdict(updates={}):
+    renderdict = {'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            'command': " ".join(sys.argv),
+            'workdir': os.getcwd(),
+            'user': getpass.getuser()}
+    renderdict.update(updates)
+    return renderdict
+
+
 @app.route('/index')
 @app.route("/")
 @register_breadcrumb(app, '.', 'Index')
 def index():
     clusters = app.config['CLUSTERS'].values()
-    renderdict = {
-        'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        'command': " ".join(sys.argv),
-        'workdir': os.getcwd(),
-        'user': getpass.getuser(),
-        'title': 'CFT Cluster Visualization',
-        'clusters': clusters
-    }
-
+    renderdict = base_renderdict({'clusters': clusters})
     return render_template('by_cluster.html', **renderdict)
 
 @app.route("/individuals.html")
 @register_breadcrumb(app, '.', 'By Patient')
 def by_pid():
     clusters = app.config['CLUSTERS'].values()
-    renderdict = {
-        'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        'command': " ".join(sys.argv),
-        'workdir': os.getcwd(),
-        'user': getpass.getuser(),
-        'title': 'CFT Cluster Visualization',
-        'clusters': clusters
-    }
-
+    renderdict = base_renderdict({'clusters': clusters})
     return render_template('by_pid.html', **renderdict)
 
 def pid_bc():
@@ -71,16 +64,9 @@ def pid_bc():
 def by_timepoint(pid):
     clusters = app.config['CLUSTERS'].values()
     clusters = [c for c in clusters if c.pid == pid]
-    renderdict = {
+    renderdict = base_renderdict({
         'pid' : pid,
-        'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        'command': " ".join(sys.argv),
-        'workdir': os.getcwd(),
-        'user': getpass.getuser(),
-        'title': 'CFT Cluster Visualization',
-        'clusters': clusters
-    }
-
+        'clusters': clusters})
     return render_template('by_timepoint.html', **renderdict)
 
 def timepoint_bc():
@@ -95,19 +81,10 @@ def by_seed(pid, timepoint):
     clusters = app.config['CLUSTERS'].values()
     clusters = [c for c in clusters if c.pid == pid]
     clusters = [c for c in clusters if c.timepoint == timepoint]
-
-    renderdict = {
+    renderdict = base_renderdict({
         'pid' : pid,
         'timepoint' : timepoint,
-
-        'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        'command': " ".join(sys.argv),
-        'workdir': os.getcwd(),
-        'user': getpass.getuser(),
-        'title': 'CFT Cluster Visualization',
-        'clusters': clusters
-    }
-
+        'clusters': clusters})
     return render_template('by_seed.html', **renderdict)
 
 def seed_bc():
@@ -125,18 +102,11 @@ def by_cluster(pid, timepoint, seedid):
     clusters = [c for c in clusters if c.timepoint == timepoint]
     clusters = [c for c in clusters if c.seedid == seedid]
 
-    renderdict = {
+    renderdict = base_renderdict({
         'pid' : pid,
         'timepoint' : timepoint,
         'seedid' : seedid,
-
-        'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        'command': " ".join(sys.argv),
-        'workdir': os.getcwd(),
-        'user': getpass.getuser(),
-        'title': 'CFT Cluster Visualization',
-        'clusters': clusters
-    }
+        'clusters': clusters})
 
     return render_template('by_cluster.html', **renderdict)
 
@@ -146,11 +116,10 @@ def cluster_svgpage(id=None):
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
 
-    renderdict = {
-        'id': id,
+    renderdict = base_renderdict({
+        'id' : id,
         'svg': cluster.svgstr(),
-        'records': cluster.sequences(),
-    }
+        'records': cluster.sequences()})
 
     return render_template('cluster.html', **renderdict)
 
@@ -158,7 +127,7 @@ def cluster_svgpage(id=None):
 def cluster_tree(id=None):
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
-    renderdict = {'svg': cluster.svgstr(), }
+    renderdict = base_renderdict({'svg': cluster.svgstr()})
 
     return render_template('tree.html', **renderdict)
 
@@ -168,7 +137,7 @@ def cluster_sequences(id=None):
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
 
-    renderdict = {'records': cluster.sequences(), }
+    renderdict = base_renderdict({'records': cluster.sequences()})
 
     return render_template('sequences.html', **renderdict)
 
@@ -209,11 +178,10 @@ def cluster_page(id=None):
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
 
-    renderdict = {
+    renderdict = base_renderdict({
         'cluster': cluster,
         'asciiart': cluster.tree().get_ascii(),
-        'records': cluster.sequences(),
-    }
+        'records': cluster.sequences()})
 
     return render_template('asciiart.html', **renderdict)
 
