@@ -59,21 +59,56 @@ installing `scons` and `nestly`.
 	$ hash -r
 ```
 
-## Running
-
-Build using `scons`.
-You can specify the datapath to be built using the `--datapath` flag.
+Finally, you'll have to have partis installed somewhere in order to execute `bin/process_partis.py` (via the `bin/demo.sh` script; see below).
+If you have partis installed somewhere on your `PATH` already, you should be good to go.
+If not, you can simply clone the partis repo and set the `PARTIS` environment variable so `process_partis.py` knows where to find things.
 
 ```
-scons --datapath=path/to/yer/data/
+git clone --depth 1 git@github.com:psathryella/partis.git
+export PARTIS=$PWD/partis
+```
+
+## Running
+
+Running comes in three phases.
+
+### Process partis output
+
+First we execute the `process_partis.py` sciprt via `bin/demo.sh`.
+This takes the output from partis and does some pre-processing on the data, splitting clusters up into separate repositories.
+
+You'll need to specify an output directory for this intermediate data using the `outdir` environment variable.
+Additionally, you'll likely need to specify the input `datapath` (there is a default, but there's a good chance it will be stale...).
+
+```
+datapath=path/to/yer/data/ outdir=processpartis-output ./bin/demo.sh
+```
+
+### Running scons
+
+The rest of the build process will be executed using `scons`.
+This builds trees out of each of the clusters, and does ancestral state reconstructions using these trees.
+
+You can specify the `datapath` used as the outdir in the last step by using the `--datapath` flag.
+
+```
+scons --datapath=processpartis-output
 ```
 
 Currently, all data is placed in an `output` subdirectory of your current working directory.
 
+### Running the CFT web server
+
+To actually consume the fruits of our labor, we need to fire up the CFT web server, which will provide us with a web interface for exploring the data.
+
 Before exiting, the build will prompt you with the directions for how to execute the cftweb server given the output `metadata.json` file.
-This should look something like
+This should look something like:
 
 ```
-cd cftweb && python -m cftweb -d output/metadata.json
+cd cftweb && python -m cftweb --file /path/to/output/metadata.json
 ```
+
+The default port is `5000`.
+If someone else is running the web server on the same machine (or something else using that port), you can set a different one using the `-P` flag.
+
 
