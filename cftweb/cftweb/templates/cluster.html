@@ -1,137 +1,151 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends "base.jinja" %}
+{% block page_css %}
+  <style>
+    .col-container {
+      width: 100%;
+    }
+    .scrollable {
+      overflow-x: scroll;
+    }
+    .resizable {
+      resize: horizontal;
+      float: left;
+    }
+    .ascii-art {
+      /* float: right; */
+	    white-space: pre;
+	    font-family: monospace;
+    }
+    span.Vgene {
+      background-color: #b2d28e
+    }
+    span.N {
+      background-color: #8fbbd9
+    }
+    span.Dgene {
+      background-color: #ecaf80
+    }
+    span.Jgene {
+      background-color: #aba7d4
+    }
+    span.mutation {
+      color: red
+    }
+    span.CDR3 {
+      font-weight: bold
+    }
 
-  <head>
+  </style>
+{% endblock %}
 
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-
-    <title>2 Col Portfolio - Start Bootstrap Template</title>
-
-    <!-- Bootstrap Core CSS -->
-    <link href="{{url_for('static', filename='css/bootstrap.min.css')}}" rel="stylesheet">
-
-    <!-- Custom CSS -->
-    <link href="{{url_for('static', filename='css/2-col-portfolio.css')}}" rel="stylesheet">
-
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-    <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-    <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-
-    <style>
-      .svg-container { 
-	display: inline-block;
-	position: relative;
-	width: 100%;
-	padding-bottom: 100%; 
-	vertical-align: middle; 
-	overflow: hidden; 
-      }
-      .svg-content { 
-	display: inline-block;
-	position: absolute;
-	top: 0;
-	left: 0;
-}
-    </style>
-  </head>
-
-  <body>
-
-    <!-- Navigation -->
-    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-      <div class="container">
-        <!-- Brand and toggle get grouped for better mobile display -->
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="#">Start Bootstrap</a>
-        </div>
-        <!-- Collect the nav links, forms, and other content for toggling -->
-        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-          <ul class="nav navbar-nav">
-            <li>
-              <a href="#">About</a>
-            </li>
-            <li>
-              <a href="#">Services</a>
-            </li>
-            <li>
-              <a href="#">Contact</a>
-            </li>
-          </ul>
-        </div>
-        <!-- /.navbar-collapse -->
-      </div>
-      <!-- /.container -->
-    </nav>
-
-    <!-- Page Content -->
-    <div class="container-fluid">
-
-      <!-- Page Header -->
-      <div class="row">
-        <div class="col-lg-12">
-          <h1 class="page-header">Page Heading
-            <small>Secondary Text</small>
-          </h1>
-        </div>
-      </div>
-      <!-- /.row -->
-
-      <!-- Projects Row -->
-      <div class="row">
-      	<div class="col-md-6" >
-	  <figure class="svg-container w80">
-	    {{svg|safe}}
-	  </figure>
-	</div>
-	<div class="col-md-6" style="overflow-x: scroll;">
-	  <table>
-	    {%- for rec in records %}
-	    <tr><td>> {{rec.id}}</td><td>{{rec.seq}}</td></tr>
-	    {% endfor -%}
-	  </table>
-	</div>
-      </div>
-      <!-- /.row -->
+  <!-- TODO Need to add this crap somewhere still probably... -->
+  <!--<head>-->
+    <!--<meta http-equiv="X-UA-Compatible" content="IE=edge">-->
+    <!--[> Custom CSS <]-->
+    <!--<link href="{{url_for('static', filename='css/2-col-portfolio.css')}}" rel="stylesheet">-->
+  <!--</head>-->
 
 
-      <hr>
+{% block script %}
 
-      <!-- /.row -->
+{% endblock %}
 
-      <hr>
 
-      <!-- Footer -->
-      <footer>
-        <div class="row">
-          <div class="col-lg-12">
-            <p>Copyright &copy; Your Website 2014</p>
-          </div>
-        </div>
-        <!-- /.row -->
-      </footer>
+{% block content %}
 
+<div class="row">
+  <div class="col-md-6">
+    <table class="table table-striped">
+      <tbody>
+        <tr>
+          <th>Patient ID</th>
+          <td>{{ cluster.pid }}</td>
+        </tr>
+        <tr>
+          <th>Timepoint</th>
+          <td>{{ cluster.timepoint }}</td>
+        </tr>
+        <tr>
+          <th>Seed</th>
+          <td>{{ cluster.seed }}</td>
+        </tr>
+        <tr>
+          <th>V-gene</th>
+          <td>{{ cluster.v_gene }}</td>
+        </tr>
+        <tr>
+          <th>D-gene</th>
+          <td>{{ cluster.d_gene }}</td>
+        </tr>
+        <tr>
+          <th>J-gene</th>
+          <td>{{ cluster.j_gene }}</td>
+        </tr>
+        <tr>
+          <th>Sequences</th>
+          <td>{{ cluster.nseq }}</td>
+        </tr>
+        <tr>
+          <th>Download</th>
+          <td><a href='{{ url_for('cluster_fasta', id=cluster.id) }}'>Fasta</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div>
+  <strong>View mode:</strong>
+  &nbsp;
+  <!-- This is rather fricking ridiculous, but it works -->
+  <span class="display-toggle">ASCII</span>
+  <a href="#" class="view-mode-toggle display-toggle" style="display: none;">ASCII</a>
+  &nbsp;
+  <span class="display-toggle" style="display: none;">SVG</span>
+  <a href="#" class="view-mode-toggle display-toggle">SVG</a>
+</div>
+
+<div class="row display-toggle" style="display: none;">
+  <div class="col-md-12" style="overflow-x: scroll;">
+    <figure class="svg-container w80">
+      {{ svg | safe }}
+    </figure>
+  </div>
+</div>
+
+<div class="col-container display-toggle">
+  <div class="scrollable resizable" style="width: 35%;">
+    <div class="ascii-art">
+      {{asciiart|safe}}
     </div>
-    <!-- /.container -->
+  </div>
+  <div class="scrollable resizable" style="width: 10%;">
+    <div>&nbsp;</div><div>&nbsp;</div>
+    {% for rec in records %}
+    <div class="ascii-art"> &gt; {{rec.id}} </div>
+    {% endfor %}
+    <div>&nbsp;</div>
+  </div>
+  <div class="scrollable" style="width: auto;">
+    <div>&nbsp;</div><div>&nbsp;</div>
+    {% for rec in records %}
+    <div class="ascii-art"> {{rec.seq | annotate(cluster) | safe}} </div>
+    {% endfor %}
+    <div>&nbsp;</div>
+  </div>
+</div>
 
-    <!-- jQuery -->
-    <script src="{{url_for('static', filename='js/jquery.js')}}"></script>
+<script type="text/javascript">
+console.log("hello from outside");
+$(function() {
+    console.log("Hello world");
+    $(".view-mode-toggle").click(function() {
+      console.log("Toggling view mode");
+      $(".display-toggle").toggle();
+      });
+    });
+</script>
 
-    <!-- Bootstrap Core JavaScript -->
-    <script src="{{url_for('static', filename='js/bootstrap.min.js')}}"></script>
 
-  </body>
+{% endblock %}
 
-</html>
