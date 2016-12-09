@@ -34,6 +34,7 @@
     span.CDR3 {
       font-weight: bold
     }
+
   </style>
 {% endblock %}
 
@@ -45,46 +46,74 @@
   <!--</head>-->
 
 
+{% block script %}
+
+{% endblock %}
+
+
 {% block content %}
 
-<table class="table table-striped">
-  <tbody>
-    <tr>
-      <th>Patient ID</th>
-      <td>{{ cluster.pid }}</td>
-    </tr>
-    <tr>
-      <th>Timepoint</th>
-      <td>{{ cluster.timepoint }}</td>
-    </tr>
-    <tr>
-      <th>Seed</th>
-      <td>{{ cluster.seed }}</td>
-    </tr>
-    <tr>
-      <th>V-gene</th>
-      <td>{{ cluster.v_gene }}</td>
-    </tr>
-    <tr>
-      <th>D-gene</th>
-      <td>{{ cluster.d_gene }}</td>
-    </tr>
-    <tr>
-      <th>J-gene</th>
-      <td>{{ cluster.j_gene }}</td>
-    </tr>
-    <tr>
-      <th>Sequences</th>
-      <td>{{ cluster.nseq }}</td>
-    </tr>
-    <tr>
-      <th>Download</th>
-      <td><a href='{{ url_for('cluster_fasta', id=cluster.id) }}'>Fasta</a></td>
-    </tr>
-  </tbody>
-</table>
+<div class="row">
+  <div class="col-md-6">
+    <table class="table table-striped">
+      <tbody>
+        <tr>
+          <th>Patient ID</th>
+          <td>{{ cluster.pid }}</td>
+        </tr>
+        <tr>
+          <th>Timepoint</th>
+          <td>{{ cluster.timepoint }}</td>
+        </tr>
+        <tr>
+          <th>Seed</th>
+          <td>{{ cluster.seed }}</td>
+        </tr>
+        <tr>
+          <th>V-gene</th>
+          <td>{{ cluster.v_gene }}</td>
+        </tr>
+        <tr>
+          <th>D-gene</th>
+          <td>{{ cluster.d_gene }}</td>
+        </tr>
+        <tr>
+          <th>J-gene</th>
+          <td>{{ cluster.j_gene }}</td>
+        </tr>
+        <tr>
+          <th>Sequences</th>
+          <td>{{ cluster.nseq }}</td>
+        </tr>
+        <tr>
+          <th>Download</th>
+          <td><a href='{{ url_for('cluster_fasta', id=cluster.id) }}'>Fasta</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
-<div class="col-container">
+<div>
+  <strong>View mode:</strong>
+  &nbsp;
+  <!-- This is rather fricking ridiculous, but it works -->
+  <span class="display-toggle">ASCII</span>
+  <a href="#" class="view-mode-toggle display-toggle" style="display: none;">ASCII</a>
+  &nbsp;
+  <span class="display-toggle" style="display: none;">SVG</span>
+  <a href="#" class="view-mode-toggle display-toggle">SVG</a>
+</div>
+
+<div class="row display-toggle" style="display: none;">
+  <div class="col-md-12" style="overflow-x: scroll;">
+    <figure class="svg-container w80">
+      {{ svg | safe }}
+    </figure>
+  </div>
+</div>
+
+<div class="col-container display-toggle">
   <div class="scrollable resizable" style="width: 35%;">
     <div class="ascii-art">
       {{asciiart|safe}}
@@ -105,6 +134,18 @@
     <div>&nbsp;</div>
   </div>
 </div>
+
+<script type="text/javascript">
+console.log("hello from outside");
+$(function() {
+    console.log("Hello world");
+    $(".view-mode-toggle").click(function() {
+      console.log("Toggling view mode");
+      $(".display-toggle").toggle();
+      });
+    });
+</script>
+
 
 {% endblock %}
 
