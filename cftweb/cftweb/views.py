@@ -53,10 +53,11 @@ def by_pid():
     renderdict = base_renderdict({'clusters': clusters})
     return render_template('by_pid.html', **renderdict)
 
+
+
 def pid_bc():
     pid = request.view_args['pid']
     return [{'text': pid, 'url': url_for('by_timepoint', pid=pid)}]
-
 
 @app.route("/<pid>/timepoints.html")
 @register_breadcrumb(app, '.pid', '<ignored>',
@@ -68,6 +69,8 @@ def by_timepoint(pid):
         'pid' : pid,
         'clusters': clusters})
     return render_template('by_timepoint.html', **renderdict)
+
+
 
 def timepoint_bc():
     pid = request.view_args['pid']
@@ -86,6 +89,8 @@ def by_seed(pid, timepoint):
         'timepoint' : timepoint,
         'clusters': clusters})
     return render_template('by_seed.html', **renderdict)
+
+
 
 def seed_bc():
     pid = request.view_args['pid']
@@ -111,35 +116,22 @@ def by_cluster(pid, timepoint, seedid):
     return render_template('by_cluster.html', **renderdict)
 
 
-@app.route("/cluster/<id>/overview.html")
-def cluster_svgpage(id=None):
+
+@app.route("/cluster/<id>/cluster.html")
+def cluster_page(id=None):
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
+
+    view_mode = request.args.get('view_mode', 'ascii')
 
     renderdict = base_renderdict({
-        'id' : id,
-        'svg': cluster.svgstr(),
-        'records': cluster.sequences()})
+        'cluster': cluster,
+        'records': cluster.sequences(),
+        'view_mode': view_mode,
+        'asciiart': cluster.tree().get_ascii(),
+        'svg': cluster.svgstr()})
 
     return render_template('cluster.html', **renderdict)
-
-@app.route("/cluster/<id>/tree.html")
-def cluster_tree(id=None):
-    clusters = app.config['CLUSTERS']
-    cluster = clusters[id]
-    renderdict = base_renderdict({'svg': cluster.svgstr()})
-
-    return render_template('tree.html', **renderdict)
-
-
-@app.route("/cluster/<id>/sequences.html")
-def cluster_sequences(id=None):
-    clusters = app.config['CLUSTERS']
-    cluster = clusters[id]
-
-    renderdict = base_renderdict({'records': cluster.sequences()})
-
-    return render_template('sequences.html', **renderdict)
 
 
 @app.route("/download/fasta/<id>.fa")
@@ -172,17 +164,4 @@ def cluster_phylip(id=None):
     phylip = to_phylip(cluster.sequences())
 
     return Response(phylip, mimetype="application/octet-stream")
-
-@app.route("/cluster/<id>/asciiart.html")
-def cluster_page(id=None):
-    clusters = app.config['CLUSTERS']
-    cluster = clusters[id]
-
-    renderdict = base_renderdict({
-        'cluster': cluster,
-        'asciiart': cluster.tree().get_ascii(),
-        'records': cluster.sequences()})
-
-    return render_template('asciiart.html', **renderdict)
-
 
