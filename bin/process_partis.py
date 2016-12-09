@@ -107,23 +107,48 @@ def process_log_file(log_file):
     location of inferred germlines, which chain we're using, etc.
     """
 
-    # function call is first line of log file
+    # assumes function call is first line of log file
+    # eventually i think duncan wants to append "CALL" or something like it
+    # to the function call so it can be reliably searched for.
+    # but for now we'll assume it's the first line, which it is.
     with open(log_file, 'r') as partis_log:
         call = partis_log.readline()
 
     call_args = call.split()
-    # chain and location of inferred germlines
-    if '--parameter-dir' in call_args:
-        params = [call_args[1+call_args.index(cmd_arg)] \
-                for cmd_arg in ['--chain', '--parameter-dir']]
-        # inferred germlines are in hmm directory
-        params[1] += '/hmm/germline-sets'
-    else:
-        # use IMGT germlines if no cached parameters provided
-        params = [call_args[1+call_args.index('--chain')]]
-        params.append(partis_path + '/data/germlines/human')
+    if not any([list_item.startswith('--') for list_item in call_args]):
+        # if there are command line arguments in the first line then
+        # it is probably a command. otherwise this won't have any good
+        # information for us.
+        raise Exception('First line of provided log file not a valid partis command: {}'.format(call))
 
-    return params
+    if not '--chain' in call_args:
+        # default to heavy chain
+        chain = 'h'
+    else:
+        chain = call_args[1+call_args.index('--chain')]
+
+    if not '--parameter-dir' in call_args:
+        # currently we use IMGT germlines if no cached parameters provided.
+        # we have no other way of getting this information since it's printed
+        # to stdout if it's not provided. should we assume it's always
+        # provided?
+        inferred_gls = partis_path + '/data/germlines/human'
+    else:
+        inferred_gls = call_args[1+call_args.index('--parameter-dir')] + \
+                '/hmm/germline-sets'
+
+    # if the parameter file is not an absolute path then we don't know where
+    # to look since we don't know where partis was run from!
+    # so for now we'll spit an error
+    if not os.path.isabs(inferred_gls):
+        raise ValueError('Parameter directory must be an absolute path: ' \
+                + str(inferred_gls))
+
+    # even if the path is absolute it might have been deleted...
+    if not os.path.isdir(inferred_gls):
+        raise ValueError('Invalid parameter directory: ' + str(inferred_gls))
+
+    return chain, inferred_gls
 
 
 def process_data(annot_file, part_file, chain, glpath):
