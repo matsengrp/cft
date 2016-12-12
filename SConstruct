@@ -163,10 +163,8 @@ def iter_meta(datapath):
 nest = Nest()
 w = SConsWrap(nest, outdir_base, alias_environment=env)
 
-# TODO These should now be aggregates now
-#metadata = []
-#svgfiles = []
 
+# We'll be building up these aggregates in order to spit out our final metadata.json file, the ultimate target of this repo
 w.add_aggregate('metadata', list)
 w.add_aggregate('svgfiles', list)
 
@@ -231,6 +229,7 @@ def dnaml(outdir, c):
         'cd ' + outdir + ' && dnaml < ${SOURCE.file} >${TARGETS[2].file}')
 
 def extended_metadata(metadata, dnaml_tree_tgt):
+    "Add dnaml_tree target(s) as metadata to the given metadata dict; used prior to metadata write."
     m = copy.copy(metadata)
     m['svg'] = path.relpath(str(dnaml_tree_tgt[0]), outdir_base)
     m['fasta'] = path.relpath(str(dnaml_tree_tgt[1]), outdir_base)
