@@ -50,7 +50,7 @@ class Cluster(object):
         array = []
         print("fromfile attempting to open {}".format(filename))
         try:
-            dir = os.path.dirname(filename)
+            dir = os.path.abspath(os.path.dirname(filename))
             with open(filename, 'rb') as fp:
                 print("fromfile reading {}".format(filename))
                 array = json.load(fp)
@@ -75,12 +75,19 @@ class Cluster(object):
         # attributes.  Test for the presence of the attribute before
         # accessing in case we are working with an older version of
         # the json file.
-        
+        #
+        # Should really trigger a warning if any of these things happens...
+
         self.svg = os.path.join(dir, self.svg) if hasattr(self, 'svg') else "'svg' json attribute missing"
         self.fasta = os.path.join(dir, self.fasta) if hasattr(self,
                                                             'fasta') else "'fasta' json attribute missing"
         self.newick = os.path.join(dir, self.newick) if hasattr(self,
                                                             'newick') else "'newick' json attribute missing"
+        self.seedlineage = os.path.join(dir, self.seedlineage) if hasattr(self,
+                                                            'seedlineage') else "'seedlineage' json attribute missing"
+
+        # Make sure that has_seed is a boolean attribute
+        self.has_seed = self.has_seed == 'True'
 
         # TEMPORARY HACK!
         #
@@ -99,7 +106,8 @@ class Cluster(object):
         # "Hs-LN2-5RACE-IgG-new" is the name of the sequencing run,
         # 
         # "Hs-LN4-5RACE-IgK-100k/QB850.043-Vk/cluster4/dnaml.seedLineage.fa"
-        path = self.seedlineage
+        # Note; using the data seedlineage here since we've made the self.seedlineage absolute in path
+        path = data['seedlineage']
         regex = re.compile(r'^Hs-(?P<timepoint>[^-]*)-[^/]*/(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/')
         m = regex.match(path)
         if m:
@@ -175,3 +183,5 @@ class Cluster(object):
     def seeds(self):
         # return the set of seed sequences (if any ) associated with this cluster.
         pass
+
+

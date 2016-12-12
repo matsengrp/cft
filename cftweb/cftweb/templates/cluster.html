@@ -86,9 +86,22 @@
           <td>{{ cluster.nseq }}</td>
         </tr>
         <tr>
-          <th>Download</th>
-          <td><a href='{{ url_for('cluster_fasta', id=cluster.id) }}'>Fasta</a></td>
+          <th>Has seed?</th>
+          <td>{{ cluster.has_seed }}</td>
         </tr>
+        <tr>
+          <th>All sequences</th>
+          <td>
+            <a href='{{ url_for('cluster_fasta', id=cluster.id) }}'>Fasta</a> &nbsp;
+            <a href='{{ url_for('cluster_phylip', id=cluster.id) }}'>Phylip</a>
+          </td>
+        </tr>
+        {% if cluster.has_seed %}
+        <tr>
+          <th>Seed lineage</th>
+          <td><a href='{{ url_for('seedlineage_fasta', id=cluster.id) }}'>Fasta</a></td>
+        </tr>
+        {% endif %}
       </tbody>
     </table>
   </div>
@@ -97,7 +110,9 @@
 <div>
   <strong>View mode:</strong>
   &nbsp;
-  <!-- This is rather fricking ridiculous, but it works -->
+  <!-- This is rather fricking ridiculous, but it works; The idea is that these toggles toggle not only the views,
+     but themselves as well, since they all have the view-mode-toggle class. This is the sort of ridiculous stateful
+     crap we have to resort to without doing something like React. -->
   <span class="display-toggle">ASCII</span>
   <a href="#" class="view-mode-toggle display-toggle" style="display: none;">ASCII</a>
   &nbsp;
