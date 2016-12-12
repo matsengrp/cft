@@ -12,22 +12,22 @@ from __future__ import print_function
 import os
 import sys
 
-import cluster
+#import cluster
 import datetime
 import getpass
-import hashlib
+import flask
 from cStringIO import StringIO
-from jinja2 import Environment, FileSystemLoader
-from flask import render_template, abort, Response, url_for, request, g, jsonify
+from flask import render_template, Response, url_for, request
 from flask_breadcrumbs import register_breadcrumb
 
-from Bio.Seq import Seq
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
-from Bio.Alphabet import IUPAC
 
 from cftweb import app
 import filters
+
+# annoying error indicator hack; semantically irrelevant; need to load filters for filters to be loaded somewhere in html templates
+_ = filters
 
 def base_renderdict(updates={}):
     renderdict = {'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -45,6 +45,7 @@ def index():
     clusters = app.config['CLUSTERS'].values()
     renderdict = base_renderdict({'clusters': clusters})
     return render_template('by_cluster.html', **renderdict)
+
 
 @app.route("/individuals.html")
 @register_breadcrumb(app, '.', 'By Patient')
@@ -139,6 +140,7 @@ def cluster_fasta(id=None):
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
 
+    # It would probably be better just to transmit the self.fasta attr...
     def to_fasta(seqs):
         fp = StringIO()
         SeqIO.write(seqs, fp, 'fasta')
@@ -153,7 +155,7 @@ def cluster_phylip(id=None):
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
 
-    def to_phylip(seq):
+    def to_phylip(seqs):
         fp = StringIO()
         for seq in seqs:
             seq = seq.replace('.', '-')
@@ -164,4 +166,13 @@ def cluster_phylip(id=None):
     phylip = to_phylip(cluster.sequences())
 
     return Response(phylip, mimetype="application/octet-stream")
+
+
+@app.route("/download/fasta/<id>.seedlineage.fa")
+def seedlineage_fasta(id=None):
+    clusters = app.config['CLUSTERS']
+    cluster = clusters[id]
+
+    return flask.send_file(cluster.seedlineage)
+
 
