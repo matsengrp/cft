@@ -34,6 +34,7 @@ import sys
 import subprocess
 import copy
 import glob
+import functools
 
 from os import path
 from warnings import warn
@@ -167,6 +168,39 @@ w = SConsWrap(nest, outdir_base, alias_environment=env)
 # We'll be building up these aggregates in order to spit out our final metadata.json file, the ultimate target of this repo
 w.add_aggregate('metadata', list)
 w.add_aggregate('svgfiles', list)
+
+
+# TODO; fon't forget to pop seed now instead of cluster at the end
+# TODO; also note that now we're passing datapath as the parent with `seeds` dir so need to change README
+
+test_seeds = ["QB850.424-Vk", "QB850.043-Vk"]
+def seeds_fn(datapath):
+    return os.listdir(path.join(datapath, 'seeds'))
+# You can use this to toggle a small testset vs the entire data set
+seeds = test_seeds
+
+w.add('seed', seeds)
+
+@w.add_target()
+def partitions(outdir, c):
+    return path.join(datapath, 'seeds', c['seed'], 'partition.csv')
+
+def partitions(datapath, c):
+    # This 'seeds' thing here is potentially a bad assumption...
+    glob.glob(path.join(datapath, 'seeds', c['seed'], "*-plus-*.csv"))
+
+
+def path_base_root(full_path):
+    return path.splitext(path.basename(full_path))[0]
+
+
+w.add('partition', functools.partial(partitions(datapath)), label_func=path_base_root)
+
+
+#@w.add_target()
+#def process_partis(outdir, c):
+    #return env.Command(path.join(outdir, 'metadata.json')
+        #)
 
 
 # Our first nest; By metadata file
