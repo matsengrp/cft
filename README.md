@@ -68,6 +68,13 @@ git clone --depth 1 git@github.com:psathryella/partis.git
 export PARTIS=$PWD/partis
 ```
 
+### Running partis
+
+At the moment, this part of the pipeline doesn't require running partis at all.
+If it becomes necessary to do this in the future, you will need to make sure you actually have a fully built partis in your `$PARTIS` dir, as well as all of it's prerequisites installed.
+See `$PARTIS/README.md` for instructions on this.
+
+
 ## Running
 
 Running comes in three phases.
@@ -110,5 +117,6 @@ cd cftweb && python -m cftweb --file /path/to/output/metadata.json
 
 The default port is `5000`.
 If someone else is running the web server on the same machine (or something else using that port), you can set a different one using the `-P` flag.
+
 
 
