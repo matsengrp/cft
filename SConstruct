@@ -246,17 +246,26 @@ def dnaml_tree(outdir, c):
             map(lambda x: path.join(outdir, x),
                 ["dnaml.svg", "dnaml.fa", "dnaml.seedLineage.fa", "dnaml.newick"]),
             c['dnaml'],
-            "xvfb-run -a bin/dnaml2tree.py --dnaml ${SOURCES[1]} --outdir ${TARGETS[0].dir} --basename dnaml")
+            "- xvfb-run -a bin/dnaml2tree.py --dnaml ${SOURCES[1]} --outdir ${TARGETS[0].dir} --basename dnaml")
     # Do aggregate work
     c['svgfiles'].append(tgt[0])
     m = extended_metadata(c['cluster'], tgt)
     c['metadata'].append(m)
     return tgt
 
+def tgt_exists(tgt):
+    p = str(tgt)
+    exists = path.exists(p)
+    if not exists:
+        print("Path doesn't exist:", p)
+    return exists
+
 def write_metadata(metadata):
     def build_fn(target, source, env):
+        # Filter out the seeds with clusters that didn't compute through dnaml2tree.py
+        good_metadata = map(lambda x: x[1], filter(lambda x: tgt_exists(x[0]), zip(source, metadata)))
         with open(str(target[0]), "w") as fh:
-            json.dump(metadata, fh, sort_keys=True,
+            json.dump(good_metadata, fh, sort_keys=True,
                            indent=4, separators=(',', ': '))
     return build_fn
 
