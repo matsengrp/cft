@@ -14,44 +14,52 @@ which process_partis.py
 # note you can override this with an environment variable,
 #    datapath="/my/home" demo.sh
 
-datapath="${datapath:-/fh/fast/matsen_e/processed-data/partis/kate-qrs-2016-09-09/seeds}"
+datapath="${datapath:-/fh/fast/matsen_e/processed-data/partis/kate-qrs-2016-09-09/new}"
 outdir="${outdir:-output}"
-
 
 # Run processing on annotations file
 # BUG: we should scan for these seeds or they should be provided on
 # the command line.
-#seed1="$datapath/QA255.006-Vh"
-seed2="$datapath/QB850.424-Vk"
-seed3="$datapath/QB850.043-Vk"
+#seed1="$datapath/seeds/QA255.006-Vh"
+seed2="$datapath/seeds/QB850.001-Vh"
+seed3="$datapath/seeds/QB850.043-Vk"
 #seeds=( $seed1 $seed2 $seed3)
 seeds=( $seed2 $seed3)
 
 # Uncomment below to run on all seeds.
 # Will pass as argument eventually, but maybe this is a job for
 # python/scons?
-seeds=($datapath/Q*)
+seeds=($datapath/seeds/Q*)
+
+echo "${seeds[@]}"
 
 # Separate fasta files for each cluster
 for seeddir in "${seeds[@]}"
 do
   seed="$(basename $seeddir)"
-  files=($datapath/$seed/*-cluster-annotations.csv)
-  for annotation in  "${files[@]}"
+  timedirs=($datapath/seeds/$seed/*)
+  for annotation in  "${timedirs[@]}"
   do
     path="${annotation%/*}"
     basename="${annotation##*/}"
-    basename="${basename%-cluster-annotations.csv}"
-
-    partition=${path}/${basename}.csv
+    timept="${basename%-100k}"
+    paramdir="$datapath/$timept"
+	
+    partition=${path}/${basename}/partition.csv
+    annotation=${path}/${basename}/partition-cluster-annotations.csv
     logfile=${path}/${basename}.log
+
+    # we can run this with either --partis_log ${logfile} or
+    # --param_dir ${paramdir}
+    # the latter is probably preferred so log files do not have to
+    # be processed...
+
     process_partis.py \
            --annotations ${annotation} \
            --partition ${partition} \
-           --partis_log ${logfile} \
+           --param_dir ${paramdir} \
            --cluster_base cluster \
-           --output_dir ${outdir}/$seed/$basename \
-           --separate
+           --output_dir ${outdir}/$seed/$basename
   done
 done
 
