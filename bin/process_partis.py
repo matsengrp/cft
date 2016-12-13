@@ -58,10 +58,6 @@ def parse_args():
         help='input cluster partition csv',
         type=existing_file, required=True)
     parser.add_argument(
-        '--partis_log',
-        help='log file containing relevant information about partis run',
-        type=existing_file, required=True)
-    parser.add_argument(
         '--cluster_base',
         help='basename for clusters',
         default='cluster')
@@ -69,16 +65,15 @@ def parse_args():
         '--output_dir',
         default='.',
         help='directory for output files')
-    parser.add_argument(
-        '--baseline',
-        action='store_true',
-        help='output fasta files in baseline format',
-        default=False)
-    parser.add_argument(
-        '--separate',
-        action='store_true',
-        help='output to per-cluster fasta files',
-        default=False)
+    log_or_param_dir = parser.add_mutually_exclusive_group(required=True)
+    log_or_param_dir.add_argument(
+        '--partis_log',
+        help='log file containing relevant information about partis run (required if --param_dir not specified)',
+        type=existing_file)
+    log_or_param_dir.add_argument(
+        '--param_dir',
+        help='log file containing relevant information about partis run',
+        type=str)
     #parser.add_argument('--select_clustering', dest='select_clustering',
     #        help='choose a row from partition file for a different cluster',
     #        default=0, type=int)
@@ -122,7 +117,7 @@ def process_log_file(log_file):
         raise Exception('First line of provided log file not a valid partis command: {}'.format(call))
 
     if not '--chain' in call_args:
-        # default to heavy chain
+        # partis default is heavy chain
         chain = 'h'
     else:
         chain = call_args[1+call_args.index('--chain')]
@@ -179,6 +174,7 @@ def process_data(annot_file, part_file, chain, glpath):
         unique_ids.append('naive'+str(idx))
         seqs = cluster['seqs'].split(':')
         seqs.append(cluster['naive_seq'])
+
         # sometimes we'll have duplicate IDs, which is a no-no for
         # FastTree, so we'll group them together with set()
         idseqs = list(set(zip(unique_ids, seqs)))
@@ -204,7 +200,7 @@ def process_data(annot_file, part_file, chain, glpath):
     return output_df
 
 
-def write_json(df, fname, mod_date, cluster_base, annotations, partition):
+def write_json(df, fname, mod_date, cluster_base, annotations, partition, meta):
     """
     Write metatdata to json file from dataframe
     """
@@ -226,12 +222,6 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition):
     # This currently will only work if the output files are spat into a directory
     # of the form"/path/to/output/QA255.016-Vh/Hs-LN2-5RACE-IgG-new/*.fa"
     # Otherwise no new fields will be added.
-
-    regex = re.compile(r'^(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
-    m = regex.match('/'.join(fname.split('/')[-3:-1]))
-    meta = {}
-    if m:
-        meta = m.groupdict()
 
     def merge_two_dicts(dict1, dict2):
         """
@@ -321,7 +311,18 @@ def main():
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    chain, inferred_gls = process_log_file(args.partis_log)
+    # get metadata
+    regex = re.compile(r'^(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
+    m = regex.match('/'.join(args.output_dir.split('/')[-2:]))
+    meta = {}
+    if m:
+        meta = m.groupdict()
+
+    if args.partis_log is not None:
+        chain, inferred_gls = process_log_file(args.partis_log)
+    else:
+        chain = meta['gene'][1].lower()
+        inferred_gls = args.param_dir + '/hmm/germline-sets'
 
     melted_annotations = process_data(args.annotations,
                                       args.partition,
@@ -340,8 +341,8 @@ def main():
                os.path.getmtime(args.annotations),
                args.cluster_base,
                args.annotations,
-               args.partition)
-
+               args.partition,
+               meta)
 
 
 if __name__ == '__main__':
