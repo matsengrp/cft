@@ -220,7 +220,7 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition, meta):
     # "Hs-LN2-5RACE-IgG-new" is the name of the sequencing run,
     #
     # This currently will only work if the output files are spat into a directory
-    # of the form"/path/to/output/QA255.016-Vh/Hs-LN2-5RACE-IgG-new/*.fa"
+    # of the form "/path/to/output/QA255.016-Vh/Hs-LN2-5RACE-IgG-new/*.fa"
     # Otherwise no new fields will be added.
 
     def merge_two_dicts(dict1, dict2):
@@ -317,6 +317,8 @@ def main():
     meta = {}
     if m:
         meta = m.groupdict()
+    else:
+        raise Exception('--output_dir needs to be of the form "/path/to/output/QA255.016-Vh/Hs-LN2-5RACE-IgG"')
 
     if args.partis_log is not None:
         chain, inferred_gls = process_log_file(args.partis_log)
