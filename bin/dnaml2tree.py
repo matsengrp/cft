@@ -37,7 +37,7 @@ def sections(fh):
 def parse_seqdict(fh):
     #  152        sssssssssG AGGTGCAGCT GTTGGAGTCT GGGGGAGGCT TGGTACAGCC TGGGGGGTCC
     seqs = defaultdict(str)
-    pat = re.compile("^\s*(?P<id>[a-zA-Z0-9>_-]*)\s+(?P<seq>[a-zA-Z ]+)")
+    pat = re.compile("^\s*(?P<id>[a-zA-Z0-9>_.-]*)\s+(?P<seq>[a-zA-Z ]+)")
     fh.next()
     for line in fh:
         m = pat.match(line)
@@ -54,12 +54,14 @@ def parse_seqdict(fh):
 def iter_parents(fh):
     parents = {}
     #  152          >naive2           0.01208     (     zero,     0.02525) **
-    pat = re.compile("^\s*(?P<parent>[0-9]+)\s+(?P<child>[a-zA-z0-9>_-]+)\s+(?P<distance>[0-9]+(\.[0-9]+))")
+    pat = re.compile("^\s*(?P<parent>[0-9]+)\s+(?P<child>[a-zA-z0-9>_.-]+)\s+(?P<distance>[0-9]+(\.[0-9]+))")
     fh.next()
     fh.next()
     for line in fh:
         # print("\"{}\"".format(line))
         m = pat.match(line)
+        #print(line)
+        #print(m)
         if m:
             yield (m.group("child"), (m.group("parent"), float(m.group("distance"))))
         else:
@@ -81,6 +83,12 @@ def outfile2seqs(outfile='outfile'):
                 parents = { k: v for k, v in iter_parents(fh) }
             else:
                 raise RuntimeError("unrecognized phylip setion = {}".format(sect))
+    # a necessary, but not sufficient, condition for this to be a valid tree is
+    # that exactly one node is parentless
+    if not len(parents) == len(sequences) - 1:
+        #print(len(parents), len(sequences))
+        print(parents)
+        raise RuntimeError('invalid results attempting to parse {}: there are {} parentless sequences'.format(outfile, len(sequences) - len(parents)))
     return sequences, parents
 
 
