@@ -37,7 +37,7 @@ def sections(fh):
 def parse_seqdict(fh):
     #  152        sssssssssG AGGTGCAGCT GTTGGAGTCT GGGGGAGGCT TGGTACAGCC TGGGGGGTCC
     seqs = defaultdict(str)
-    pat = re.compile("^\s*(?P<id>[a-zA-Z0-9>_-]*)\s+(?P<seq>[a-zA-Z ]+)")
+    pat = re.compile("^\s*(?P<id>[a-zA-Z0-9>_.-]*)\s+(?P<seq>[a-zA-Z ]+)")
     fh.next()
     for line in fh:
         m = pat.match(line)
@@ -54,7 +54,7 @@ def parse_seqdict(fh):
 def iter_parents(fh):
     parents = {}
     #  152          >naive2           0.01208     (     zero,     0.02525) **
-    pat = re.compile("^\s*(?P<parent>[0-9]+)\s+(?P<child>[a-zA-z0-9>_-]+)\s+(?P<distance>[0-9]+(\.[0-9]+))")
+    pat = re.compile("^\s*(?P<parent>[0-9]+)\s+(?P<child>[a-zA-z0-9>_.-]+)\s+(?P<distance>[0-9]+(\.[0-9]+))")
     fh.next()
     fh.next()
     for line in fh:
@@ -81,6 +81,10 @@ def outfile2seqs(outfile='outfile'):
                 parents = { k: v for k, v in iter_parents(fh) }
             else:
                 raise RuntimeError("unrecognized phylip setion = {}".format(sect))
+    # a necessary, but not sufficient, condition for this to be a valid tree is
+    # that exactly one node is parentless
+    if not len(parents) == len(sequences) - 1:
+        raise RuntimeError('invalid results attempting to parse {}: there are {} parentless sequences'.format(outfile, len(sequences) - len(parents)))
     return sequences, parents
 
 
@@ -198,6 +202,7 @@ def main():
     
     # reroot on germline outgroup, if available.
     # [csw] don't reroot for now while we experiment with ascii-art trees.
+    # [wsd] ^ note that this breaks lineage iteration (won't include naive), issue #73
     # tree = reroot_tree(tree, '.*naive.*')
 
     # highlight lineage from seed to root.
@@ -206,7 +211,11 @@ def main():
     # write sequences along lineage from seed to root.
     fname = outbase + '.seedLineage.fa'
     with open(fname, 'w') as f:
-        SeqIO.write([node.seq for node in iter_lineage(tree, 'seed.*')], f, "fasta")
+        seq2write = [node.seq for node in iter_lineage(tree, 'seed.*')]
+        # if we didn't reroot on naive, we need a special line of code to also print that one
+        if 'naive' not in tree.name:
+            seq2write.append(find_node(tree, '.*naive.*').seq)
+        SeqIO.write(seq2write, f, 'fasta')
 
     # write newick file
     fname = outbase + '.newick'
