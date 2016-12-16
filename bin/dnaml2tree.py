@@ -206,6 +206,7 @@ def main():
     
     # reroot on germline outgroup, if available.
     # [csw] don't reroot for now while we experiment with ascii-art trees.
+    # [wsd] ^ note that this breaks lineage iteration (won't include naive), issue #73
     # tree = reroot_tree(tree, '.*naive.*')
 
     # highlight lineage from seed to root.
@@ -214,7 +215,11 @@ def main():
     # write sequences along lineage from seed to root.
     fname = outbase + '.seedLineage.fa'
     with open(fname, 'w') as f:
-        SeqIO.write([node.seq for node in iter_lineage(tree, 'seed.*')], f, "fasta")
+        seq2write = [node.seq for node in iter_lineage(tree, 'seed.*')]
+        # if we didn't reroot on naive, we need a special line of code to also print that one
+        if 'naive' not in tree.name:
+            seq2write.append(find_node(tree, '.*naive.*').seq)
+        SeqIO.write(seq2write, f, 'fasta')
 
     # write newick file
     fname = outbase + '.newick'
