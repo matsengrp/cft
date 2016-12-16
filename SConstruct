@@ -1,40 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-Carry partially processed partis output through steps needed 
-to propare files for display via cftweb application.
+Carry partis output through prepation for display via cftweb application.
 
-This SCons file expects to work on FASTA files produced by  
-`post_partis/scripts/process_partis.py`
+This SConstruct does the following:
 
-Those fasta files are run through `dnaml` and a custom python script
-to generate a SVG tree file and a fasta file containing sequences at
-the internal nodes of the tree.
+* Runs process_partis.py for each seed/sequencing-run/parition combination, producing a metadata file of information
+* For each such parition, the cluster with the seed is analyzed:
+    * Tree construction using `FastTree`
+    * Ancestral state reconstruction using `dnaml`
+    * Some SVG visualization
+* Results of all these analyses are then pointed to by a merged metadata file, which is then consumed by cftweb
 
-Certain fasta files cannot be processed by this pipeline as they have
-too few sequences for dnaml to handle.  Those short fasta files are
-detected and skipped automatically.
+Clusters with only two sequences cannot be analyzed by dnaml or FastTree, and so these are skipped atuomatically.
+Additionally, some clusters end up with bad trees after a rerooting step, and also have trouble in our dnaml2tree step.
+These are left out of the final `metadata.json` file.
+Eventually, all of these cases should be caught and tombstone information should be left in the metadata file capturing as much infomration as possible.
 
-You need to have `seqmagick` and `dnaml` available in your path to use this script.
-Typical usage would be,
-
-    $ module use ~matsengrp/modules
-    $ module load phylip
-    $ module load seqmagick
-    $ scons -j 20
-
-
+See README for typical environment setup and usage.
 '''
 
 
 from __future__ import print_function
 import os
-import re
 import sys
+import csv
 import subprocess
-import copy
 import glob
-import functools
+import shutil
 
 from os import path
 from warnings import warn
@@ -43,40 +36,51 @@ from nestly.scons import SConsWrap
 from SCons.Script import Environment
 from sconsutils import Wait
 
-from Bio import SeqIO  # for validating fasta files.
 import json
 
+# Need this in order to read csv files with sequences in the fields
+csv.field_size_limit(sys.maxsize)
 
-# Directory where metadata files live.
+# Setting up command line arguments/options
 AddOption('--datapath',
               dest='datapath',
               type='string',
               nargs=1,
               action='store',
               metavar='DIR',
-              default="/home/cwarth/src/matsen/cft/post_partis/output",
-              help='directory where JSON metadata can be found.')
+              default="/fh/fast/matsen_e/processed-data/partis/kate-qrs-2016-09-09/new",
+              help='partis output directory')
+
+AddOption('--outdir',
+        dest='outdir',
+        type='string',
+        nargs=1,
+        action='store',
+        metavar='DIR',
+        default="output",
+        help="directory in which to output results")
+
+
+# Set up SCons environment
 
 environ = os.environ.copy()
+env = Environment(ENV=environ)
 
-env = Environment(ENV=environ, )
+# Add stuff to PATH
 env.PrependENVPath('PATH', 'bin')
 env.PrependENVPath('PATH', 'post_partis/scripts')
 env.PrependENVPath('PATH', 'tree')
 
-# simpler...
-outdir_base = 'output'
-#env['build'] = 'output'
 
 
-# 
+# Some environment sanity checks to make sure we have all prerequisits
+
 def cmd_exists(cmd):
     return subprocess.call("type " + cmd, shell=True, 
         stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
 
-# check if dependencies are available, but only if we aren't in a dry-run.
+# only check for dependencies if we aren't in a dry-run.
 if not GetOption('no_exec'):
-    # Exit if any of the prerequisites are missing.
     msg = ""
     if not cmd_exists('dnaml'):
         msg += '''
@@ -108,120 +112,150 @@ if not GetOption('no_exec'):
         sys.exit(1)
 
 
-        
-# Return True if `f` (scons File object) is a "valid" fasta file.
-# "valid" in this case means the file exists, is readable, has the expected fasta format, and
-# includes 2 or more sequences.
-# This test is necessary to filter out short fasta files that will cause `dnaml` to crash.
-def valid_fasta(f):
-    ok = False
-    for i,_ in enumerate(SeqIO.parse(str(f), "fasta")):
-        ok = i >= 2
-        if ok:
-            break
-    return ok
 
 
-
-# Iterate through metadata entries for each cluster.
-#
-# Metadata is contained in json files below `datapath`, one per seed.
-# Each json file holds an array of metadata entries, one per cluster.
-#
-# Some metadata entries are filtered out because they have too few
-# sequences (which will cause dnaml to crash!)
-
+# Grab our cli options
 
 datapath = GetOption('datapath')
+outdir_base = GetOption('outdir') # we call this outdir_base in order to not conflict with nestly fns outdir arg
 print("datapath = {}".format(datapath))
+print("outdir = {}".format(outdir_base))
 
 
-def iter_meta(datapath):
-    filter = re.compile('^.*\.json$').search
-    for meta_path, dirs, files in os.walk(datapath):
-        jsonfiles = [j for j in files if filter(j)]
-        for j in jsonfiles:
-            with open(path.join(meta_path, j), 'r') as fh:
-                meta = json.load(fh)
-                for m in meta:
-                    # fix-up the path to the fasta file
-                    # Assume fasta files are in the same directory as the metadata
-                    m['fasta'] = path.join(meta_path, path.basename(m['file']))
 
-                    # assume the last component of the path is the
-                    # name of the run that this partis info came from.
-                    # It would be better to have this explicitly
-                    # included in the json info.
-                    #
-                    # This is used to distinguish multiple partis runs
-                    # on the same seed.
-                    m['run'] = path.basename(path.normpath(meta_path))
-                    if valid_fasta(m['fasta']):
-                        yield m
+# Initialize nestly!
+# ==================
 
+# This lets us create parameter nests and run the given pipeline for each combination of nesting parameters.
+# It also lets us "pop" out of nesting levels in order to aggregate on nested results.
 
-# Set up nestly
+# Our nesting is going to more or less model the nesting of things in our datapath directory.
+# seed > parameter_set > partition
+
+# Here we initialize nestly, and create an scons wrapper for it
+
 nest = Nest()
 w = SConsWrap(nest, outdir_base, alias_environment=env)
 
 
-# We'll be building up these aggregates in order to spit out our final metadata.json file, the ultimate target of this repo
+# Here we add some aggregate targets which we'll be build upon in order to spit out our final metadata.json file.
+
 w.add_aggregate('metadata', list)
 w.add_aggregate('svgfiles', list)
 
 
-# TODO; fon't forget to pop seed now instead of cluster at the end
-# TODO; also note that now we're passing datapath as the parent with `seeds` dir so need to change README
+
+# Initialize seed nest
+# --------------------
+
+# The very first nesting is on the seed id.
+# For the sake of testing, we allow for switching between the full set of seeds, as returned by `seeds_fn`, and a small test set (`test_seeds`).
+# Perhaps we'll hook this up to a command line option at some point...
+# In any case, note that w.add lets you either directly pass a collection, or a function of the control dictionary (`c` in the functions below) for determining what nest parameters to add.
 
 test_seeds = ["QB850.424-Vk", "QB850.043-Vk"]
 def seeds_fn(datapath):
     return os.listdir(path.join(datapath, 'seeds'))
 # You can use this to toggle a small testset vs the entire data set
 seeds = test_seeds
+#seeds = seeds_fn(datapath)
 
+# Initialize our first nest level
 w.add('seed', seeds)
 
-@w.add_target()
-def partitions(outdir, c):
-    return path.join(datapath, 'seeds', c['seed'], 'partition.csv')
 
-def partitions(datapath, c):
-    # This 'seeds' thing here is potentially a bad assumption...
-    glob.glob(path.join(datapath, 'seeds', c['seed'], "*-plus-*.csv"))
+# Initialize parameter set nest
+# -----------------------------
 
+# Next we nest on parameter sets; I believe these correspond to sequencing runs.
+# They're the things that look like "Hs-LN2-5RACE-IgG", and are nested within each seed's output directory.
+
+w.add('parameter_set', lambda c: map(lambda x: path.basename(x), glob.glob(path.join(datapath, 'seeds', c['seed'], "*"))))
+
+
+# Some helpers at the seed level
+
+def input_dir(c):
+    "Return the `seed > parameter_set` directory given the closed over datapath and a nestly control dictionary"
+    # This 'seeds' thing here is potentially not a very general assumption; not sure how variable that might be upstream
+    return path.join(datapath, 'seeds', c['seed'], c['parameter_set'])
 
 def path_base_root(full_path):
     return path.splitext(path.basename(full_path))[0]
 
-
-w.add('partition', functools.partial(partitions(datapath)), label_func=path_base_root)
-
-
-#@w.add_target()
-#def process_partis(outdir, c):
-    #return env.Command(path.join(outdir, 'metadata.json')
-        #)
+def valid_partition(fname):
+    with open(fname, 'r') as partition_handle:
+        partition = csv.DictReader(partition_handle).next()
+        unique_ids = partition['unique_ids'].split(':')
+        return len(unique_ids) >= 2 # Do we want >2 or >=2?
 
 
-# Our first nest; By metadata file
-w.add('cluster',
-        iter_meta(datapath),
-        # Label the nodes as run/seed/fasta-filename/
-        label_func=lambda m: path.join(m["run"], m["seed"], path.basename(path.splitext(m['fasta'])[0])))
+def annotations(c):
+    """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
+    for actual analysis."""
+    return map(path_base_root,
+                # We might eventually want to handle small partitions more manually, so there's data on the other end, but for now, filter is easiest
+                filter(valid_partition,
+                        glob.glob(path.join(input_dir(c), "*-plus-*.csv"))))
+
+def partitions(c):
+    "Returns the `partition.csv` file path with all the partition information for every partition output by partis."
+    return path.join(input_dir(c), 'partition.csv')
+
+def parameter_dir(c):
+    "The input parameter directory (as in input to partis); see --parameter-dir flag to various partis cli calls."
+    return path.join(datapath, c['parameter_set'])
+
+
+
+# Each c["partition"] value actually points to the annotations for that partition... a little weird but...
+w.add('partition', annotations)
+
+
+def annotation(c):
+    return path.join(input_dir(c), c['partition'] + '.csv')
 
 @w.add_target()
-def padn(outdir, c):
+def process_partis(outdir, c):
+    return env.Command(path.join(outdir, 'metadata.json'),
+            [partitions(c), annotation(c)],
+            'process_partis.py ' +
+                '--partition ${SOURCES[0]} ' +
+                '--annotations ${SOURCES[1]} ' +
+                #'--param_dir ' + parameter_dir(c) + ' '
+                '--partis_log ' + path.join(input_dir(c), 'partition.log ') +
+                '--cluster_base cluster ' +
+                '--output_dir ' + outdir)
+
+# To get the input sequences we need to read in the file output by process_partis to figure out what the input fasta was,
+# and then for convenience copy it over locally
+
+def extract_inseqs(target, source, env):
+    with open(str(source[0]), "r") as source_handle:
+        metadata = json.load(source_handle)
+        shutil.copy(metadata['fasta'], str(target[0]))
+
+@w.add_target()
+def inseqs(outdir, c):
     return env.Command(
-        path.join(outdir, "padN.fa"),
-        c['cluster']['fasta'],
-        "python bin/padseq.py  $SOURCE >$TARGET")
+        path.join(outdir, "inseqs.fasta"),
+        c['process_partis'],
+        extract_inseqs)
+
+# Forget why we do this; Chris W. seems to think it may not have been as necessary as original thought.
+@w.add_target()
+def padded_seqs(outdir, c):
+    return env.Command(
+        path.join(outdir, "padded_seqs.fa"),
+        c['inseqs'],
+        "python bin/padseq.py $SOURCE > $TARGET")
 
 # use fasttree to make newick tree from sequences
 @w.add_target()
-def newick(outdir, c):
+def fasttree(outdir, c):
     return env.Command(
         path.join(outdir, "fasttree.nwk"),
-        c['padn'],
+        c['padded_seqs'],
         "FastTree -nt -quiet $SOURCE > $TARGET")
 
 # calculate list of sequences to be pruned
@@ -229,24 +263,26 @@ def newick(outdir, c):
 def pruned_ids(outdir, c):
     return env.Command(
         path.join(outdir, "pruned_ids.txt"),
-        c['newick'],
+        c['fasttree'],
         "python bin/prune.py $SOURCE > $TARGET")
 
 # prune out sequences to reduce taxa
 @w.add_target()
-def fasta(outdir, c):
+def pruned_seqs(outdir, c):
     return env.Command(
         path.join(outdir, "pruned.fa"),
-        [c['pruned_ids'], c['padn']],
+        [c['pruned_ids'], c['padded_seqs']],
         "seqmagick convert --include-from-file $SOURCES $TARGET")
 
+# Convert to phylip for dnaml
 @w.add_target()
 def phy(outdir, c):
     return env.Command(
         path.join(outdir, "pruned.phy"),
-        c['fasta'],
+        c['pruned_seqs'],
         "seqmagick convert $SOURCE $TARGET")
 
+# Create a config file for dnaml (a persnickety old program with interactive menues...)
 @w.add_target()
 def dnaml_config(outdir, c):
     return env.Command(
@@ -254,23 +290,16 @@ def dnaml_config(outdir, c):
         c['phy'],
         "python bin/mkconfig.py $SOURCE > $TARGET")
 
+# Run dnaml by passing in the "config file" as stdin hoping the menues all stay sane
+# (Aside: There is a program for programatically responding to interactive menus if this gets any hairier)
 @w.add_target()
 def dnaml(outdir, c):
     "run dnaml (from phylip package) to create tree with inferred sequences at internal nodes"
     return env.SRun(
         map(lambda x: path.join(outdir, x), ["outtree", "outfile", "dnaml.log"]),
         c['dnaml_config'],
-        'cd ' + outdir + ' && dnaml < ${SOURCE.file} >${TARGETS[2].file}')
+        'cd ' + outdir + ' && dnaml < ${SOURCE.file} > ${TARGETS[2].file}')
 
-def extended_metadata(metadata, dnaml_tree_tgt):
-    "Add dnaml_tree target(s) as metadata to the given metadata dict; used prior to metadata write."
-    m = copy.copy(metadata)
-    m['svg'] = path.relpath(str(dnaml_tree_tgt[0]), outdir_base)
-    m['fasta'] = path.relpath(str(dnaml_tree_tgt[1]), outdir_base)
-    m['seedlineage'] = path.relpath(str(dnaml_tree_tgt[2]), outdir_base)
-    m['newick'] = path.relpath(str(dnaml_tree_tgt[3]), outdir_base)
-    del m['file']
-    return m
 
 @w.add_target()
 def dnaml_tree(outdir, c):
@@ -280,28 +309,79 @@ def dnaml_tree(outdir, c):
             map(lambda x: path.join(outdir, x),
                 ["dnaml.svg", "dnaml.fa", "dnaml.seedLineage.fa", "dnaml.newick"]),
             c['dnaml'],
-            "xvfb-run -a bin/dnaml2tree.py --dnaml ${SOURCES[1]} --outdir ${TARGETS[0].dir} --basename dnaml")
+            # Note: the `-` prefix here tells scons to keep going if this command fails.
+            # For some reason, this script is failing on some weird trees with multiple root nodes.
+            # See notes below on `tgt_exists` for how we handle this.
+            "- xvfb-run -a bin/dnaml2tree.py --dnaml ${SOURCES[1]} --outdir ${TARGETS[0].dir} --basename dnaml")
     # Do aggregate work
     c['svgfiles'].append(tgt[0])
-    m = extended_metadata(c['cluster'], tgt)
-    c['metadata'].append(m)
     return tgt
 
-def write_metadata(metadata):
-    def build_fn(target, source, env):
-        with open(str(target[0]), "w") as fh:
-            json.dump(metadata, fh, sort_keys=True,
-                           indent=4, separators=(',', ': '))
-    return build_fn
+# Might want to switch back to this approach...
+#def extended_metadata(metadata, dnaml_tree_tgt):
+    #"Add dnaml_tree target(s) as metadata to the given metadata dict; used prior to metadata write."
+    #with open(
+    #m = copy.copy(metadata)
+    #m['svg'] = path.relpath(str(dnaml_tree_tgt[0]), outdir_base)
+    #m['fasta'] = path.relpath(str(dnaml_tree_tgt[1]), outdir_base)
+    #m['seedlineage'] = path.relpath(str(dnaml_tree_tgt[2]), outdir_base)
+    #m['newick'] = path.relpath(str(dnaml_tree_tgt[3]), outdir_base)
+    #del m['file']
+    #return m
 
-w.pop('cluster')
+@w.add_target()
+def cluster_metadata(outdir, c):
+    tgt = env.Command(
+            path.join(outdir, 'extended_metadata.json'),
+            c['process_partis'] + c['dnaml_tree'],
+            # Don't like the order assumptions here...
+            'json_assoc.py $SOURCE $TARGET ' +
+                'svg ${SOURCES[1]} ' +
+                'fasta ${SOURCES[2]} ' +
+                'seedlineage ${SOURCES[3]} ' +
+                'newick ${SOURCES[4]}')
+    # Note; we used to delete the 'file' attribute as well; not sure why or if that's necessary
+    c['metadata'].append(tgt)
+    return tgt
+
+
+# Popping out
+# -----------
+
+# Here we pop out to the "seed" level so we can aggregate our metadata
+
+w.pop('seed')
+
+
+# Filtering out bad clusters:
+
+# As mentioned above, dnaml2tree fails for some clusters, so we'd like to filter these clusters out of the final metadata results.
+# We do this based on whether the svg targets of the dnaml2tree command point to actual files or not.
+# Eventually it would be nice to let them pass through with information indicating there was a failure, and handle appropriately in cftweb.
+# We may also want to handle clusters that are too small similarly, but for now we're filtering them out at the very beginning of the pipeline.
+
+# For now, to the stated end, we have this filter predicate
+def tgt_exists(tgt):
+    p = str(tgt)
+    exists = path.exists(p)
+    if not exists:
+        print("Path doesn't exist:", p)
+    return exists
+
+def write_metadata(target, sources, env):
+    svgfiles, metadata = sources
+    # Here's where we filter out the seeds with clusters that didn't compute through dnaml2tree.py
+    good_metadata = map(lambda x: x[1], filter(lambda x: tgt_exists(x[0]), zip(svgfiles, metadata)))
+    with open(target, "w") as fh:
+        json.dump(good_metadata, fh, sort_keys=True,
+                       indent=4, separators=(',', ': '))
 
 @w.add_target()
 def metadata(outdir, c):
     tgt = env.Command(
-        [path.join(outdir, "metadata.json")],
-        c['svgfiles'],
-        write_metadata(c['metadata']))
+        path.join(outdir, "metadata.json"),
+        [c['svgfiles'], c['metadata']],
+        write_metadata)
     env.AlwaysBuild(tgt)
     return tgt
 
