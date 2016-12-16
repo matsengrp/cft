@@ -60,8 +60,6 @@ def iter_parents(fh):
     for line in fh:
         # print("\"{}\"".format(line))
         m = pat.match(line)
-        #print(line)
-        #print(m)
         if m:
             yield (m.group("child"), (m.group("parent"), float(m.group("distance"))))
         else:
@@ -86,8 +84,6 @@ def outfile2seqs(outfile='outfile'):
     # a necessary, but not sufficient, condition for this to be a valid tree is
     # that exactly one node is parentless
     if not len(parents) == len(sequences) - 1:
-        #print(len(parents), len(sequences))
-        print(parents)
         raise RuntimeError('invalid results attempting to parse {}: there are {} parentless sequences'.format(outfile, len(sequences) - len(parents)))
     return sequences, parents
 
