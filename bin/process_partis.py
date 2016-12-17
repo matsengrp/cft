@@ -163,7 +163,6 @@ def process_data(annot_file, part_file, chain, glpath):
         current_df['cluster'] = str(idx)
         current_df['has_seed'] = any(seed_id in line['unique_ids'] for seed_id in \
                 seed_ids)
-        current_df['cdr3_length'] = str(line['cdr3_length'])
         current_df['seed_ids'] = ':'.join(seed_ids)
         current_df['cdr3_start'] = line['codon_positions']['v']
         for gene in 'vdj':
