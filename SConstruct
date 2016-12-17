@@ -234,7 +234,6 @@ def process_partis(outdir, c):
 def extract_inseqs(outdir, target, source, env):
     with open(str(source[0]), "r") as source_handle:
         metadata = json.load(source_handle)[0]
-        print("meta:", metadata)
         shutil.copy(path.join(outdir, metadata['file']), str(target[0]))
 
 @w.add_target()
@@ -370,11 +369,19 @@ def tgt_exists(tgt):
         print("Path doesn't exist:", p)
     return exists
 
-def write_metadata(target, sources, env):
-    svgfiles, metadata = sources
+def in_pairs(xs):
+    it = iter(xs)
+    for x in it:
+        yield x, next(it)
+
+def node_metadata(node):
+    with open(str(node), 'r') as handle:
+        return json.load(handle)
+
+def write_metadata(target, source, env):
     # Here's where we filter out the seeds with clusters that didn't compute through dnaml2tree.py
-    good_metadata = map(lambda x: x[1], filter(lambda x: tgt_exists(x[0]), zip(svgfiles, metadata)))
-    with open(target, "w") as fh:
+    good_metadata = map(lambda x: node_metadata(x[1]), filter(lambda x: tgt_exists(x[0]), in_pairs(source)))
+    with open(str(target[0]), "w") as fh:
         json.dump(good_metadata, fh, sort_keys=True,
                        indent=4, separators=(',', ': '))
 
@@ -382,7 +389,7 @@ def write_metadata(target, sources, env):
 def metadata(outdir, c):
     tgt = env.Command(
         path.join(outdir, "metadata.json"),
-        [c['svgfiles'], c['metadata']],
+        zip(c['svgfiles'], c['metadata']),
         write_metadata)
     env.AlwaysBuild(tgt)
     return tgt
