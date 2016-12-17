@@ -122,14 +122,14 @@ def process_log_file(log_file):
     else:
         chain = call_args[1+call_args.index('--chain')]
 
-    if not '--parameter-dir' in call_args:
+    if not '--param_dir' in call_args:
         # currently we use IMGT germlines if no cached parameters provided.
         # we have no other way of getting this information since it's printed
         # to stdout if it's not provided. should we assume it's always
         # provided?
         inferred_gls = partis_path + '/data/germlines/human'
     else:
-        inferred_gls = call_args[1+call_args.index('--parameter-dir')] + \
+        inferred_gls = call_args[1+call_args.index('--param_dir')] + \
                 '/hmm/germline-sets'
 
     # if the parameter file is not an absolute path then we don't know where
@@ -172,7 +172,7 @@ def process_data(annot_file, part_file, chain, glpath):
         seq_ids = cluster['unique_ids'].split(':')
         unique_ids = [('seed_' if seq_id in seed_ids else '')+seq_id for seq_id in seq_ids]
         unique_ids.append('naive'+str(idx))
-        seqs = cluster['seqs'].split(':')
+        seqs = cluster['input_seqs'].split(':')
         seqs.append(cluster['naive_seq'])
 
         # sometimes we'll have duplicate IDs, which is a no-no for

@@ -28,6 +28,7 @@ import csv
 import subprocess
 import glob
 import shutil
+import functools
 
 from os import path
 from warnings import warn
@@ -230,17 +231,18 @@ def process_partis(outdir, c):
 # To get the input sequences we need to read in the file output by process_partis to figure out what the input fasta was,
 # and then for convenience copy it over locally
 
-def extract_inseqs(target, source, env):
+def extract_inseqs(outdir, target, source, env):
     with open(str(source[0]), "r") as source_handle:
-        metadata = json.load(source_handle)
-        shutil.copy(metadata['fasta'], str(target[0]))
+        metadata = json.load(source_handle)[0]
+        print("meta:", metadata)
+        shutil.copy(path.join(outdir, metadata['file']), str(target[0]))
 
 @w.add_target()
 def inseqs(outdir, c):
     return env.Command(
         path.join(outdir, "inseqs.fasta"),
         c['process_partis'],
-        extract_inseqs)
+        functools.partial(extract_inseqs, outdir))
 
 # Forget why we do this; Chris W. seems to think it may not have been as necessary as original thought.
 @w.add_target()
