@@ -43,7 +43,8 @@ def base_renderdict(updates={}):
 @register_breadcrumb(app, '.', 'Index')
 def index():
     clusters = app.config['CLUSTERS'].values()
-    renderdict = base_renderdict({'clusters': clusters})
+    clusters = sorted(clusters, key=lambda c: (c.pid, c.timepoint, c.seed, c.clustering_step))
+    renderdict = base_renderdict({'clusters': clusters, 'heading': "All clusters"})
     return render_template('by_cluster.html', **renderdict)
 
 
@@ -107,6 +108,7 @@ def by_cluster(pid, timepoint, seedid):
     clusters = [c for c in clusters if c.pid == pid]
     clusters = [c for c in clusters if c.timepoint == timepoint]
     clusters = [c for c in clusters if c.seedid == seedid]
+    clusters = sorted(clusters, key=lambda x: x.clustering_step)
 
     renderdict = base_renderdict({
         'pid' : pid,
