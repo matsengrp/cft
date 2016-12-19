@@ -25,7 +25,8 @@ jQuery(document).ready(function($) {
           <th>D-gene</th>
           <th>J-gene</th>
           <th>Sequences</th>
-          <th>Has seed?</th>
+          <th>Clustering step</th>
+          <!--<th>Has seed?</th>-->
           <th>Download</th>
         </tr>
       </thead>
@@ -39,7 +40,8 @@ jQuery(document).ready(function($) {
           <td>{{ c.d_gene }}</td>
           <td>{{ c.j_gene }}</td>
           <td>{{ c.nseq }}</td>
-          <td>{{ c.has_seed }}</td>
+          <td>{{ c.clustering_step }}</td>
+          <!--<td>{{ c.has_seed }}</td>-->
           <td><a href='{{ url_for('cluster_fasta', id=c.id) }}'>Fasta</a></td>
         </tr>
         {%-endfor-%}

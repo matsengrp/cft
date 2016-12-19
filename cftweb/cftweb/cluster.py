@@ -88,6 +88,7 @@ class Cluster(object):
 
         # Make sure that has_seed is a boolean attribute
         self.has_seed = self.has_seed == 'True'
+        self.clustering_step = int(self.clustering_step)
 
         # TEMPORARY HACK!
         #
@@ -108,7 +109,7 @@ class Cluster(object):
         # "Hs-LN4-5RACE-IgK-100k/QB850.043-Vk/cluster4/dnaml.seedLineage.fa"
         # Note; using the data seedlineage here since we've made the self.seedlineage absolute in path
         path = data['seedlineage']
-        regex = re.compile(r'^Hs-(?P<timepoint>[^-]*)-[^/]*/(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/')
+        regex = re.compile(r'^(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/Hs-(?P<timepoint>[^-]*)-[^/]*/')
         m = regex.match(path)
         if m:
             self.pid = m.group('pid')
