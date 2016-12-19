@@ -23,6 +23,7 @@ See README for typical environment setup and usage.
 
 from __future__ import print_function
 import os
+import re
 import sys
 import csv
 import subprocess
@@ -332,15 +333,20 @@ def dnaml_tree(outdir, c):
 
 @w.add_target()
 def cluster_metadata(outdir, c):
+    def dnaml_tgt_relpath(i):
+        return path.relpath(str(c['dnaml_tree'][i]), outdir_base)
     tgt = env.Command(
             path.join(outdir, 'extended_metadata.json'),
             c['process_partis'] + c['dnaml_tree'],
-            # Don't like the order assumptions here...
+            # Don't like the order assumptions on dnaml_tgts here...
             'json_assoc.py $SOURCE $TARGET ' +
-                'svg ${SOURCES[1]} ' +
-                'fasta ${SOURCES[2]} ' +
-                'seedlineage ${SOURCES[3]} ' +
-                'newick ${SOURCES[4]}')
+                # Not 100% on this; Pick optimal attr/key name
+                #'best_partition ' + c['partition'] + ' ' +
+                'clustering_step ' + re.compile('run-viterbi-best-plus-(?P<step>.*)').match(c['partition']).group('step') + ' ' +
+                'svg ' + dnaml_tgt_relpath(0) + ' ' +
+                'fasta ' + dnaml_tgt_relpath(1) + ' ' +
+                'seedlineage ' + dnaml_tgt_relpath(2) + ' ' +
+                'newick ' + dnaml_tgt_relpath(3) + ' ')
     # Note; we used to delete the 'file' attribute as well; not sure why or if that's necessary
     c['metadata'].append(tgt)
     return tgt
