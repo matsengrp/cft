@@ -159,8 +159,8 @@ test_seeds = ["QB850.424-Vk", "QB850.043-Vk"]
 def seeds_fn(datapath):
     return os.listdir(path.join(datapath, 'seeds'))
 # You can use this to toggle a small testset vs the entire data set
-seeds = test_seeds
-#seeds = seeds_fn(datapath)
+#seeds = test_seeds
+seeds = seeds_fn(datapath)
 
 # Initialize our first nest level
 w.add('seed', seeds)
@@ -312,8 +312,6 @@ def dnaml_tree(outdir, c):
                 ["dnaml.svg", "dnaml.fa", "dnaml.seedLineage.fa", "dnaml.newick"]),
             c['dnaml'],
             # Note: the `-` prefix here tells scons to keep going if this command fails.
-            # For some reason, this script is failing on some weird trees with multiple root nodes.
-            # See notes below on `tgt_exists` for how we handle this.
             "- xvfb-run -a bin/dnaml2tree.py --dnaml ${SOURCES[1]} --outdir ${TARGETS[0].dir} --basename dnaml")
     # Do aggregate work
     c['svgfiles'].append(tgt[0])
