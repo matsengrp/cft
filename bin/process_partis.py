@@ -81,21 +81,6 @@ def parse_args():
     return parser.parse_args()
 
 
-def calculate_bounds(line, glfo):
-    """
-    Calculate index of cdr3 region as well as start and end index
-    for v, d and j genes.
-
-    For light chains, partis outputs bounds for the d region as a zero-length
-    set of bounds starting and ending at the same place (i.e., absent any indels
-    this will mean the v region ends where the j region begins).
-    """
-
-    utils.process_input_line(line)
-    utils.add_implicit_info(glfo, line)
-    return line['codon_positions']['v'], line['regional_bounds']
-
-
 def process_log_file(log_file):
     """
     Get function call from log file that will include information about
@@ -167,34 +152,22 @@ def process_data(annot_file, part_file, chain, glpath):
     output_df = pd.DataFrame()
     annotations = pd.read_csv(annot_file, dtype=object)
     glfo = glutils.read_glfo(glpath, chain=chain)
+    to_keep = ['unique_ids', 'seqs', 'v_gene', 'd_gene', 'j_gene', 'cdr3_length']
     for idx, cluster in annotations.fillna('').iterrows():
         current_df = pd.DataFrame()
-        seq_ids = cluster['unique_ids'].split(':')
-        unique_ids = [('seed_' if seq_id in seed_ids else '')+seq_id for seq_id in seq_ids]
-        unique_ids.append('naive'+str(idx))
-        seqs = cluster.get('input_seqs', cluster.get('seqs')).split(':')
-        seqs.append(cluster['naive_seq'])
-
-        # sometimes we'll have duplicate IDs, which is a no-no for
-        # FastTree, so we'll group them together with set()
-        idseqs = list(set(zip(unique_ids, seqs)))
-        unique_ids, seqs = zip(*idseqs)
-        current_df['unique_ids'] = unique_ids
-        current_df['seqs'] = seqs
+        line = cluster.to_dict()
+        utils.process_input_line(line)
+        utils.add_implicit_info(glfo, line)
+        for col in to_keep:
+            current_df[col] = line[col]
         current_df['cluster'] = str(idx)
-        current_df['has_seed'] = any(seed_id in seq_ids for seed_id in \
+        current_df['has_seed'] = any(seed_id in line['unique_ids'] for seed_id in \
                 seed_ids)
-        current_df['v_gene'] = cluster['v_gene']
-        current_df['d_gene'] = cluster['d_gene']
-        current_df['j_gene'] = cluster['j_gene']
-        current_df['cdr3_length'] = str(cluster['cdr3_length'])
         current_df['seed_ids'] = ':'.join(seed_ids)
-        cdr3, region_bounds = \
-                calculate_bounds(cluster.to_dict(), glfo)
-        current_df['cdr3_start'] = cdr3
+        current_df['cdr3_start'] = line['codon_positions']['v']
         for gene in 'vdj':
             for pos in ['start', 'end']:
-                current_df[gene+'_'+pos] = region_bounds[gene][pos.startswith('e')]
+                current_df[gene+'_'+pos] = line['regional_bounds'][gene][pos.startswith('e')]
         output_df = pd.concat([output_df, current_df])
 
     return output_df
