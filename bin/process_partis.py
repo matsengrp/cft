@@ -152,12 +152,14 @@ def process_data(annot_file, part_file, chain, glpath):
     output_df = pd.DataFrame()
     annotations = pd.read_csv(annot_file, dtype=object)
     glfo = glutils.read_glfo(glpath, chain=chain)
-    to_keep = ['unique_ids', 'seqs', 'v_gene', 'd_gene', 'j_gene', 'cdr3_length']
+    to_keep = ['v_gene', 'd_gene', 'j_gene', 'cdr3_length']
     for idx, cluster in annotations.fillna('').iterrows():
         current_df = pd.DataFrame()
         line = cluster.to_dict()
         utils.process_input_line(line)
         utils.add_implicit_info(glfo, line)
+        current_df['unique_ids'] = line['unique_ids'] + ['naive{}'.format(idx)]
+        current_df['seqs'] = line['seqs'] + [line['naive_seq']]
         for col in to_keep:
             current_df[col] = line[col]
         current_df['cluster'] = str(idx)
@@ -286,7 +288,8 @@ def main():
 
     # get metadata
     regex = re.compile(r'^(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
-    m = regex.match('/'.join(args.output_dir.split('/')[-2:]))
+    path = '/'.join(args.output_dir.split('/')[-3:])
+    m = regex.match(path)
     meta = {}
     if m:
         meta = m.groupdict()
