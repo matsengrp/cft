@@ -108,7 +108,7 @@ def by_cluster(pid, timepoint, seedid):
     clusters = [c for c in clusters if c.pid == pid]
     clusters = [c for c in clusters if c.timepoint == timepoint]
     clusters = [c for c in clusters if c.seedid == seedid]
-    clusters = sorted(clusters, key=lambda x: x.clustering_step)
+    clusters = sorted(clusters, key=lambda c: (c.seed, c.clustering_step))
 
     renderdict = base_renderdict({
         'pid' : pid,
