@@ -172,7 +172,7 @@ def process_data(annot_file, part_file, chain, glpath):
         seq_ids = cluster['unique_ids'].split(':')
         unique_ids = [('seed_' if seq_id in seed_ids else '')+seq_id for seq_id in seq_ids]
         unique_ids.append('naive'+str(idx))
-        seqs = cluster['input_seqs'].split(':')
+        seqs = cluster.get('input_seqs', cluster.get('seqs')).split(':')
         seqs.append(cluster['naive_seq'])
 
         # sometimes we'll have duplicate IDs, which is a no-no for
