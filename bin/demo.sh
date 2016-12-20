@@ -29,37 +29,37 @@ seeds=( $seed2 $seed3)
 # Uncomment below to run on all seeds.
 # Will pass as argument eventually, but maybe this is a job for
 # python/scons?
-#seeds=($datapath/seeds/Q*)
+seeds=($datapath/seeds/Q*)
 
 echo "${seeds[@]}"
 
 # Separate fasta files for each cluster
 for seeddir in "${seeds[@]}"
 do
-    seed="$(basename $seeddir)"
-    timedirs=($datapath/seeds/$seed/*)
-    for annotation in  "${timedirs[@]}"
-    do
-	path="${annotation%/*}"
-	basename="${annotation##*/}"
-	timept="${basename%-100k}"
+  seed="$(basename $seeddir)"
+  timedirs=($datapath/seeds/$seed/*)
+  for annotation in  "${timedirs[@]}"
+  do
+    path="${annotation%/*}"
+    basename="${annotation##*/}"
+    timept="${basename%-100k}"
     paramdir="$datapath/$timept"
 	
-	partition=${path}/${basename}/partition.csv
-	annotation=${path}/${basename}/partition-cluster-annotations.csv
-	logfile=${path}/${basename}.log
+    partition=${path}/${basename}/partition.csv
+    annotation=${path}/${basename}/partition-cluster-annotations.csv
+    logfile=${path}/${basename}.log
 
     # we can run this with either --partis_log ${logfile} or
     # --param_dir ${paramdir}
     # the latter is probably preferred so log files do not have to
     # be processed...
 
-	process_partis.py \
-	       --annotations ${annotation} \
-	       --partition ${partition} \
-	       --param_dir ${paramdir} \
-	       --cluster_base cluster \
-	       --output_dir ${outdir}/$seed/$basename
-    done
+    process_partis.py \
+           --annotations ${annotation} \
+           --partition ${partition} \
+           --param_dir ${paramdir} \
+           --cluster_base cluster \
+           --output_dir ${outdir}/$seed/$basename
+  done
 done
 

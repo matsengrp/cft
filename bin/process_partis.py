@@ -107,14 +107,14 @@ def process_log_file(log_file):
     else:
         chain = call_args[1+call_args.index('--chain')]
 
-    if not '--parameter-dir' in call_args:
+    if not '--param_dir' in call_args:
         # currently we use IMGT germlines if no cached parameters provided.
         # we have no other way of getting this information since it's printed
         # to stdout if it's not provided. should we assume it's always
         # provided?
         inferred_gls = partis_path + '/data/germlines/human'
     else:
-        inferred_gls = call_args[1+call_args.index('--parameter-dir')] + \
+        inferred_gls = call_args[1+call_args.index('--param_dir')] + \
                 '/hmm/germline-sets'
 
     # if the parameter file is not an absolute path then we don't know where
@@ -152,12 +152,14 @@ def process_data(annot_file, part_file, chain, glpath):
     output_df = pd.DataFrame()
     annotations = pd.read_csv(annot_file, dtype=object)
     glfo = glutils.read_glfo(glpath, chain=chain)
-    to_keep = ['unique_ids', 'seqs', 'v_gene', 'd_gene', 'j_gene', 'cdr3_length']
+    to_keep = ['v_gene', 'd_gene', 'j_gene', 'cdr3_length']
     for idx, cluster in annotations.fillna('').iterrows():
         current_df = pd.DataFrame()
         line = cluster.to_dict()
         utils.process_input_line(line)
         utils.add_implicit_info(glfo, line)
+        current_df['unique_ids'] = line['unique_ids'] + ['naive{}'.format(idx)]
+        current_df['seqs'] = line['seqs'] + [line['naive_seq']]
         for col in to_keep:
             current_df[col] = line[col]
         current_df['cluster'] = str(idx)
@@ -286,7 +288,8 @@ def main():
 
     # get metadata
     regex = re.compile(r'^(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
-    m = regex.match('/'.join(args.output_dir.split('/')[-2:]))
+    path = '/'.join(args.output_dir.split('/')[-3:])
+    m = regex.match(path)
     meta = {}
     if m:
         meta = m.groupdict()

@@ -86,14 +86,14 @@
           <td>{{ cluster.nseq }}</td>
         </tr>
         <tr>
-          <th>Has seed?</th>
-          <td>{{ cluster.has_seed }}</td>
+          <th>Clustering step</th>
+          <td>{{ cluster.clustering_step }}</td>
         </tr>
         <tr>
           <th>All sequences</th>
           <td>
             <a href='{{ url_for('cluster_fasta', id=cluster.id) }}'>Fasta</a> &nbsp;
-            <a href='{{ url_for('cluster_phylip', id=cluster.id) }}'>Phylip</a>
+            <!--<a href='{{ url_for('cluster_phylip', id=cluster.id) }}'>Phylip</a>-->
           </td>
         </tr>
         {% if cluster.has_seed %}

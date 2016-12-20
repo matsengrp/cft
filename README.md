@@ -68,34 +68,35 @@ git clone --depth 1 git@github.com:psathryella/partis.git
 export PARTIS=$PWD/partis
 ```
 
+### Running partis
+
+At the moment, this part of the pipeline doesn't require running partis at all.
+If it becomes necessary to do this in the future, you will need to make sure you actually have a fully built partis in your `$PARTIS` dir, as well as all of it's prerequisites installed.
+See `$PARTIS/README.md` for instructions on this.
+
+
 ## Running
 
-Running comes in three phases.
+Running is a two step process:
 
-### Process partis output
+* Run the analyses and produce a summary `metadata.json` file
+* Run the `cftweb` application based on this file
 
-First we execute the `process_partis.py` sciprt via `bin/demo.sh`.
-This takes the output from partis and does some pre-processing on the data, splitting clusters up into separate repositories.
-
-You'll need to specify an output directory for this intermediate data using the `outdir` environment variable.
-Additionally, you'll likely need to specify the input `datapath` (there is a default, but there's a good chance it will be stale...).
-
-```
-datapath=path/to/yer/data/ outdir=processpartis-output ./bin/demo.sh
-```
 
 ### Running scons
 
-The rest of the build process will be executed using `scons`.
-This builds trees out of each of the clusters, and does ancestral state reconstructions using these trees.
+The build process can be initiated by executing `scons`.
 
-You can specify the `datapath` used as the outdir in the last step by using the `--datapath` flag.
+This does some initial processing of partis results using `process_partis.py`, builds trees out of each of the clusters, and does ancestral state reconstructions using these trees, finally producing a `metadata.json` file consumable by the `cftweb` web application.
+
+This build script takes two options parameters:
+
+* `--datapath`: The output directory of the partis run, defaulting (currently) to `/fh/fast/matsen_e/processed-data/partis/kate-qrs-2016-09-09/new`
+* `--outdir`: The directory in which to output the results of this `SConstruct`, including the `metadata.json` file, defaulting to `output`.
 
 ```
-scons --datapath=processpartis-output
+scons --datapath=/some/partis/output-dir --outdir=data/outdir
 ```
-
-Currently, all data is placed in an `output` subdirectory of your current working directory.
 
 ### Running the CFT web server
 
