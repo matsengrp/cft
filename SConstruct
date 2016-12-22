@@ -255,7 +255,7 @@ def padded_seqs(outdir, c):
 # use fasttree to make newick tree from sequences
 @w.add_target()
 def fasttree(outdir, c):
-    return env.Command(
+    return env.SRun(
         path.join(outdir, "fasttree.nwk"),
         c['padded_seqs'],
         "FastTree -nt -quiet $SOURCE > $TARGET")
@@ -266,7 +266,7 @@ def pruned_ids(outdir, c):
     return env.Command(
         path.join(outdir, "pruned_ids.txt"),
         c['fasttree'],
-        "python bin/prune.py $SOURCE > $TARGET")
+        "python bin/prune.py --seed " + c['seed'] + " $SOURCE > $TARGET")
 
 # prune out sequences to reduce taxa
 @w.add_target()
@@ -297,10 +297,12 @@ def dnaml_config(outdir, c):
 @w.add_target()
 def dnaml(outdir, c):
     "run dnaml (from phylip package) to create tree with inferred sequences at internal nodes"
-    return env.SRun(
+    tgt = env.SRun(
         map(lambda x: path.join(outdir, x), ["outtree", "outfile", "dnaml.log"]),
         c['dnaml_config'],
         'cd ' + outdir + ' && dnaml < ${SOURCE.file} > ${TARGETS[2].file}')
+    env.Depends(tgt, c['phy'])
+    return tgt
 
 
 @w.add_target()
