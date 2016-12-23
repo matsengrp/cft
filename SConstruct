@@ -301,6 +301,8 @@ def dnaml(outdir, c):
         map(lambda x: path.join(outdir, x), ["outtree", "outfile", "dnaml.log"]),
         c['dnaml_config'],
         'cd ' + outdir + ' && dnaml < ${SOURCE.file} > ${TARGETS[2].file}')
+    # Manually depend on phy so that we rerun dnaml if the input sequences change (without this, dnaml will
+    # only get rerun if one of the targets are removed or if the iput dnaml_config file is changed).
     env.Depends(tgt, c['phy'])
     return tgt
 
@@ -315,6 +317,9 @@ def dnaml_tree(outdir, c):
             c['dnaml'],
             # Note: the `-` prefix here tells scons to keep going if this command fails.
             "- xvfb-run -a bin/dnaml2tree.py --seed " + c['seed'] + " --dnaml ${SOURCES[1]} --outdir ${TARGETS[0].dir} --basename dnaml")
+    # Manually depend on dnaml2tree.py script, since it doesn't fall in the first position within the command
+    # string.
+    env.Depends(tgt, 'bin/dnaml2tree.py')
     # Do aggregate work
     c['svgfiles'].append(tgt[0])
     return tgt
