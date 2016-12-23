@@ -178,3 +178,11 @@ def seedlineage_fasta(id=None):
     return flask.send_file(cluster.seedlineage)
 
 
+@app.route("/cluster/<id>/tree.svg")
+def svg_view(id=None):
+    clusters = app.config['CLUSTERS']
+    cluster = clusters[id]
+
+    return flask.send_file(cluster.svg)
+
+
