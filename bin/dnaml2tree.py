@@ -69,7 +69,7 @@ def iter_parents(fh):
 # parse the dnaml output file and return data strictures containing a
 # list biopython.SeqRecords and a dict containing adjacency
 # relationships and distances between nodes.
-def outfile2seqs(outfile='outfile'):
+def outfile2seqs(outfile='outfile', seed=None):
     sequences = []
     parents = {}
     with open(outfile, 'rU') as fh:
@@ -85,6 +85,20 @@ def outfile2seqs(outfile='outfile'):
     # that exactly one node is parentless
     if not len(parents) == len(sequences) - 1:
         raise RuntimeError('invalid results attempting to parse {}: there are {} parentless sequences'.format(outfile, len(sequences) - len(parents)))
+
+    # because phy format only allows 10 character ids, probably we need to expand the seed name
+    if seed is not None:
+        matches = 0
+        for seq in sequences:
+            if seq.id in seed:
+                matches += 1
+                parents[seed] = parents.pop(seq.id)
+                seq.id = seed
+        if matches == 0:
+            raise RuntimeError('seed not found')
+        elif matches > 1:
+            raise RuntimeError('two many seed substring matches')
+
     return sequences, parents
 
 
@@ -182,13 +196,15 @@ def main():
         help='output directory where results are left.  [ default \'%(default)s\' ]')
     parser.add_argument(
         '--basename', help='basename of output files.   [ default \'basename(DNAML)\' ]')
+    parser.add_argument(
+        '--seed', type=str, help='id of leaf [default \'seed\']', default='seed')
     args = parser.parse_args()
 
     # basename of outputfiles is taken from --basename if supplied, otherwise basename of DNAML.
     basename = args.basename if args.basename else os.path.basename(args.dnaml)
     outbase = os.path.join(args.outdir, os.path.splitext(basename)[0])
 
-    sequences, parents = outfile2seqs(args.dnaml)
+    sequences, parents = outfile2seqs(args.dnaml, seed=args.seed)
 
     if not sequences or not parents:
         raise RuntimeError("No sequences were available; are you sure this is a dnaml output file?")
@@ -206,12 +222,12 @@ def main():
     # tree = reroot_tree(tree, '.*naive.*')
 
     # highlight lineage from seed to root.
-    highlight_lineage(tree, 'seed.*')
+    highlight_lineage(tree, args.seed+'.*')
 
     # write sequences along lineage from seed to root.
     fname = outbase + '.seedLineage.fa'
     with open(fname, 'w') as f:
-        seq2write = [node.seq for node in iter_lineage(tree, 'seed.*')]
+        seq2write = [node.seq for node in iter_lineage(tree, args.seed)]
         # if we didn't reroot on naive, we need a special line of code to also print that one
         if 'naive' not in tree.name:
             seq2write.append(find_node(tree, '.*naive.*').seq)
