@@ -32,7 +32,7 @@ def sections(fh):
                 yield k
                 break
 
-            
+
 # iterate over entries in the sequences section
 def parse_seqdict(fh):
     #  152        sssssssssG AGGTGCAGCT GTTGGAGTCT GGGGGAGGCT TGGTACAGCC TGGGGGGTCC
@@ -90,7 +90,7 @@ def outfile2seqs(outfile='outfile', seed=None):
     if seed is not None:
         matches = 0
         for seq in sequences:
-            if seq.id in seed:
+            if len(seq.id) == 10 and seq.id in seed:
                 matches += 1
                 parents[seed] = parents.pop(seq.id)
                 seq.id = seed
@@ -109,11 +109,11 @@ def build_tree(sequences, parents):
     def mknode(r):
         n = Tree(
             name=r.id,
-            dist=parents[r.id][1] if r.id in parents else None,
+            dist=parents[r.id][1] if r.id in parents else 0,
             format=1)
         n.add_features(seq=r)
         return n
-    
+
     nodes = { r.id: mknode(r) for r in sequences }
 
     # connect the nodes using the parent data
@@ -164,7 +164,7 @@ def iter_lineage(tree, pattern):
         yield node
         node = node.up
 
-        
+
 # highlight the lineage (branches) from a node to the root.
 # target node name is identified by a regular expression.
 # The default pattern is chosen to highlight lineage from a seed node to the root.
@@ -177,7 +177,7 @@ def highlight_lineage(tree, pattern='seed.*'):
         node.set_style(nstyle)
     return tree
 
-        
+
 def main():
     def existing_file(fname):
         """
@@ -215,14 +215,11 @@ def main():
         SeqIO.write(sequences, fh, "fasta")
 
     tree = build_tree(sequences, parents)
-    
+
     # reroot on germline outgroup, if available.
     # [csw] don't reroot for now while we experiment with ascii-art trees.
     # [wsd] ^ note that this breaks lineage iteration (won't include naive), issue #73
     # tree = reroot_tree(tree, '.*naive.*')
-
-    # highlight lineage from seed to root.
-    highlight_lineage(tree, args.seed+'.*')
 
     # write sequences along lineage from seed to root.
     fname = outbase + '.seedLineage.fa'
@@ -247,6 +244,11 @@ def main():
 
     ts.layout_fn = my_layout
     fname = outbase + '.svg'
+	# whether or not we had rerooted on naive before, we want to do so for the SVG tree
+    if 'naive' not in tree.name:
+        tree = reroot_tree(tree, '.*naive.*')
+	    # highlight lineage from seed to root.
+	tree = highlight_lineage(tree, args.seed+'.*')
     tree.render(fname, tree_style=ts)
 
 
