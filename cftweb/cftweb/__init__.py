@@ -27,6 +27,41 @@ def content_file_iterator(dir):
                 yield os.path.join(root, f)
 
 
+def email_on_error(app):
+    from logging.handlers import SMTPHandler
+    mail_handler = SMTPHandler('127.0.0.1', 'csmall@fredhutch.org',
+                               app.config['ADMINS'], 'cftweb failed')
+    mail_handler.setLevel(logging.ERROR)
+    app.logger.addHandler(mail_handler)
+
+
+def slack_on_error(app):
+    import logging
+    from slacker_log_handler import SlackerLogHandler
+    slack_handler = SlackerLogHandler(os.environ['SLACK_TOKEN'],
+                                      'cft',
+                                      stack_trace=True,
+                                      username='cftweb-robot')
+    # Should probably set everything to use the app.config['LOGGING_FORMAT'] as shown here
+    #slack_handler.setFormatter(Formatter(app.config['LOGGING_FORMAT']))
+    slack_handler.setLevel(logging.ERROR)
+    app.logger.addHandler(slack_handler)
+
+
+def log_to_file(app):
+    from logging.handlers import RotatingFileHandler
+    from logging import Formatter
+    log_path = app.config['LOG_PATH']
+    file_handler = RotatingFileHandler(
+        log_path, maxBytes=1 << 20, backupCount=5)
+    file_handler.setFormatter(
+        Formatter('%(asctime)s %(levelname)s: %(message)s '
+                  '[in %(pathname)s:%(lineno)d]'))
+    file_handler.setLevel(logging.INFO)
+    app.logger.addHandler(file_handler)
+
+
+
 # Initiate engine before the first request
 @app.before_first_request
 def before_first_request():
@@ -44,21 +79,13 @@ def before_first_request():
 
     # Configure logging
     if not app.debug:
-        from logging.handlers import SMTPHandler, RotatingFileHandler
-        from logging import Formatter
-        mail_handler = SMTPHandler('127.0.0.1', 'igdbweb@fredhutch.org',
-                                   app.config['ADMINS'], 'igdb failed')
-        mail_handler.setLevel(logging.ERROR)
-        log_path = app.config['LOG_PATH']
-        file_handler = RotatingFileHandler(
-            log_path, maxBytes=1 << 20, backupCount=5)
-        file_handler.setFormatter(
-            Formatter('%(asctime)s %(levelname)s: %(message)s '
-                      '[in %(pathname)s:%(lineno)d]'))
+        # Turning this off for now...
+        log_to_file(app)
+        if app.config['OPTIONS'].email:
+            email_on_error(app)
+        if app.config['OPTIONS'].slack:
+            slack_on_error(app)
         app.logger.setLevel(logging.INFO)
-        file_handler.setLevel(logging.INFO)
-        app.logger.addHandler(file_handler)
-        app.logger.addHandler(mail_handler)
 
 
 # @app.errorhandler(Exception)

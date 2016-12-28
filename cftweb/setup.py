@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-setup(name='igdbweb',
+setup(name='cftweb',
       version='0.1.0',
       description='Immunoglobin germline web interface',
       author='Chris Warth <cwarth@fredhutch.org>',
@@ -9,5 +9,5 @@ setup(name='igdbweb',
           'flask','frozen-flask','numpy','biopython'
       ],
 
-      package_data={'igdbweb': ['templates/*', 'static/*']}
+      package_data={'cftweb': ['templates/*', 'static/*']}
 )
