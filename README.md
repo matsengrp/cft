@@ -39,14 +39,9 @@ Now load the python packages.  Again these are mostly specified using
 via conda.
 
 ```
-	$ conda install pandas
-	$ conda install biopython
-	$ conda install flask
-	$ conda install nestly
-	$ conda install pyqt
-	$ pip install ete3
-	$ pip install scons
-	$ pip install flask-breadcrumbs
+	$ conda install pandas biopython flask nestly pyqt slackclient
+	$ pip install ete3 scons flask-breadcrumbs slacker-log-handler
+ 
 ```
 
 Your mileage may vary, but I have found it necessary to 
@@ -111,5 +106,10 @@ cd cftweb && python -m cftweb --file /path/to/output/metadata.json
 
 The default port is `5000`.
 If someone else is running the web server on the same machine (or something else using that port), you can set a different one using the `-P` flag.
+
+### Running CFT web in production
+
+Note that for production, you may want to specify either the `--email` or `--slack` flags to the invocation above so that folks can be notified of errors.
+For slack notifications (recommended), you will also need to obtain an API token (see <https://api.slack.com/web#authentication>), and set the `SLACK_TOKEN` environment variable accordingly.
 
 

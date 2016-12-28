@@ -1,28 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-Convert IGDB json files into static website.
-
-Usage:
-    python -m igdbweb
-
+Convert CFT json files into a static website for data exploration.
 '''
 from __future__ import print_function
 
-import os
-import sys
 import argparse
 
 from cftweb import app
 
 # pass commandline arguments to flask app
 # http://flask.pocoo.org/snippets/133/
-#
-# Start this app with,
-# 	$ python -m igdbweb
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog='igdbbweb', description=__doc__)
+    parser = argparse.ArgumentParser(prog='python -m cftbweb', description=__doc__)
+
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
+        '--file',
+        help="""Name of metadata file: [default "%(default)s"]""")
+    group.add_argument(
+        '--dir',
+        help="""Directory where content can be found: [default "%(default)s"]""")
 
     parser.add_argument(
         '-H',
@@ -39,23 +38,25 @@ if __name__ == "__main__":
         '--debug',
         default=False,
         action="store_true",
-        help='turn on debugging output')
+        help='turn on debugging output (and turn off email, slack and file logging)')
+    parser.add_argument(
+        '-e',
+        '--email',
+        default=False,
+        action="store_true",
+        help="send error message notifications to admins (see config) via email")
+    parser.add_argument(
+        '-s',
+        '--slack',
+        default=False,
+        action="store_true",
+        help="send error message notifications to slack")
     parser.add_argument(
         '-v',
         '--verbose',
         action='store_true',
         default=False,
         help='verbose output')
-    
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        '--file',
-        help="""Name of metadata file: [default "%(default)s"]"""
-    )
-    group.add_argument(
-        '--dir',
-        help="""Directory where content can be found: [default "%(default)s"]"""
-    )
     
 
     global options
