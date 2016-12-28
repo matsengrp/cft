@@ -30,37 +30,21 @@ import subprocess
 import glob
 import shutil
 import functools
+import sconsutils
 
 from os import path
 from warnings import warn
 from nestly import Nest
 from nestly.scons import SConsWrap
-from SCons.Script import Environment
-from sconsutils import Wait
+from SCons.Script import Environment, AddOption
 
 import json
 
 # Need this in order to read csv files with sequences in the fields
 csv.field_size_limit(sys.maxsize)
 
-# Setting up command line arguments/options
-AddOption('--datapath',
-              dest='datapath',
-              type='string',
-              nargs=1,
-              action='store',
-              metavar='DIR',
-              default="/fh/fast/matsen_e/processed-data/partis/kate-qrs-2016-09-09/new",
-              help='partis output directory')
-
-AddOption('--outdir',
-        dest='outdir',
-        type='string',
-        nargs=1,
-        action='store',
-        metavar='DIR',
-        default="output",
-        help="directory in which to output results")
+# No-op; Prevents analysis warnings
+sconsutils
 
 
 # Set up SCons environment
@@ -82,7 +66,7 @@ def cmd_exists(cmd):
         stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
 
 # only check for dependencies if we aren't in a dry-run.
-if not GetOption('no_exec'):
+if not env.GetOption('no_exec'):
     msg = ""
     if not cmd_exists('dnaml'):
         msg += '''
@@ -115,13 +99,40 @@ if not GetOption('no_exec'):
 
 
 
+# Setting up command line arguments/options
 
-# Grab our cli options
+AddOption('--datapath',
+              dest='datapath',
+              type='string',
+              nargs=1,
+              action='store',
+              metavar='DIR',
+              default="/fh/fast/matsen_e/processed-data/partis/kate-qrs-2016-09-09/new",
+              help='partis output directory')
 
-datapath = GetOption('datapath')
-outdir_base = GetOption('outdir') # we call this outdir_base in order to not conflict with nestly fns outdir arg
+AddOption('--outdir',
+        dest='outdir',
+        type='string',
+        nargs=1,
+        action='store',
+        metavar='DIR',
+        default="output",
+        help="directory in which to output results")
+
+AddOption('--test',
+        dest='test_run',
+        action='store_true',
+        default=False,
+        help="Setting this flag does a test run for just a couple of seeds")
+
+
+datapath = env.GetOption('datapath')
+outdir_base = env.GetOption('outdir') # we call this outdir_base in order to not conflict with nestly fns outdir arg
+test_run = env.GetOption("test_run")
+
 print("datapath = {}".format(datapath))
 print("outdir = {}".format(outdir_base))
+print("test_run = {}".format(test_run))
 
 
 
@@ -151,16 +162,16 @@ w.add_aggregate('svgfiles', list)
 # --------------------
 
 # The very first nesting is on the seed id.
+
 # For the sake of testing, we allow for switching between the full set of seeds, as returned by `seeds_fn`, and a small test set (`test_seeds`).
-# Perhaps we'll hook this up to a command line option at some point...
-# In any case, note that w.add lets you either directly pass a collection, or a function of the control dictionary (`c` in the functions below) for determining what nest parameters to add.
+# This is controllable via the `--test` cli flag
 
 test_seeds = ["QB850.424-Vk", "QB850.043-Vk"]
+
 def seeds_fn(datapath):
     return os.listdir(path.join(datapath, 'seeds'))
-# You can use this to toggle a small testset vs the entire data set
-seeds = test_seeds
-#seeds = seeds_fn(datapath)
+
+seeds = test_seeds if test_run else seeds_fn(datapath)
 
 # Initialize our first nest level
 w.add('seed', seeds)
