@@ -55,13 +55,18 @@ installing `scons` and `nestly`.
 ```
 
 Finally, you'll have to have partis installed somewhere in order to execute `bin/process_partis.py` (via the `bin/demo.sh` script; see below).
-If you have partis installed somewhere on your `PATH` already, you should be good to go.
-If not, you can simply clone the partis repo and set the `PARTIS` environment variable so `process_partis.py` knows where to find things.
+This repository has a partis submodule that should be kept in sync so that bugs as a result of mismatching assumptions should be avoided.
+To check out this submodule, execute `git submodule init`.
+If there are updates to the submodules, you can have those reflected in your checkout by executing `git submodule update`.
+If you want to update the partis version/commit pointed to by this submodule, you can `cd partis && git update-partis-repo-as-desired && cd .. && git add partis && git commit -m "Updated partis"`.
+
+Before running the pipeline, you'll have to set the `PARTIS` environment variable so `process_partis.py` knows where to find things.
 
 ```
-git clone --depth 1 git@github.com:psathryella/partis.git
 export PARTIS=$PWD/partis
 ```
+
+Note that if you have partis installed somewhere on your `PATH` already, this will be used.
 
 ### Running partis
 
