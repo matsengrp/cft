@@ -9,12 +9,7 @@ Usage:
 '''
 from __future__ import print_function
 
-import os
-import sys
-
-#import cluster
-import datetime
-import getpass
+import copy
 import flask
 from cStringIO import StringIO
 from flask import render_template, Response, url_for, request
@@ -30,10 +25,8 @@ import filters
 _ = filters
 
 def base_renderdict(updates={}):
-    renderdict = {'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            'command': " ".join(sys.argv),
-            'workdir': os.getcwd(),
-            'user': getpass.getuser()}
+    # God damn mutability...
+    renderdict = copy.copy(app.config['BUILD_INFO'])
     renderdict.update(updates)
     return renderdict
 

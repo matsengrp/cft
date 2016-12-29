@@ -19,13 +19,6 @@ app.config['DEBUG'] = True
 # Initialize Flask-Breadcrumbs
 Breadcrumbs(app=app)
 
-# iterate through json files under`dir`
-def content_file_iterator(dir):
-    for root, dirs, files in os.walk(dir):
-        for f in files:
-            if os.path.splitext(f)[1] == '.json':
-                yield os.path.join(root, f)
-
 
 def email_on_error(app):
     from logging.handlers import SMTPHandler
@@ -67,15 +60,14 @@ def log_to_file(app):
 def before_first_request():
     options = app.config['OPTIONS']
 
-    if options.dir:
-        objects = [Cluster.fromfile(f) for f in content_file_iterator(options.dir)]
-    else:
-        objects = [Cluster.fromfile(options.file)]
-        
-    objects = itertools.chain.from_iterable(objects)
+    objects = Cluster.fromfile(options.file)
+
+    #objects = itertools.chain.from_iterable(objects)
     objects = [o for o in objects if o is not None]
-    objects = dict([(g.id, g) for g in objects])
+    objects = dict((g.id, g) for g in objects)
     app.config['CLUSTERS'] = objects
+    with open(options.file) as fh:
+        app.config['BUILD_INFO'] = json.load(fh)["build_info"]
 
     # Configure logging
     if not app.debug:

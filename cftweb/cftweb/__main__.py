@@ -15,13 +15,10 @@ from cftweb import app
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='python -m cftbweb', description=__doc__)
 
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
+    parser.add_argument(
+        '-f',
         '--file',
         help="""Name of metadata file: [default "%(default)s"]""")
-    group.add_argument(
-        '--dir',
-        help="""Directory where content can be found: [default "%(default)s"]""")
 
     parser.add_argument(
         '-H',

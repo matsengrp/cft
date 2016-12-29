@@ -53,7 +53,7 @@ class Cluster(object):
             dir = os.path.abspath(os.path.dirname(filename))
             with open(filename, 'rb') as fp:
                 print("fromfile reading {}".format(filename))
-                array = json.load(fp)
+                array = json.load(fp)["clusters"]
             c = [cls(data, dir) for data in array if type(data) is dict]
         except ValueError as e:
             print(
