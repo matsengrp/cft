@@ -31,6 +31,8 @@ import glob
 import shutil
 import functools
 import sconsutils
+import datetime
+import getpass
 
 from os import path
 from warnings import warn
@@ -402,9 +404,14 @@ def node_metadata(node):
 
 def write_metadata(target, source, env):
     # Here's where we filter out the seeds with clusters that didn't compute through dnaml2tree.py
-    good_metadata = map(lambda x: node_metadata(x[1]), filter(lambda x: tgt_exists(x[0]), in_pairs(source)))
+    good_clusters = map(lambda x: node_metadata(x[1]), filter(lambda x: tgt_exists(x[0]), in_pairs(source)))
+    metadata = {'clusters': good_clusters,
+                'build_info': {'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                               'command': " ".join(sys.argv),
+                               'workdir': os.getcwd(),
+                               'user': getpass.getuser()}}
     with open(str(target[0]), "w") as fh:
-        json.dump(good_metadata, fh, sort_keys=True,
+        json.dump(metadata, fh, sort_keys=True,
                        indent=4, separators=(',', ': '))
 
 @w.add_target()
