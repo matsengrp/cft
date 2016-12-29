@@ -1,0 +1,3 @@
+[submodule "partis"]
+	path = partis
+	url = git@github.com:psathyrella/partis.git
