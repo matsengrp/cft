@@ -1,9 +1,12 @@
 import os
 
-import itertools
 import logging
 import json
-from flask import Flask, g
+import sys
+import datetime
+import getpass
+import subprocess
+from flask import Flask
 from flask_breadcrumbs import Breadcrumbs
 
 from cluster import Cluster
@@ -15,6 +18,17 @@ os.environ['CFTWEB_SETTINGS'] = os.path.join(
 app = Flask(__name__)
 app.config.from_envvar('CFTWEB_SETTINGS')
 app.config['DEBUG'] = True
+
+def git(*args):
+    return subprocess.check_output(['git'] + list(args))
+
+app.config['CFTWEB_BUILD_INFO'] = {
+        'app_date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        'app_command': " ".join(sys.argv),
+        'app_workdir': os.getcwd(),
+        'app_user': getpass.getuser(),
+        'app_commit': git('rev-parse', 'HEAD'),
+        'app_status': git('status', '--porcelain')}
 
 # Initialize Flask-Breadcrumbs
 Breadcrumbs(app=app)
@@ -66,7 +80,7 @@ def before_first_request():
     objects = dict((g.id, g) for g in objects)
     app.config['CLUSTERS'] = objects
     with open(options.file) as fh:
-        app.config['BUILD_INFO'] = json.load(fh)["build_info"]
+        app.config['DATA_BUILD_INFO'] = json.load(fh)["build_info"]
 
     # Configure logging
     if not app.debug:

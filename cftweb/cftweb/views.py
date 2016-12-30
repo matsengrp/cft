@@ -26,7 +26,12 @@ _ = filters
 
 def base_renderdict(updates={}):
     # God damn mutability...
-    renderdict = copy.copy(app.config['BUILD_INFO'])
+    renderdict = copy.copy(app.config['DATA_BUILD_INFO'])
+    renderdict.update(app.config['CFTWEB_BUILD_INFO'])
+    renderdict['commit_url'] = "https://github.com/matsengrp/cft/tree/" + renderdict["commit"]
+    renderdict['short_commit'] = renderdict["commit"][0:10]
+    renderdict['app_commit_url'] = "https://github.com/matsengrp/cft/tree/" + renderdict["app_commit"]
+    renderdict['app_short_commit'] = renderdict["app_commit"][0:10]
     renderdict.update(updates)
     return renderdict
 
