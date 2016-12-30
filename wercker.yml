@@ -1,5 +1,6 @@
 
-box: continuumio/miniconda
+#box: continuumio/miniconda
+box: psathyrella/partis
 
 # comment
 build:
@@ -47,8 +48,23 @@ build:
     - script:
         name: Install sourcecode dependencies
         code: |
-          git clone --depth 1 https://github.com/psathyrella/partis.git
+          #git clone --depth 1 https://github.com/psathyrella/partis.git
+          git submodule init 
           export PARTIS=$PWD/partis
+          cd partis
+          git clone https://github.com/psathyrella/datascripts.git _datascripts
+
+    # Run partis
+    - script:
+        name: Run partis
+        code: |
+          cd partis
+          ./_datascripts/run.py cache-parameters --study kate-qrs --dsets 999g --n-procs 5 --no-slurm  --extra-str v2
+          ./_datascripts/run.py partition --seed-partition --study kate-qrs --dsets 999g --n-procs 5 --no-slurm  --extra-str v2
+          ./_datascripts/run.py run-viterbi --seed-cluster-annotations --study kate-qrs --dsets 999g --n-procs 5 --no-slurm  --extra-str v2
+          ./_datascripts/run.py view-alternative-naive-seqs --seed-partition --study kate-qrs --dsets 999g --n-procs 5 --no-slurm  --extra-str v2
+
+    # Run the pipeline
 
 
     # Run Dave's script to parse some sample partis data.
