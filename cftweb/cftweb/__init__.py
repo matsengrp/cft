@@ -62,7 +62,6 @@ def before_first_request():
 
     objects = Cluster.fromfile(options.file)
 
-    #objects = itertools.chain.from_iterable(objects)
     objects = [o for o in objects if o is not None]
     objects = dict((g.id, g) for g in objects)
     app.config['CLUSTERS'] = objects
