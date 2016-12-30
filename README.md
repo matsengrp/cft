@@ -89,10 +89,13 @@ The build process can be initiated by executing `scons`.
 
 This does some initial processing of partis results using `process_partis.py`, builds trees out of each of the clusters, and does ancestral state reconstructions using these trees, finally producing a `metadata.json` file consumable by the `cftweb` web application.
 
-This build script takes two options parameters:
+This build script takes three options parameters:
 
 * `--datapath`: The output directory of the partis run, defaulting (currently) to `/fh/fast/matsen_e/processed-data/partis/kate-qrs-2016-09-09/new`
 * `--outdir`: The directory in which to output the results of this `SConstruct`, including the `metadata.json` file, defaulting to `output`.
+* `--test`: Run on a small subset of all the seeds, as defined in the `SConstruct`, rather than the whole dataset; Useful for testing new code.
+
+Typical example usage:
 
 ```
 scons --datapath=/some/partis/output-dir --outdir=data/outdir
