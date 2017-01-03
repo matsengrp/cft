@@ -1,3 +1,6 @@
 [submodule "partis"]
 	path = partis
 	url = git@github.com:psathyrella/partis.git
+[submodule "auspice"]
+	path = auspice
+	url = https://github.com/nextstrain/auspice.git
