@@ -29,6 +29,7 @@ if __name__ == "__main__":
         '-P',
         '--port',
         default=5000,
+        type=int,
         help='Port for the Flask app  [%(default)d]')
     parser.add_argument(
         '-d',
@@ -60,7 +61,19 @@ if __name__ == "__main__":
     options = parser.parse_args()
     app.config['OPTIONS'] = options
 
-    app.run(debug=options.debug, host=options.host, port=int(options.port))
+    if not options.debug:
+        try:
+            from gevent import wsgi
+            print("Running with WSGI server")
+            http_server = wsgi.WSGIServer((options.host, options.port), app)
+            http_server.serve_forever()
+        except ImportError:
+            print("Unable to run with WSGI server; using built in server (may crash spontaneously)")
+            print("See: http://stackoverflow.com/questions/37962925/flask-app-get-ioerror-errno-32-broken-pipe")
+            print("Run in debug mode to prevent this warning")
+            app.run(debug=options.debug, host=options.host, port=options.port)
 
+    else:
+        app.run(debug=options.debug, host=options.host, port=int(options.port))
 
     
