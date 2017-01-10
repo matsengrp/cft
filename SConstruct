@@ -412,6 +412,7 @@ def write_metadata(target, source, env):
                 'build_info': {'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                                'command': " ".join(sys.argv),
                                'workdir': os.getcwd(),
+                               'datapath': datapath,
                                'user': getpass.getuser(),
                                'commit': git('rev-parse', 'HEAD'),
                                'status': git('status', '--porcelain')}}
