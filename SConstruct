@@ -349,6 +349,22 @@ def dnaml_tree(outdir, c):
     #del m['file']
     #return m
 
+
+@w.add_target()
+def ancestral_aa(outdir, c):
+    return env.Command(
+        path.join(outdir, 'ancestral_aa.fa'),
+        [c['process_partis'], c['dnaml_tree'][1]],
+        'translate_seqs.py $SOURCES $TARGET')
+
+@w.add_target()
+def seedlineage_aa(outdir, c):
+    return env.Command(
+        path.join(outdir, 'seedlineage_aa.fa'),
+        [c['process_partis'], c['dnaml_tree'][2]],
+        'translate_seqs.py $SOURCES $TARGET')
+
+
 @w.add_target()
 def cluster_metadata(outdir, c):
     def dnaml_tgt_relpath(i):
@@ -364,6 +380,8 @@ def cluster_metadata(outdir, c):
                 'svg ' + dnaml_tgt_relpath(0) + ' ' +
                 'fasta ' + dnaml_tgt_relpath(1) + ' ' +
                 'seedlineage ' + dnaml_tgt_relpath(2) + ' ' +
+                'ancestral_aa ' + str(c['ancestral_aa']) + ' ' +
+                'seedlineage_aa ' + str(c['seedlineage_aa']) + ' ' +
                 'newick ' + dnaml_tgt_relpath(3) + ' ')
     # Note; we used to delete the 'file' attribute as well; not sure why or if that's necessary
     c['metadata'].append(tgt)
