@@ -87,14 +87,18 @@
         <tr>
           <th>All sequences</th>
           <td>
-            <a href='{{ url_for('cluster_fasta', id=cluster.id) }}'>Fasta</a> &nbsp;
+            <a href='{{ url_for('cluster_fasta', id=cluster.id) }}'>Nucleotide</a> &nbsp;
+            <a href='{{ url_for('cluster_aa_fasta', id=cluster.id) }}'>AA Translation</a> &nbsp;
             <!--<a href='{{ url_for('cluster_phylip', id=cluster.id) }}'>Phylip</a>-->
           </td>
         </tr>
         {% if cluster.has_seed %}
         <tr>
           <th>Seed lineage</th>
-          <td><a href='{{ url_for('seedlineage_fasta', id=cluster.id) }}'>Fasta</a></td>
+          <td>
+            <a href='{{ url_for('seedlineage_fasta', id=cluster.id) }}'>Nucleotide</a> &nbsp;
+            <a href='{{ url_for('seedlineage_aa_fasta', id=cluster.id) }}'>AA Translation</a>
+          </td>
         </tr>
         {% endif %}
       </tbody>

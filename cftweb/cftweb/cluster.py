@@ -79,12 +79,11 @@ class Cluster(object):
         # Should really trigger a warning if any of these things happens...
 
         self.svg = os.path.join(dir, self.svg) if hasattr(self, 'svg') else "'svg' json attribute missing"
-        self.fasta = os.path.join(dir, self.fasta) if hasattr(self,
-                                                            'fasta') else "'fasta' json attribute missing"
-        self.newick = os.path.join(dir, self.newick) if hasattr(self,
-                                                            'newick') else "'newick' json attribute missing"
-        self.seedlineage = os.path.join(dir, self.seedlineage) if hasattr(self,
-                                                            'seedlineage') else "'seedlineage' json attribute missing"
+        self.fasta = os.path.join(dir, self.fasta) if hasattr(self, 'fasta') else "'fasta' json attribute missing"
+        self.newick = os.path.join(dir, self.newick) if hasattr(self, 'newick') else "'newick' json attribute missing"
+        self.seedlineage = os.path.join(dir, self.seedlineage) if hasattr(self, 'seedlineage') else "'seedlineage' json attribute missing"
+        self.cluster_aa = os.path.join(dir, self.cluster_aa) if hasattr(self, 'cluster_aa') else "'cluster_aa' json attribute missing"
+        self.seedlineage_aa = os.path.join(dir, self.seedlineage_aa) if hasattr(self, 'seedlineage_aa') else "'seedlineage_aa' json attribute missing"
 
         # Make sure that has_seed is a boolean attribute
         self.has_seed = self.has_seed == 'True'
@@ -154,7 +153,7 @@ class Cluster(object):
         return fasta
 
     def sequences(self):
-        # return the sequences records associated with this cluster
+        "return the sequences records associated with this cluster"
         records = []
         with open(self.fasta, "rU") as fh: 
             tree = self.tree()
@@ -162,8 +161,18 @@ class Cluster(object):
             records = [record_dict[id] if id in record_dict else fake_seq() for id in iter_names_inorder(tree)]
         return records
 
+    def aa_sequences(self):
+        "return the amino acid sequences records associated with this cluster"
+        records = []
+        with open(self.cluster_aa, "rU") as fh: 
+            tree = self.tree()
+            record_dict = SeqIO.to_dict(SeqIO.parse(fh, "fasta"))
+            # Not sure why we're expecting there might be "fake seqs"...
+            records = [record_dict[id] if id in record_dict else fake_seq() for id in iter_names_inorder(tree)]
+        return records
+
     def tree(self):
-        # return ETE tree structure arranged to seed node to the right of all other nodes
+        "return ETE tree structure arranged to seed node to the right of all other nodes"
         tree = Tree(self.newick, format=1)
         naive_node = find_node(tree, '.*naive.*')
         if naive_node:

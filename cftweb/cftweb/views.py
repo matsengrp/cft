@@ -9,6 +9,7 @@ Usage:
 '''
 from __future__ import print_function
 
+import os
 import copy
 import flask
 from cStringIO import StringIO
@@ -150,6 +151,39 @@ def cluster_fasta(id=None):
     return Response(fasta, mimetype="application/octet-stream")
 
 
+@app.route("/download/fasta/<id>.seedlineage.fa")
+def seedlineage_fasta(id=None):
+    clusters = app.config['CLUSTERS']
+    cluster = clusters[id]
+
+    return flask.send_file(cluster.seedlineage)
+
+
+@app.route("/download/fasta/<id>_aa.fa")
+def cluster_aa_fasta(id=None):
+    clusters = app.config['CLUSTERS']
+    cluster = clusters[id]
+
+    return flask.send_file(cluster.cluster_aa)
+
+@app.route("/download/fasta/<id>.seedlineage_aa.fa")
+def seedlineage_aa_fasta(id=None):
+    clusters = app.config['CLUSTERS']
+    cluster = clusters[id]
+
+    return flask.send_file(cluster.seedlineage_aa)
+
+
+
+@app.route("/cluster/<id>/tree.svg")
+def svg_view(id=None):
+    clusters = app.config['CLUSTERS']
+    cluster = clusters[id]
+
+    return flask.send_file(cluster.svg)
+
+
+# This is brokerz... should remove if no one needs it...
 @app.route("/download/phylip/<id>.phy")
 def cluster_phylip(id=None):
     clusters = app.config['CLUSTERS']
@@ -166,21 +200,4 @@ def cluster_phylip(id=None):
     phylip = to_phylip(cluster.sequences())
 
     return Response(phylip, mimetype="application/octet-stream")
-
-
-@app.route("/download/fasta/<id>.seedlineage.fa")
-def seedlineage_fasta(id=None):
-    clusters = app.config['CLUSTERS']
-    cluster = clusters[id]
-
-    return flask.send_file(cluster.seedlineage)
-
-
-@app.route("/cluster/<id>/tree.svg")
-def svg_view(id=None):
-    clusters = app.config['CLUSTERS']
-    cluster = clusters[id]
-
-    return flask.send_file(cluster.svg)
-
 

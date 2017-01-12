@@ -349,10 +349,30 @@ def dnaml_tree(outdir, c):
     #del m['file']
     #return m
 
+
+@w.add_target()
+def cluster_aa(outdir, c):
+    return env.Command(
+        path.join(outdir, 'cluster_aa.fa'),
+        [c['process_partis'], c['dnaml_tree'][1]],
+        'translate_seqs.py $SOURCES $TARGET')
+
+@w.add_target()
+def seedlineage_aa(outdir, c):
+    return env.Command(
+        path.join(outdir, 'seedlineage_aa.fa'),
+        [c['process_partis'], c['dnaml_tree'][2]],
+        'translate_seqs.py $SOURCES $TARGET')
+
+
 @w.add_target()
 def cluster_metadata(outdir, c):
+    # Note: We have to do all this crazy relpath crap because the assumption of cftweb is that all paths
+    # specified in the input metadata.json file are relative to _its_ location, in our context, always base_outdir
+    def relpath(tgt_path):
+        return path.relpath(tgt_path, outdir_base)
     def dnaml_tgt_relpath(i):
-        return path.relpath(str(c['dnaml_tree'][i]), outdir_base)
+        return relpath(str(c['dnaml_tree'][i]))
     tgt = env.Command(
             path.join(outdir, 'extended_metadata.json'),
             c['process_partis'] + c['dnaml_tree'],
@@ -364,6 +384,8 @@ def cluster_metadata(outdir, c):
                 'svg ' + dnaml_tgt_relpath(0) + ' ' +
                 'fasta ' + dnaml_tgt_relpath(1) + ' ' +
                 'seedlineage ' + dnaml_tgt_relpath(2) + ' ' +
+                'cluster_aa ' + relpath(str(c['cluster_aa'][0])) + ' ' +
+                'seedlineage_aa ' + relpath(str(c['seedlineage_aa'][0])) + ' ' +
                 'newick ' + dnaml_tgt_relpath(3) + ' ')
     # Note; we used to delete the 'file' attribute as well; not sure why or if that's necessary
     c['metadata'].append(tgt)
