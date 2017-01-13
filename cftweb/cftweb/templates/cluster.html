@@ -85,6 +85,10 @@
           <td>{{ cluster.clustering_step }}</td>
         </tr>
         <tr>
+          <th>Logprob</th>
+          <td>{{ cluster.logprob }}</td>
+        </tr>
+        <tr>
           <th>All sequences</th>
           <td>
             <a href='{{ url_for('cluster_fasta', id=cluster.id) }}'>Nucleotide</a> &nbsp;

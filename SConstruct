@@ -373,14 +373,16 @@ def cluster_metadata(outdir, c):
         return path.relpath(tgt_path, outdir_base)
     def dnaml_tgt_relpath(i):
         return relpath(str(c['dnaml_tree'][i]))
+    n = re.compile('run-viterbi-best-plus-(?P<step>.*)').match(c['partition']).group('step')
     tgt = env.Command(
             path.join(outdir, 'extended_metadata.json'),
-            c['process_partis'] + c['dnaml_tree'],
+            c['process_partis'] + [partitions(c)] + c['dnaml_tree'],
             # Don't like the order assumptions on dnaml_tgts here...
-            'json_assoc.py $SOURCE $TARGET ' +
+            'assoc_logprob.py $SOURCE ${SOURCES[1]} -n ' + n + ' /dev/stdout | ' +
+                'json_assoc.py /dev/stdin $TARGET ' +
                 # Not 100% on this; Pick optimal attr/key name
                 #'best_partition ' + c['partition'] + ' ' +
-                'clustering_step ' + re.compile('run-viterbi-best-plus-(?P<step>.*)').match(c['partition']).group('step') + ' ' +
+                'clustering_step ' + n + ' ' +
                 'svg ' + dnaml_tgt_relpath(0) + ' ' +
                 'fasta ' + dnaml_tgt_relpath(1) + ' ' +
                 'seedlineage ' + dnaml_tgt_relpath(2) + ' ' +
