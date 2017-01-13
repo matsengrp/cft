@@ -209,9 +209,9 @@ def annotations(c):
     """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
     for actual analysis."""
     return map(path_base_root,
-                # We might eventually want to handle small partitions more manually, so there's data on the other end, but for now, filter is easiest
-                filter(valid_partition,
-                        glob.glob(path.join(input_dir(c), "*-plus-*.csv"))))
+               # We might eventually want to handle small partitions more manually, so there's data on the other end, but for now, filter is easiest
+               filter(valid_partition,
+                      glob.glob(path.join(input_dir(c), "*-plus-*.csv"))))
 
 def partitions(c):
     "Returns the `partition.csv` file path with all the partition information for every partition output by partis."
