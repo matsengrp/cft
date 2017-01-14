@@ -20,6 +20,13 @@
     .svg-container text {
       cursor: pointer;
     }
+    .seq-mode-link {
+      cursor: pointer;
+    }
+    /* We can make the amino acid alignment a little bigger, since shorter */
+    .ascii-art.aa {
+      font-size: 15px;
+    }
 
 
     /* The alignment coloring/styling */
@@ -93,7 +100,7 @@
           <th>All sequences</th>
           <td>
             <a href='{{ url_for('cluster_fasta', id=cluster.id) }}'>Nucleotide</a> &nbsp;
-            <a href='{{ url_for('cluster_aa_fasta', id=cluster.id) }}'>AA Translation</a> &nbsp;
+            <a href='{{ url_for('cluster_aa_fasta', id=cluster.id) }}'>Amino Acid</a> &nbsp;
             <!--<a href='{{ url_for('cluster_phylip', id=cluster.id) }}'>Phylip</a>-->
           </td>
         </tr>
@@ -102,7 +109,7 @@
           <th>Seed lineage</th>
           <td>
             <a href='{{ url_for('seedlineage_fasta', id=cluster.id) }}'>Nucleotide</a> &nbsp;
-            <a href='{{ url_for('seedlineage_aa_fasta', id=cluster.id) }}'>AA Translation</a>
+            <a href='{{ url_for('seedlineage_aa_fasta', id=cluster.id) }}'>Amino Acid</a>
           </td>
         </tr>
         {% endif %}
@@ -111,18 +118,8 @@
   </div>
 </div>
 
-<!--<div>-->
-  <!--<strong>View mode:</strong>-->
-  <!--&nbsp;-->
-  <!--<!-- This is rather fricking ridiculous, but it works; The idea is that these toggles toggle not only the views,-->
-     <!--but themselves as well, since they all have the view-mode-toggle class. This is the sort of ridiculous stateful-->
-     <!--crap we have to resort to without doing something like React. -->-->
-  <!--<span class="display-toggle">ASCII</span>-->
-  <!--<a href="#" class="view-mode-toggle display-toggle" style="display: none;">ASCII</a>-->
-  <!--&nbsp;-->
-  <!--<span class="display-toggle" style="display: none;">SVG</span>-->
-  <!--<a href="#" class="view-mode-toggle display-toggle">SVG</a>-->
-<!--</div>-->
+
+<h3>Phylogenetic tree</h3>
 
 <div class="row">
   <div class="col-md-12" style="overflow-x: scroll;">
@@ -132,18 +129,29 @@
   </div>
 </div>
 
+
+<br/><br/>
+<h3>{{focus_node}} lineage alignment</h3>
+
+<div>
+  <p>
+    <a class="seq-mode-link" data="aa">Amino Acid</a> &nbsp;
+    <a class="seq-mode-link" data="dna">Nucleotide</a>
+  </p>
+</div>
+
 <div class="col-container">
   <div class="scrollable resizable" style="width: 10%;">
     <div>&nbsp;</div><div>&nbsp;</div>
     {% for rec in lineage_seqs %}
-    <div class="ascii-art"> &gt; {{rec.id}} </div>
+    <div class="ascii-art {{seq_mode}}"> &gt; {{rec.id}} </div>
     {% endfor %}
     <div>&nbsp;</div>
   </div>
   <div class="scrollable display-toggle" style="width: auto;">
     <div>&nbsp;</div><div>&nbsp;</div>
     {% for rec in lineage_seqs %}
-    <div class="ascii-art"> {{rec.seq | annotate(cluster, seq_mode) | safe}} </div>
+    <div class="ascii-art {{seq_mode}}"> {{rec.seq | annotate(cluster, seq_mode) | safe}} </div>
     {% endfor %}
     <div>&nbsp;</div>
   </div>
@@ -152,15 +160,19 @@
 <script type="text/javascript">
 $(function() {
     // Define a function for updating the query params
-    function updateQueryStringParameter(uri, key, value) {
+    function updateQueryStringParameter(key, value) {
+      var currentUrl = window.location.href;
       var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
-      var separator = uri.indexOf('?') !== -1 ? "&" : "?";
-      if (uri.match(re)) {
-        return uri.replace(re, '$1' + key + "=" + value + '$2');
+      var separator = currentUrl.indexOf('?') !== -1 ? "&" : "?";
+      var newUrl;
+      if (currentUrl.match(re)) {
+        newUrl = currentUrl.replace(re, '$1' + key + "=" + value + '$2');
       }
       else {
-        return uri + separator + key + "=" + value;
+        newUrl = currentUrl + separator + key + "=" + value;
       }
+      // Navigate to new url
+      location.href = newUrl;
     }
 
     // When our SVG tree's text nodes are clicks, update the focus_node query param (and reload) so the
@@ -168,11 +180,15 @@ $(function() {
     $(".svg-container text").click(function() {
       var nodeName = $(this).html();
       console.log("Node clicked for " + nodeName);
-      var currentUrl = window.location.href;
-      var url = updateQueryStringParameter(currentUrl, 'focus_node', nodeName);
+      updateQueryStringParameter('focus_node', nodeName);
       // TODO Should add an anchor so we zip down to the alignment...
-      location.href = url;
-      //window.open(url);
+      });
+
+    // When we click on the seq_mode links, it should toggle the seq_mode query param
+    $(".seq-mode-link").click(function() {
+      var seqMode = $(this).attr('data');
+      console.log("Seq mode link clicked for " + seqMode);
+      updateQueryStringParameter('seq_mode', seqMode);
       });
     });
 </script>
