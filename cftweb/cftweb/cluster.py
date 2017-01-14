@@ -190,8 +190,4 @@ class Cluster(object):
             svgstr = "%s".format(str(e))
         return svgstr
 
-    def seeds(self):
-        # return the set of seed sequences (if any ) associated with this cluster.
-        pass
-
 
