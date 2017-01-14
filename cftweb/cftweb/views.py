@@ -155,17 +155,26 @@ def cluster_page(id=None):
 
     return render_template('cluster.html', **renderdict)
 
+def to_fasta(seqs):
+    fp = StringIO()
+    SeqIO.write(seqs, fp, 'fasta')
+    return fp.getvalue()
+
+
+@app.route("/cluster/<id>/lineage/<focus_node>.lineage.<seq_mode>.fa")
+def lineage_download(id, focus_node, seq_mode):
+    clusters = app.config['CLUSTERS']
+    cluster = clusters[id]
+    seqs = lineage_seqs(cluster, focus_node, seq_mode)
+
+    fasta = to_fasta(seqs)
+    return Response(fasta, mimetype="application/octet-stream")
+
 
 @app.route("/download/fasta/<id>.fa")
 def cluster_fasta(id=None):
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
-
-    # It would probably be better just to transmit the self.fasta attr...
-    def to_fasta(seqs):
-        fp = StringIO()
-        SeqIO.write(seqs, fp, 'fasta')
-        return fp.getvalue()
 
     fasta = to_fasta(cluster.sequences())
     return Response(fasta, mimetype="application/octet-stream")
@@ -192,7 +201,6 @@ def seedlineage_aa_fasta(id=None):
     cluster = clusters[id]
 
     return flask.send_file(cluster.seedlineage_aa)
-
 
 
 @app.route("/cluster/<id>/tree.svg")
