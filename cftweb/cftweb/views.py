@@ -118,19 +118,39 @@ def by_cluster(pid, timepoint, seedid):
     return render_template('by_cluster.html', **renderdict)
 
 
+def lineage_seqs(cluster, focus_node_name, seq_mode="dna"):
+    assert(seq_mode in set(["dna", "aa"]))
+    tree = cluster.tree()
+    focus_node = tree.search_nodes(name=focus_node_name)[0]
+    lineage = [focus_node] + focus_node.get_ancestors()
+    fname = cluster.fasta if seq_mode == "dna" else cluster.cluster_aa
+    with open(fname, "rU") as fh:
+        cluster_seqs = SeqIO.to_dict(SeqIO.parse(fh, "fasta"))
+        #import pdb; pdb.set_trace()
+        seqs = [cluster_seqs[n.name] for n in lineage if n.name in cluster_seqs]
+        # I think to add in naive we have to do something like
+        #naive_node = find_node(tree, '.*naive.*')
+        # Then get the node name from that then do the below (with correct node name)
+        #seqs.append(cluster_seqs['naive'])
+    return seqs
+
 
 @app.route("/cluster/<id>/cluster.html")
 def cluster_page(id=None):
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
 
-    view_mode = request.args.get('view_mode', 'ascii')
+    # We are now using the lineage kw_args param to get the lineage we want to display
+    seed_name = cluster.seed
+    focus_node = request.args.get('focus_node', seed_name)
+
+    seq_mode = request.args.get('seq_mode', 'aa') # also accepts 'dna' for dna; defaults to amino acid
 
     renderdict = base_renderdict({
         'cluster': cluster,
-        'records': cluster.sequences(),
-        'view_mode': view_mode,
-        'asciiart': cluster.tree().get_ascii(),
+        'focus_node': focus_node,
+        'lineage_seqs': lineage_seqs(cluster, focus_node, seq_mode),
+        'seq_mode': seq_mode,
         'svg': cluster.svgstr()})
 
     return render_template('cluster.html', **renderdict)

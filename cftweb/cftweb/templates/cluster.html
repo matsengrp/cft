@@ -13,10 +13,11 @@
     }
     .ascii-art {
       /* float: right; */
+      font-size: 12px;
 	    white-space: pre;
 	    font-family: monospace;
     }
-    .svg-container {
+    .svg-container text {
       cursor: pointer;
     }
 
@@ -110,20 +111,20 @@
   </div>
 </div>
 
-<div>
-  <strong>View mode:</strong>
-  &nbsp;
-  <!-- This is rather fricking ridiculous, but it works; The idea is that these toggles toggle not only the views,
-     but themselves as well, since they all have the view-mode-toggle class. This is the sort of ridiculous stateful
-     crap we have to resort to without doing something like React. -->
-  <span class="display-toggle">ASCII</span>
-  <a href="#" class="view-mode-toggle display-toggle" style="display: none;">ASCII</a>
-  &nbsp;
-  <span class="display-toggle" style="display: none;">SVG</span>
-  <a href="#" class="view-mode-toggle display-toggle">SVG</a>
-</div>
+<!--<div>-->
+  <!--<strong>View mode:</strong>-->
+  <!--&nbsp;-->
+  <!--<!-- This is rather fricking ridiculous, but it works; The idea is that these toggles toggle not only the views,-->
+     <!--but themselves as well, since they all have the view-mode-toggle class. This is the sort of ridiculous stateful-->
+     <!--crap we have to resort to without doing something like React. -->-->
+  <!--<span class="display-toggle">ASCII</span>-->
+  <!--<a href="#" class="view-mode-toggle display-toggle" style="display: none;">ASCII</a>-->
+  <!--&nbsp;-->
+  <!--<span class="display-toggle" style="display: none;">SVG</span>-->
+  <!--<a href="#" class="view-mode-toggle display-toggle">SVG</a>-->
+<!--</div>-->
 
-<div class="row display-toggle" style="display: none;">
+<div class="row">
   <div class="col-md-12" style="overflow-x: scroll;">
     <figure class="svg-container w80" href="{{ url_for('svg_view', id=cluster.id) }}">
       {{ svg | safe }}
@@ -131,23 +132,18 @@
   </div>
 </div>
 
-<div class="col-container display-toggle">
-  <div class="scrollable resizable" style="width: 35%;">
-    <div class="ascii-art">
-      {{ asciiart | safe }}
-    </div>
-  </div>
+<div class="col-container">
   <div class="scrollable resizable" style="width: 10%;">
     <div>&nbsp;</div><div>&nbsp;</div>
-    {% for rec in records %}
+    {% for rec in lineage_seqs %}
     <div class="ascii-art"> &gt; {{rec.id}} </div>
     {% endfor %}
     <div>&nbsp;</div>
   </div>
-  <div class="scrollable" style="width: auto;">
+  <div class="scrollable display-toggle" style="width: auto;">
     <div>&nbsp;</div><div>&nbsp;</div>
-    {% for rec in records %}
-    <div class="ascii-art"> {{rec.seq | annotate(cluster) | safe}} </div>
+    {% for rec in lineage_seqs %}
+    <div class="ascii-art"> {{rec.seq | annotate(cluster, seq_mode) | safe}} </div>
     {% endfor %}
     <div>&nbsp;</div>
   </div>
@@ -155,10 +151,11 @@
 
 <script type="text/javascript">
 $(function() {
-    $(".view-mode-toggle").click(function() {
+    // Commenting out for now, can reuse this for AA/nuc
+    /*$(".view-mode-toggle").click(function() {
       console.log("Toggling view mode");
       $(".display-toggle").toggle();
-      });
+      });*/
     $(".svg-container").click(function() {
       console.log("Opening svg in new tab");
       var url = $(".svg-container").attr("href");

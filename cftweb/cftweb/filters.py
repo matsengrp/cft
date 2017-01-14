@@ -48,8 +48,11 @@ def unique(a):
     return c
 
 @app.template_filter()
-def annotate(seq, cluster):
-    if len(seq) == 0: return seq
+def annotate(seq, cluster, seq_mode="dna"):
+    # Make sure seq_mode is supported
+    assert(seq_mode in set(["dna", "aa"]))
+    # Return if empyt seq or seq mode is aa (for now; might annotate aa eventually...)
+    if len(seq) == 0 or seq_mode == 'aa': return seq
     seq = seq.upper()
     # random indices to mock up to 10 mutations in each sequence
     #import random
