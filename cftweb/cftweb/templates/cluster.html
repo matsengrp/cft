@@ -151,15 +151,28 @@
 
 <script type="text/javascript">
 $(function() {
-    // Commenting out for now, can reuse this for AA/nuc
-    /*$(".view-mode-toggle").click(function() {
-      console.log("Toggling view mode");
-      $(".display-toggle").toggle();
-      });*/
-    $(".svg-container").click(function() {
-      console.log("Opening svg in new tab");
-      var url = $(".svg-container").attr("href");
-      window.open(url);
+    // Define a function for updating the query params
+    function updateQueryStringParameter(uri, key, value) {
+      var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+      var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+      if (uri.match(re)) {
+        return uri.replace(re, '$1' + key + "=" + value + '$2');
+      }
+      else {
+        return uri + separator + key + "=" + value;
+      }
+    }
+
+    // When our SVG tree's text nodes are clicks, update the focus_node query param (and reload) so the
+    // corresponding lineage is loaded.
+    $(".svg-container text").click(function() {
+      var nodeName = $(this).html();
+      console.log("Node clicked for " + nodeName);
+      var currentUrl = window.location.href;
+      var url = updateQueryStringParameter(currentUrl, 'focus_node', nodeName);
+      // TODO Should add an anchor so we zip down to the alignment...
+      location.href = url;
+      //window.open(url);
       });
     });
 </script>
