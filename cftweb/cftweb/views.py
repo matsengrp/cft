@@ -211,21 +211,3 @@ def svg_view(id=None):
     return flask.send_file(cluster.svg)
 
 
-# This is brokerz... should remove if no one needs it...
-@app.route("/download/phylip/<id>.phy")
-def cluster_phylip(id=None):
-    clusters = app.config['CLUSTERS']
-    cluster = clusters[id]
-
-    def to_phylip(seqs):
-        fp = StringIO()
-        for seq in seqs:
-            seq = seq.replace('.', '-')
-            record = SeqRecord(seq)
-            SeqIO.write(record, fp, 'phylip-relaxed')
-        return fp.getvalue()
-
-    phylip = to_phylip(cluster.sequences())
-
-    return Response(phylip, mimetype="application/octet-stream")
-
