@@ -40,7 +40,7 @@ via conda.
 
 ```
 	$ conda install pandas biopython flask nestly pyqt slackclient
-	$ pip install ete3 scons flask-breadcrumbs slacker-log-handler
+	$ pip install ete3 scons flask-breadcrumbs slacker-log-handler cottonmouth
  
 ```
 
