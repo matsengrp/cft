@@ -117,28 +117,20 @@ class Cluster(object):
             self.timepoint = m.group('timepoint')
 
         
-        # Generate a unique identifier.  This id is used to index into
-        # a dict of clusters and it will be visible in URLs.
-        # Generating ids in this way means that the resulting URLs are
-        # not persistent; they will change every time this server is
-        # restarted.
+        # Generate a unique identifier.  This id is used to index into a dict of clusters and it will be visible in URLs.
         #
-        # Whatever id is used here, it must be unique across all the
-        # clusters being managed by the web interface.  If the id is
-        # persistent across time, all the better!
+        # Whatever id is used here, it must be unique across all the clusters being managed by the web interface.
+        # Our particular approach here is to use a hash of "<individual> + <timepoint> + <seed>". In theory, this could 
+        # clash if (e.g.) researchers reran after some sequencing error, but because we only accept a single
+        # json file these days, this scenario seems unlikely. The benefit of doing this versus just creating a
+        # random uuid (or some such) is that we get persistent cluster urls across reboots.
         #
-        # One alternative would be generate an id by
-        # concatenating parts of the cluster data, something like
-        # "<individual> + <timepoint> + <seed>", but it is hard to
-        # guarantee that would actually be unique.  Researchers might
-        # rerun the exact same run again because of some sequencing
-        # error (happens all the time!).
-        #
-        # Another alternative would be to use random unique ids like uuid.uuid4().hex,
-        # but generate them earlier in the pipeline and stick them in the json file.
+        # These identifiers may have to change if addition information is needed to maintain uniqueness, and
+        # when possible care should be taken to retain existing ids. But for now this is only a soft guarantee.
         
-        self.id = uuid.uuid4().hex
+        self.id = "c{}".format(hash((self.seed, self.timepoint, self.clustering_step)))
 
+        # Compute and cache number of seqs by reading through the seq file
         self.nseq = 0
         with open(self.fasta, "rU") as fh:
             self.nseq = len(list(SeqIO.parse(fh, 'fasta')))
