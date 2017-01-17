@@ -28,7 +28,7 @@ app.config['CFTWEB_BUILD_INFO'] = {
         'app_workdir': os.getcwd(),
         'app_user': getpass.getuser(),
         'app_commit': git('rev-parse', 'HEAD'),
-        'app_status': git('status', '--porcelain')}
+        'app_status': git('status', '--porcelain', '.')}
 
 # Initialize Flask-Breadcrumbs
 Breadcrumbs(app=app)
