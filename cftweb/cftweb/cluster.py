@@ -136,6 +136,7 @@ class Cluster(object):
             self.nseq = len(list(SeqIO.parse(fh, 'fasta')))
 
 
+    # Public methods
         
     def fasta(self):
         # return a string containing the fasta sequences
@@ -144,32 +145,34 @@ class Cluster(object):
             fasta = fh.read()
         return fasta
 
-    def sequences(self):
+    def sequences(self, seq_mode="dna", as_dict=False):
         "return the sequences records associated with this cluster"
+        assert(seq_mode in set(["dna", "aa"]))
         records = []
-        with open(self.fasta, "rU") as fh: 
-            tree = self.tree()
-            record_dict = SeqIO.to_dict(SeqIO.parse(fh, "fasta"))
-            records = [record_dict[id] if id in record_dict else fake_seq() for id in iter_names_inorder(tree)]
+        with open(self.fasta if seq_mode == "dna" else self.cluster_aa, "rU") as fh: 
+            records = (SeqIO.to_dict if as_dict else list)(SeqIO.parse(fh, "fasta"))
         return records
 
-    def aa_sequences(self):
-        "return the amino acid sequences records associated with this cluster"
-        records = []
-        with open(self.cluster_aa, "rU") as fh: 
-            tree = self.tree()
-            record_dict = SeqIO.to_dict(SeqIO.parse(fh, "fasta"))
-            # Not sure why we're expecting there might be "fake seqs"...
-            records = [record_dict[id] if id in record_dict else fake_seq() for id in iter_names_inorder(tree)]
-        return records
+    def lineage_seqs(self, focus_node_name, seq_mode="dna"):
+        tree = self.tree()
+        focus_node = tree.search_nodes(name=focus_node_name)[0]
+        lineage = [focus_node] + focus_node.get_ancestors()
+        cluster_seqs = self.sequences(seq_mode=seq_mode, as_dict=True)
+        seqs = [cluster_seqs[n.name] for n in lineage if n.name in cluster_seqs]
+        # Add naive to the very bottom (we should really just rewrite things to ensure naive is the root)
+        seqs.append(cluster_seqs["naive0"])
+        return seqs
+
+    def seed_seq(self, seq_mode="dna"):
+        return self.sequences(seq_mode=seq_mode, as_dict=True)[self.seed]
 
     def tree(self):
         "return ETE tree structure arranged to seed node to the right of all other nodes"
         tree = Tree(self.newick, format=1)
-        naive_node = find_node(tree, '.*naive.*')
-        if naive_node:
-            tree.set_outgroup(naive_node)
-        sort_tree(tree, direction=1, predicate=lambda n: 'seed' in n.name)
+        #naive_node = find_node(tree, '.*naive.*')
+        #if naive_node:
+            #tree.set_outgroup(naive_node)
+        #sort_tree(tree, direction=1, predicate=lambda n: 'seed' in n.name)
         return tree
 
     def svgstr(self):

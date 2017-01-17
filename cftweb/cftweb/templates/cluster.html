@@ -228,14 +228,18 @@
 
 <div class="col-container">
   <div class="scrollable resizable" style="width: 10%;">
-    <div>&nbsp;</div><div>&nbsp;</div>
+    <div>&nbsp;</div>
+    <div class="ascii-art {{seq_mode}}"> &gt; {{seed_seq.id}} </div>
+    <div>&nbsp;</div>
     {% for rec in lineage_seqs %}
     <div class="ascii-art {{seq_mode}}"> &gt; {{rec.id}} </div>
     {% endfor %}
     <div>&nbsp;</div>
   </div>
   <div class="scrollable display-toggle" style="width: auto;">
-    <div>&nbsp;</div><div>&nbsp;</div>
+    <div>&nbsp;</div>
+    <div class="ascii-art {{seq_mode}}"> {{seed_seq.seq | annotate(cluster, seq_mode) | safe}} </div>
+    <div>&nbsp;</div>
     {% for rec in lineage_seqs %}
     <div class="ascii-art {{seq_mode}}"> {{rec.seq | annotate(cluster, seq_mode) | safe}} </div>
     {% endfor %}
