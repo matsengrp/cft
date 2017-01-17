@@ -149,7 +149,7 @@ def to_fasta(seqs):
 def lineage_download(id, focus_node, seq_mode):
     clusters = app.config['CLUSTERS']
     cluster = clusters[id]
-    seqs = lineage_seqs(cluster, focus_node, seq_mode)
+    seqs = cluster.lineage_seqs(focus_node, seq_mode)
 
     fasta = to_fasta(seqs)
     return Response(fasta, mimetype="application/octet-stream")
