@@ -133,6 +133,7 @@ def cluster_page(id=None):
         'cluster': cluster,
         'focus_node': focus_node,
         'lineage_seqs': cluster.lineage_seqs(focus_node, seq_mode),
+        'seed_seq': cluster.seed_seq(seq_mode),
         'seq_mode': seq_mode,
         'svg': cluster.svgstr()})
 
