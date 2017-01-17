@@ -5,15 +5,17 @@ import csv
 import json
 
 
+
 def get_logprob(partition_handle, cluster_step):
     parts = [x for x in csv.DictReader(partition_handle)]
-    for x in parts:
+    for i, x in enumerate(parts):
+        x['index'] = i
         x['n_clusters'] = int(x['n_clusters'])
         x['logprob'] = float(x['logprob'])
-    best_part = min(parts, key=lambda x: x['n_clusters'])
-    best_n = best_part['n_clusters']
-    cluster_n = best_n + cluster_step
-    return [x['logprob'] for x in parts if x['n_clusters'] == cluster_n][0]
+    best_part = max(parts, key=lambda x: x['logprob'])
+    best_i = best_part['index']
+    cluster_i = best_i + cluster_step
+    return parts[cluster_i]["logprob"]
 
 
 def merge_logprob(in_handle, logprob, out_handle):
