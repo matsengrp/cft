@@ -163,6 +163,20 @@ class Cluster(object):
             records = [record_dict[id] if id in record_dict else fake_seq() for id in iter_names_inorder(tree)]
         return records
 
+    def lineage_seqs(self, focus_node_name, seq_mode="dna"):
+        assert(seq_mode in set(["dna", "aa"]))
+        tree = self.tree()
+        focus_node = tree.search_nodes(name=focus_node_name)[0]
+        lineage = [focus_node] + focus_node.get_ancestors()
+        fname = self.fasta if seq_mode == "dna" else self.cluster_aa
+        with open(fname, "rU") as fh:
+            cluster_seqs = SeqIO.to_dict(SeqIO.parse(fh, "fasta"))
+            #import pdb; pdb.set_trace()
+            seqs = [cluster_seqs[n.name] for n in lineage if n.name in cluster_seqs]
+            # Add naive to the very bottom (we should really just rewrite things to ensure naive is the root)
+            seqs.append(cluster_seqs["naive0"])
+        return seqs
+
     def tree(self):
         "return ETE tree structure arranged to seed node to the right of all other nodes"
         tree = Tree(self.newick, format=1)
