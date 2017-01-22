@@ -159,7 +159,7 @@ def process_data(annot_file, part_file, chain, glpath):
         utils.process_input_line(line)
         utils.add_implicit_info(glfo, line)
         current_df['unique_ids'] = line['unique_ids'] + ['naive{}'.format(idx)]
-        current_df['seqs'] = line['seqs'] + [line['naive_seq']]
+        current_df['seqs'] = line['input_seqs'] + [line['naive_seq']]
         for col in to_keep:
             current_df[col] = line[col]
         current_df['cluster'] = str(idx)

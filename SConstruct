@@ -52,6 +52,11 @@ sconsutils
 # Set up SCons environment
 
 environ = os.environ.copy()
+
+# If the PARTIS env var isn't already set, default to $PWD/partis (where we have a git
+# submodule checkout; this is needed for bin/process_partis.py)
+environ['PARTIS'] = environ.get('PARTIS', path.join(os.getcwd(), 'partis'))
+
 env = Environment(ENV=environ)
 
 # Add stuff to PATH
@@ -258,19 +263,85 @@ def inseqs(outdir, c):
         functools.partial(extract_inseqs, outdir))
 
 # Forget why we do this; Chris W. seems to think it may not have been as necessary as original thought.
+# Regardless of what the deal was with this, I think we can take it out once we add an alignment for inseqs
+#@w.add_target()
+#def padded_seqs(outdir, c):
+    #return env.Command(
+        #path.join(outdir, "padded_seqs.fa"),
+        #c['inseqs'],
+        #"python bin/padseq.py $SOURCE > $TARGET")
+
+
+
+# Sequence Alignment
+# ==================
+
+# What follows is a rather convoluted backtranslation strategy for sequence alignment.
+# The basic idea is that we translate our sequences, align them (taking advantage of coding information),
+# and from this infer the a nucleotide alignment using `seqmagick backtrans-align`.
+# The problem is that `seqmagick` rather finicky here about sequence ordering and nucleotide seqs being in
+# lengths of multiples of three.
+# So there's a bunch of housekeeping here in making sure all of this is the case for our final backtrans-align
+# step.
+
 @w.add_target()
-def padded_seqs(outdir, c):
+def translated_inseqs_(outdir, c):
     return env.Command(
-        path.join(outdir, "padded_seqs.fa"),
-        c['inseqs'],
-        "python bin/padseq.py $SOURCE > $TARGET")
+        #path.join(outdir, "translated_inseqs.fasta"),
+        #c['inseqs'],
+        #'seqmagick convert --translate dna2protein $SOURCE $TARGET')
+        [path.join(outdir, "translated_inseqs.fasta"), path.join(outdir, 'inseqs_trimmed.fasta')],
+        [c['process_partis'], c['inseqs']],
+        'translate_seqs.py $SOURCES $TARGET -t ${TARGETS[1]}')
+
+@w.add_target()
+def translated_inseqs(outdir, c):
+    return c['translated_inseqs_'][0]
+
+@w.add_target()
+def trimmed_inseqs(outdir, c):
+    return c['translated_inseqs_'][1]
+
+@w.add_target()
+def sorted_inseqs(outdir, c):
+    return env.Command(
+        path.join(outdir, "sorted_inseqs.fasta"),
+        c['trimmed_inseqs'],
+        'seqmagick convert --sort name-asc $SOURCE $TARGET')
+
+@w.add_target()
+def aligned_translated_inseqs(outdir, c):
+    return env.SRun(
+        path.join(outdir, "aligned_translated_inseqs.fasta"),
+        c['translated_inseqs'],
+        'muscle -in $SOURCE -out $TARGET')
+
+@w.add_target()
+def sorted_aligned_translated_inseqs(outdir, c):
+    return env.Command(
+        path.join(outdir, "sorted_aligned_translated_inseqs.fasta"),
+        c['aligned_translated_inseqs'],
+        'seqmagick convert --sort name-asc $SOURCE $TARGET')
+
+# All that for this...
+@w.add_target()
+def aligned_inseqs(outdir, c):
+    return env.Command(
+        path.join(outdir, 'aligned_inseqs.fasta'),
+        [c['sorted_aligned_translated_inseqs'], c['sorted_inseqs']],
+        'seqmagick backtrans-align -a warn $SOURCES -o $TARGET')
+
+
+
+# On with trees and other things...
+# =================================
 
 # use fasttree to make newick tree from sequences
 @w.add_target()
 def fasttree(outdir, c):
     return env.SRun(
         path.join(outdir, "fasttree.nwk"),
-        c['padded_seqs'],
+        c['aligned_inseqs'],
         "FastTree -nt -quiet $SOURCE > $TARGET")
 
 # calculate list of sequences to be pruned
@@ -286,7 +357,7 @@ def pruned_ids(outdir, c):
 def pruned_seqs(outdir, c):
     return env.Command(
         path.join(outdir, "pruned.fa"),
-        [c['pruned_ids'], c['padded_seqs']],
+        [c['pruned_ids'], c['aligned_inseqs']],
         "seqmagick convert --include-from-file $SOURCES $TARGET")
 
 # Convert to phylip for dnaml
@@ -357,6 +428,7 @@ def cluster_aa(outdir, c):
         [c['process_partis'], c['dnaml_tree'][1]],
         'translate_seqs.py $SOURCES $TARGET')
 
+# TODO I think we can take this out now that we compute lineages dynamically in cftweb
 @w.add_target()
 def seedlineage_aa(outdir, c):
     return env.Command(
