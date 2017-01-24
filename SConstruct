@@ -303,18 +303,20 @@ def trimmed_inseqs(outdir, c):
     return c['translated_inseqs_'][1]
 
 @w.add_target()
+def aligned_translated_inseqs(outdir, c):
+    return env.SRun(
+        path.join(outdir, "aligned_translated_inseqs.fasta"),
+        c['translated_inseqs'],
+        # Replace stop codons with X, or muscle inserts gaps, which messed up seqmagick backtrans-align below
+        # Note that things will break down at backtrans-align if any seq ids have * in them...
+        'sed \'s/\*/X/g\' $SOURCE | muscle -in /dev/stdin -out $TARGET')
+
+@w.add_target()
 def sorted_inseqs(outdir, c):
     return env.Command(
         path.join(outdir, "sorted_inseqs.fasta"),
         c['trimmed_inseqs'],
         'seqmagick convert --sort name-asc $SOURCE $TARGET')
-
-@w.add_target()
-def aligned_translated_inseqs(outdir, c):
-    return env.SRun(
-        path.join(outdir, "aligned_translated_inseqs.fasta"),
-        c['translated_inseqs'],
-        'muscle -in $SOURCE -out $TARGET')
 
 @w.add_target()
 def sorted_aligned_translated_inseqs(outdir, c):
@@ -323,7 +325,8 @@ def sorted_aligned_translated_inseqs(outdir, c):
         c['aligned_translated_inseqs'],
         'seqmagick convert --sort name-asc $SOURCE $TARGET')
 
-# All that for this...
+# Now, finally, we can backtranslate
+
 @w.add_target()
 def aligned_inseqs(outdir, c):
     return env.Command(
@@ -368,7 +371,7 @@ def phy(outdir, c):
         c['pruned_seqs'],
         "seqmagick convert $SOURCE $TARGET")
 
-# Create a config file for dnaml (a persnickety old program with interactive menues...)
+# Create a "config file" for dnaml (a persnickety old program with interactive menues...)
 @w.add_target()
 def dnaml_config(outdir, c):
     return env.Command(
