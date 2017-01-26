@@ -371,13 +371,15 @@ def pruned_ids(outdir, c):
         c['fasttree'],
         "python bin/prune.py --seed " + c['seed'] + " $SOURCE > $TARGET")
 
-# prune out sequences to reduce taxa
+# prune out sequences to reduce taxa, making sure to cut out columns in the alignment that are now entirely
+# gaps from insertions in sequences that have been pruned out.
 @w.add_target()
 def pruned_seqs(outdir, c):
     return env.Command(
         path.join(outdir, "pruned.fa"),
         [c['pruned_ids'], c['aligned_inseqs']],
-        "seqmagick convert --include-from-file $SOURCES $TARGET")
+        "seqmagick convert --include-from-file $SOURCES - | " +
+        "seqmagick convert --squeeze - $TARGET")
 
 # Convert to phylip for dnaml
 @w.add_target()
@@ -439,21 +441,20 @@ def dnaml_tree(outdir, c):
     #del m['file']
     #return m
 
-
 @w.add_target()
 def cluster_aa(outdir, c):
     return env.Command(
         path.join(outdir, 'cluster_aa.fa'),
-        [c['process_partis'], c['dnaml_tree'][1]],
-        'translate_seqs.py $SOURCES $TARGET')
+        c['dnaml_tree'][1],
+        'seqmagick convert --translate dna2protein $SOURCE $TARGET')
 
 # TODO I think we can take this out now that we compute lineages dynamically in cftweb
 @w.add_target()
 def seedlineage_aa(outdir, c):
     return env.Command(
         path.join(outdir, 'seedlineage_aa.fa'),
-        [c['process_partis'], c['dnaml_tree'][2]],
-        'translate_seqs.py $SOURCES $TARGET')
+        c['dnaml_tree'][2],
+        'seqmagick convert --translate dna2protein $SOURCE $TARGET')
 
 
 @w.add_target()
