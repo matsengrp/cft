@@ -37,7 +37,7 @@ def sections(fh):
 def parse_seqdict(fh):
     #  152        sssssssssG AGGTGCAGCT GTTGGAGTCT GGGGGAGGCT TGGTACAGCC TGGGGGGTCC
     seqs = defaultdict(str)
-    pat = re.compile("^\s*(?P<id>[a-zA-Z0-9>_.-]*)\s+(?P<seq>[a-zA-Z ]+)")
+    pat = re.compile("^\s*(?P<id>[a-zA-Z0-9>_.-]*)\s+(?P<seq>[a-zA-Z \-]+)")
     fh.next()
     for line in fh:
         m = pat.match(line)

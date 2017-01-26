@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-from Bio import SeqIO, SeqRecord
+from Bio import SeqIO, SeqRecord, Seq
 import json
 
 
@@ -15,7 +15,7 @@ def trim_end(seqrecord, frame):
 
 def translate_seqrecord(seqrecord, frame):
     end = trim_end(seqrecord, frame)
-    trans_seq = seqrecord.seq[frame:end].translate()
+    trans_seq = Seq.Seq(str(seqrecord.seq[frame:end]).replace('-', '')).translate()
     trans_seqrecord = SeqRecord.SeqRecord(trans_seq, id=seqrecord.id, name=seqrecord.name, description=seqrecord.description)
     return trans_seqrecord
 
