@@ -169,10 +169,11 @@ class Cluster(object):
     def tree(self):
         "return ETE tree structure arranged to seed node to the right of all other nodes"
         tree = Tree(self.newick, format=1)
-        #naive_node = find_node(tree, '.*naive.*')
-        #if naive_node:
-            #tree.set_outgroup(naive_node)
-        #sort_tree(tree, direction=1, predicate=lambda n: 'seed' in n.name)
+        # I'm not sure we actually need this, but there are cases where we might. Better safe than sorry.
+        naive_node = find_node(tree, '.*naive.*')
+        if naive_node:
+            tree.set_outgroup(naive_node)
+        sort_tree(tree, direction=1, predicate=lambda n: 'seed' in n.name)
         return tree
 
     def svgstr(self):
