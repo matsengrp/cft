@@ -11,6 +11,7 @@ import argparse
 import os
 import os.path
 import itertools
+import warnings
 import json
 import time
 import re
@@ -65,6 +66,10 @@ def parse_args():
         '--output_dir',
         default='.',
         help='directory for output files')
+    parser.add_argument(
+        '-F', '--remove-frameshifts',
+        help='if set, tries to remove seqs with frameshift indels from the output',
+        action="store_true")
     log_or_param_dir = parser.add_mutually_exclusive_group(required=True)
     log_or_param_dir.add_argument(
         '--partis_log',
@@ -131,6 +136,23 @@ def process_log_file(log_file):
     return chain, inferred_gls
 
 
+def indel_offset(indelfo):
+    return sum(map(lambda indel: indel['len'] * (1 if indel['type'] == 'insertion' else -1),
+                   indelfo['indels']))
+
+def infer_frameshifts(line):
+    attrs = ['stops', 'indelfos', 'input_seqs']
+    def infer_(args):
+        stop, indelfo, input_seq = args
+        aa = Seq(input_seq).translate()
+        stop_count = aa.count("*")
+        # We say it's a frameshift if the indell offsets don't leave us with a multiple of three, and if there
+        # are stop codons. Can tweak this down the road, but for now...
+        return bool(stop_count > 0 and indel_offset(indelfo) % 3)
+    return map(infer_,
+               zip(*map(lambda x: line[x], attrs)))
+
+
 def process_data(annot_file, part_file, chain, glpath):
     """
     Melt data into dataframe from annotations and partition files
@@ -160,6 +182,7 @@ def process_data(annot_file, part_file, chain, glpath):
         utils.add_implicit_info(glfo, line)
         current_df['unique_ids'] = line['unique_ids'] + ['naive{}'.format(idx)]
         current_df['seqs'] = line['input_seqs'] + [line['naive_seq']]
+        current_df['frameshifts'] = infer_frameshifts(line) + [False] # mocking last entry
         for col in to_keep:
             current_df[col] = line[col]
         current_df['cluster'] = str(idx)
@@ -251,7 +274,15 @@ def write_fasta(df, fname):
         SeqIO.write(iter_seqs(df), fh, "fasta")
 
     
-def write_separate_fasta(df, output_dir, cluster_base):
+def write_separate_fasta(df, output_dir, cluster_base, remove_frameshifts=False):
+    # Remove frameshift seqs if requested
+    frameshifted_seqs = list(df[df.frameshifts].unique_ids)
+    if frameshifted_seqs:
+        if remove_frameshifts:
+            print "Removing frameshifted seqs:", frameshifted_seqs
+            df = df[- df.frameshifts]
+        else:
+            warnings.warn("Found possible frameshifted input_seqs: " + str(frameshifted_seqs))
     for k,g in df.groupby(['cluster']):
         fname = os.path.join(output_dir, cluster_base+'{}.fa'.format(k))
         write_fasta(g, fname)
@@ -309,7 +340,8 @@ def main():
 
     write_separate_fasta(melted_annotations,
                          args.output_dir,
-                         args.cluster_base)
+                         args.cluster_base,
+                         args.remove_frameshifts)
 
     write_melted_partis(melted_annotations,
                         os.path.join(args.output_dir, 'melted.csv'))

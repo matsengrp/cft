@@ -237,9 +237,10 @@ def annotation(c):
 
 @w.add_target()
 def process_partis(outdir, c):
+    # Should get this to explicitly depend on cluster0.fa
     return env.Command(path.join(outdir, 'metadata.json'),
             [partitions(c), annotation(c)],
-            'process_partis.py ' +
+            'process_partis.py -F ' +
                 '--partition ${SOURCES[0]} ' +
                 '--annotations ${SOURCES[1]} ' +
                 #'--param_dir ' + parameter_dir(c) + ' '
