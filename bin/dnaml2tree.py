@@ -185,7 +185,7 @@ def render_tree(fname, tree, annotations, highlight_node):
         name = node.name
         seqmeta = annotations.get(node.name)
         if seqmeta and not re.compile(".*naive.*").match(node.name):
-            name = node.name + " (mf={})".format(round(float(seqmeta['mut_freqs']), 3))
+            name = node.name + " (mf={}) ".format(round(float(seqmeta['mut_freqs']), 3))
         F = TextFace(name)
         add_face_to_node(F, node, column=0, position='branch-right')
 
