@@ -130,10 +130,6 @@ class Cluster(object):
         
         self.id = "c{}".format(hash((self.seed, self.timepoint, self.clustering_step)))
 
-        # Compute and cache number of seqs by reading through the seq file
-        self.nseq = 0
-        with open(self.fasta, "rU") as fh:
-            self.nseq = len(list(SeqIO.parse(fh, 'fasta')))
 
 
     # Public methods
