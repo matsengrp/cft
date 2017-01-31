@@ -236,9 +236,10 @@ def annotation(c):
     return path.join(input_dir(c), c['partition'] + '.csv')
 
 @w.add_target()
-def process_partis(outdir, c):
+def process_partis_(outdir, c):
     # Should get this to explicitly depend on cluster0.fa
-    return env.Command(path.join(outdir, 'metadata.json'),
+    return env.Command(
+            [path.join(outdir, x) for x in ['metadata.json', 'cluster0.fa', 'seqmeta.csv']],
             [partitions(c), annotation(c)],
             'process_partis.py -F ' +
                 '--partition ${SOURCES[0]} ' +
@@ -246,7 +247,17 @@ def process_partis(outdir, c):
                 #'--param_dir ' + parameter_dir(c) + ' '
                 '--partis_log ' + path.join(input_dir(c), 'partition.log ') +
                 '--cluster_base cluster ' +
+                '--melted_base seqmeta ' +
                 '--output_dir ' + outdir)
+
+@w.add_target()
+def base_metadata(outdir, c):
+    return c['process_partis_'][0]
+
+@w.add_target()
+def seqmeta(outdir, c):
+    return c['process_partis_'][2]
+
 
 # To get the input sequences we need to read in the file output by process_partis to figure out what the input fasta was,
 # and then for convenience copy it over locally
@@ -260,7 +271,7 @@ def extract_inseqs(outdir, target, source, env):
 def inseqs(outdir, c):
     return env.Command(
         path.join(outdir, "inseqs.fasta"),
-        c['process_partis'],
+        c['base_metadata'],
         functools.partial(extract_inseqs, outdir))
 
 # Forget why we do this; Chris W. seems to think it may not have been as necessary as original thought.
@@ -292,7 +303,7 @@ def translated_inseqs_(outdir, c):
         #c['inseqs'],
         #'seqmagick convert --translate dna2protein $SOURCE $TARGET')
         [path.join(outdir, "translated_inseqs.fasta"), path.join(outdir, 'inseqs_trimmed.fasta')],
-        [c['process_partis'], c['inseqs']],
+        [c['base_metadata'], c['inseqs']],
         'translate_seqs.py $SOURCES $TARGET -t ${TARGETS[1]}')
 
 @w.add_target()
@@ -419,9 +430,10 @@ def dnaml_tree(outdir, c):
     tgt = env.Command(
             map(lambda x: path.join(outdir, x),
                 ["dnaml.svg", "dnaml.fa", "dnaml.seedLineage.fa", "dnaml.newick"]),
-            c['dnaml'],
+            [c['dnaml'][1], c['seqmeta']],
             # Note: the `-` prefix here tells scons to keep going if this command fails.
-            "- xvfb-run -a bin/dnaml2tree.py --seed " + c['seed'] + " --dnaml ${SOURCES[1]} --outdir ${TARGETS[0].dir} --basename dnaml")
+            "- xvfb-run -a bin/dnaml2tree.py --seed " + c['seed'] +
+                " --dnaml ${SOURCES[0]} --seqmeta ${SOURCES[1]} --outdir ${TARGETS[0].dir} --basename dnaml")
     # Manually depend on dnaml2tree.py script, since it doesn't fall in the first position within the command
     # string.
     env.Depends(tgt, 'bin/dnaml2tree.py')
@@ -468,7 +480,7 @@ def cluster_metadata(outdir, c):
     n = re.compile('run-viterbi-best-plus-(?P<step>.*)').match(c['partition']).group('step')
     tgt = env.Command(
             path.join(outdir, 'extended_metadata.json'),
-            c['process_partis'] + [partitions(c)] + c['dnaml_tree'],
+            [c['base_metadata'], partitions(c)] + c['dnaml_tree'],
             # Don't like the order assumptions on dnaml_tgts here...
             'assoc_logprob.py $SOURCE ${SOURCES[1]} -n ' + n + ' /dev/stdout | ' +
                 'json_assoc.py /dev/stdin $TARGET ' +

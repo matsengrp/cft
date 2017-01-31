@@ -7,7 +7,7 @@ from __future__ import print_function
 
 import argparse
 from ete3 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
-import sys
+import csv
 import re
 import os
 from warnings import warn
@@ -16,7 +16,6 @@ from collections import defaultdict
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from Bio.Alphabet import IUPAC
 
 
 # iterate over recognized sections in the phylip output file.
@@ -52,7 +51,6 @@ def parse_seqdict(fh):
 
 # iterate over entries in the distance section
 def iter_parents(fh):
-    parents = {}
     #  152          >naive2           0.01208     (     zero,     0.02525) **
     pat = re.compile("^\s*(?P<parent>[0-9]+)\s+(?P<child>[a-zA-z0-9>_.-]+)\s+(?P<distance>[0-9]+(\.[0-9]+))")
     fh.next()
@@ -178,6 +176,33 @@ def highlight_lineage(tree, pattern='seed.*'):
     return tree
 
 
+def render_tree(fname, tree, annotations, highlight_node):
+    "render tree SVG"
+    ts = TreeStyle()
+    ts.show_leaf_name = False
+
+    def my_layout(node):
+        name = node.name
+        seqmeta = annotations.get(node.name)
+        if seqmeta and not re.compile(".*naive.*").match(node.name):
+            name = node.name + " (mf={})".format(round(float(seqmeta['mut_freqs']), 3))
+        F = TextFace(name)
+        add_face_to_node(F, node, column=0, position='branch-right')
+
+    ts.layout_fn = my_layout
+    # whether or not we had rerooted on naive before, we want to do so for the SVG tree
+    if 'naive' not in tree.name:
+        tree = reroot_tree(tree, '.*naive.*')
+    # highlight lineage from seed to root.
+    tree = highlight_lineage(tree, highlight_node+'.*')
+    tree.render(fname, tree_style=ts)
+
+
+def seqmeta_input(fname):
+    with open(fname, 'r') as fhandle:
+        return dict((row['unique_ids'], row) for row in csv.DictReader(fhandle))
+
+
 def main():
     def existing_file(fname):
         """
@@ -191,6 +216,9 @@ def main():
     parser.add_argument(
         '--dnaml', type=existing_file, default='outfile',
         help='dnaml outfile (verbose output with inferred ancestral sequences, option 5). [ default \'%(default)s\' ]')
+    parser.add_argument(
+        '--seqmeta', type=seqmeta_input,
+        help="Sequence metadata file for annotating mut_freqs")
     parser.add_argument(
         '--outdir', default='.',
         help='output directory where results are left.  [ default \'%(default)s\' ]')
@@ -234,23 +262,10 @@ def main():
     fname = outbase + '.newick'
     tree.write(format=1, format_root_node=True, outfile=fname)
 
-    # render tree SVG
-    ts = TreeStyle()
-    ts.show_leaf_name = False
-
-    def my_layout(node):
-        F = TextFace(node.name)
-        add_face_to_node(F, node, column=0, position='branch-right')
-
-    ts.layout_fn = my_layout
-    fname = outbase + '.svg'
-	# whether or not we had rerooted on naive before, we want to do so for the SVG tree
-    if 'naive' not in tree.name:
-        tree = reroot_tree(tree, '.*naive.*')
-	    # highlight lineage from seed to root.
-	tree = highlight_lineage(tree, args.seed+'.*')
-    tree.render(fname, tree_style=ts)
+    render_tree(outbase+'.svg', tree, args.seqmeta, args.seed)
 
 
 if __name__ == "__main__":
     main()
+
+
