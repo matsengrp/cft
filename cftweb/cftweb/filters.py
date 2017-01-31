@@ -17,7 +17,7 @@ from cftweb import app
 # This ends up being nice, because of instead of having to mess with the semantics of constructing valid html
 # strings, we can focus on constructing simple python data structures, leaving details of closing braces etc
 # for the translation lib.
-from cottonmouth import html, tags
+from cottonmouth import html
 #from cottonmouth.html import render
 #from cottonmouth.tags import html, head, body, title, meta, link, h1
 
@@ -131,7 +131,8 @@ def annotate(seq, cluster, seq_mode="dna"):
     if len(seq) == 0: return seq
 
     if seq_mode == "dna":
-        return annotate_dna(seq, cluster)
+        #return annotate_dna(seq, cluster)
+        return seq
     else:
         return annotate_aa(seq, cluster)
 
