@@ -186,8 +186,8 @@ def render_tree(fname, tree, annotations, highlight_node):
         seqmeta = annotations.get(node.name)
         if seqmeta and not re.compile(".*naive.*").match(node.name):
             name = node.name + " (mf={}) ".format(round(float(seqmeta['mut_freqs']), 3))
-        F = TextFace(name)
-        add_face_to_node(F, node, column=0, position='branch-right')
+            F = TextFace(name)
+            add_face_to_node(F, node, column=0, position='branch-right')
 
     ts.layout_fn = my_layout
     # whether or not we had rerooted on naive before, we want to do so for the SVG tree
