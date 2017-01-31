@@ -239,6 +239,7 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition, meta):
         return merge_two_dicts({
             'file': cluster_base+cluster_id+'.fa',
             'cluster_id': cluster_id,
+            'n_seqs': len(df), # Note... this count naive; good idea?
             'v_gene': data['v_gene'],
             'v_start': data['v_start'],
             'v_end': data['v_end'],
@@ -278,8 +279,14 @@ def write_fasta(df, fname):
         SeqIO.write(iter_seqs(df), fh, "fasta")
 
     
-def write_separate_fasta(df, output_dir, cluster_base, remove_frameshifts=False):
+def write_separate_fasta(df, output_dir, cluster_base):
     # Remove frameshift seqs if requested
+    for k, g in df.groupby(['cluster']):
+        fname = os.path.join(output_dir, cluster_base+'{}.fa'.format(k))
+        write_fasta(g, fname)
+
+
+def handle_frameshifts(df, remove_frameshifts=False):
     frameshifted_seqs = list(df[df.frameshifts].unique_ids)
     if frameshifted_seqs:
         if remove_frameshifts:
@@ -287,9 +294,7 @@ def write_separate_fasta(df, output_dir, cluster_base, remove_frameshifts=False)
             df = df[- df.frameshifts]
         else:
             warnings.warn("Found possible frameshifted input_seqs: " + str(frameshifted_seqs))
-    for k, g in df.groupby(['cluster']):
-        fname = os.path.join(output_dir, cluster_base+'{}.fa'.format(k))
-        write_fasta(g, fname)
+    return df
 
 def seqmeta_path(output_dir, cluster_base, k):
     return os.path.join(output_dir, cluster_base+'{}.seqmeta.csv'.format(k))
@@ -344,13 +349,14 @@ def main():
                                       chain,
                                       inferred_gls)
 
-    write_separate_fasta(melted_annotations,
-                         args.output_dir,
-                         args.cluster_base,
-                         args.remove_frameshifts)
-
     write_melted_partis(melted_annotations,
                         melted_path(args.output_dir, args.melted_base))
+
+    melted_annotations = handle_frameshifts(melted_annotations, args.remove_frameshifts)
+
+    write_separate_fasta(melted_annotations,
+                         args.output_dir,
+                         args.cluster_base)
 
     write_json(melted_annotations,
                os.path.join(args.output_dir, 'metadata.json'),
