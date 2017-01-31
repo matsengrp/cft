@@ -10,7 +10,6 @@ import pandas as pd
 import argparse
 import os
 import os.path
-import itertools
 import warnings
 import json
 import time
@@ -66,6 +65,10 @@ def parse_args():
         '--output_dir',
         default='.',
         help='directory for output files')
+    parser.add_argument(
+        '--melted_base',
+        help='basename for melted data output',
+        default='melted')
     parser.add_argument(
         '-F', '--remove-frameshifts',
         help='if set, tries to remove seqs with frameshift indels from the output',
@@ -183,6 +186,7 @@ def process_data(annot_file, part_file, chain, glpath):
         current_df['unique_ids'] = line['unique_ids'] + ['naive{}'.format(idx)]
         current_df['seqs'] = line['input_seqs'] + [line['naive_seq']]
         current_df['frameshifts'] = infer_frameshifts(line) + [False] # mocking last entry
+        current_df['mut_freqs'] = line['mut_freqs'] + [0.0] # mocking last entry
         for col in to_keep:
             current_df[col] = line[col]
         current_df['cluster'] = str(idx)
@@ -283,28 +287,30 @@ def write_separate_fasta(df, output_dir, cluster_base, remove_frameshifts=False)
             df = df[- df.frameshifts]
         else:
             warnings.warn("Found possible frameshifted input_seqs: " + str(frameshifted_seqs))
-    for k,g in df.groupby(['cluster']):
+    for k, g in df.groupby(['cluster']):
         fname = os.path.join(output_dir, cluster_base+'{}.fa'.format(k))
         write_fasta(g, fname)
+
+def seqmeta_path(output_dir, cluster_base, k):
+    return os.path.join(output_dir, cluster_base+'{}.seqmeta.csv'.format(k))
 
 
 def write_melted_partis(df, fname):
     """
-    Cassie and other Overbaugh group members sometimes prefer output
-    in a csv file with cluster assignments so they can be sorted by other
-    metadata related to the read.
-
-    Here we'll just scrape out the cluster information and read IDs and
-    output them into a flattened csv file.
+    Spits out a csv with rows corresponding to sequences, and columns corresonding to data about seqs.
+    Cassie and other Overbaugh group members sometimes prefer this read-level format. It's also useful in
+    various parts of the cft pipeline.
     """
-
     df.to_csv(
         fname,
         index=False,
         columns=[
             'unique_ids', 'v_gene', 'd_gene', 'j_gene', 'cdr3_length',
-            'cluster', 'has_seed'
-        ])
+            'cluster', 'has_seed', 'frameshifts', 'mut_freqs'])
+
+
+def melted_path(output_dir, melted_base):
+    return os.path.join(output_dir, melted_base + '.csv')
 
 
 def main():
@@ -344,7 +350,7 @@ def main():
                          args.remove_frameshifts)
 
     write_melted_partis(melted_annotations,
-                        os.path.join(args.output_dir, 'melted.csv'))
+                        melted_path(args.output_dir, args.melted_base))
 
     write_json(melted_annotations,
                os.path.join(args.output_dir, 'metadata.json'),

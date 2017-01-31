@@ -268,7 +268,7 @@ $(function() {
     // When our SVG tree's text nodes are clicks, update the focus_node query param (and reload) so the
     // corresponding lineage is loaded.
     $(".svg-container text").click(function() {
-      var nodeName = $(this).html();
+      var nodeName = $(this).html().split(" ")[0];
       console.log("Node clicked for " + nodeName);
       updateQueryStringParameter('focus_node', nodeName);
       // TODO Should add an anchor so we zip down to the alignment...
