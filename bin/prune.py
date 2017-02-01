@@ -7,7 +7,7 @@ print taxa from pruned tree
 import argparse, sys
 from ete3 import Tree
 from dnaml2tree import find_node, reroot_tree
-        
+
 def main():
 
     parser = argparse.ArgumentParser(description=__doc__)
@@ -44,7 +44,7 @@ def main():
             node = node.up
         leaf_distances.append((leaf.name, distance))
 
-    # gotta print this, since it's not a leaf in the rerooted tree    
+    # gotta print this, since it's not a leaf in the rerooted tree
     print naive_node.name
     for leaf, distance in sorted(leaf_distances, key=lambda x: x[1])[:(args.n+1)]:
         print leaf

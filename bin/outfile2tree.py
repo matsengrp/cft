@@ -68,36 +68,98 @@ def iter_parents(fh):
 # list biopython.SeqRecords and a dict containing adjacency
 # relationships and distances between nodes.
 def outfile2seqs(outfile='outfile', seed=None):
-    sequences = []
-    parents = {}
-    with open(outfile, 'rU') as fh:
-        for sect in sections(fh):
-            if sect == 'sequences':
-                d = parse_seqdict(fh)
-                sequences = [ SeqRecord(Seq(v), id=k, description="") for (k,v) in d.items()]
-            elif sect == 'parents':
-                parents = { k: v for k, v in iter_parents(fh) }
-            else:
-                raise RuntimeError("unrecognized phylip setion = {}".format(sect))
-    # a necessary, but not sufficient, condition for this to be a valid tree is
-    # that exactly one node is parentless
-    if not len(parents) == len(sequences) - 1:
-        raise RuntimeError('invalid results attempting to parse {}: there are {} parentless sequences'.format(outfile, len(sequences) - len(parents)))
+	'''parse phylip outfile'''
+	try:
+	    sequences = []
+	    parents = {}
+	    with open(outfile, 'rU') as fh:
+	        for sect in sections(fh):
+	            if sect == 'sequences':
+	                d = parse_seqdict(fh)
+	                sequences = [ SeqRecord(Seq(v), id=k, description="") for (k,v) in d.items()]
+	            elif sect == 'parents':
+	                parents = { k: v for k, v in iter_parents(fh) }
+	            else:
+	                raise RuntimeError("unrecognized phylip setion = {}".format(sect))
+	    # a necessary, but not sufficient, condition for this to be a valid tree is
+	    # that exactly one node is parentless
+	    if not len(parents) == len(sequences) - 1:
+	        raise RuntimeError('invalid results attempting to parse {}: there are {} parentless sequences'.format(outfile, len(sequences) - len(parents)))
 
-    # because phy format only allows 10 character ids, probably we need to expand the seed name
-    if seed is not None:
-        matches = 0
-        for seq in sequences:
-            if len(seq.id) == 10 and seq.id in seed:
-                matches += 1
-                parents[seed] = parents.pop(seq.id)
-                seq.id = seed
-        if matches == 0:
-            raise RuntimeError('seed not found')
-        elif matches > 1:
-            raise RuntimeError('two many seed substring matches')
+	    # because phy format only allows 10 character ids, probably we need to expand the seed name
+	    if seed is not None:
+	        matches = 0
+	        for seq in sequences:
+	            if len(seq.id) == 10 and seq.id in seed:
+	                matches += 1
+	                parents[seed] = parents.pop(seq.id)
+	                seq.id = seed
+	        if matches == 0:
+	            raise RuntimeError('seed not found')
+	        elif matches > 1:
+	            raise RuntimeError('two many seed substring matches')
 
-    return sequences, parents
+	    return sequences, parents
+
+	except: # <-- if that didn't work, maybe it's a dnapars outfile
+	    # parse phylip outfile
+	    outfiledat = [block.split('\n\n\n')[0].split('\n\n') for block in open(outfile, 'r').read().split('From    To     Any Steps?    State at upper node')[1:]]
+
+	    # a list that will contain seq dict and parent dict for each tree found in output
+	    treedata = []
+
+	    for i, tree in enumerate(outfiledat):
+	        sequences = {}
+	        parents = {}
+	        names = []
+	        for j, block in enumerate(tree):
+	            if j == 0:
+	                for line in block.split('\n'):
+	                    fields = line.split()
+	                    if len(fields) == 0:
+	                        continue
+	                    name = fields[1]
+	                    names.append(name)
+	                    if fields[0] == 'root':
+	                        seq = ''.join(fields[2:])
+	                        parent = None
+	                    else:
+	                        seq = ''.join(fields[3:])
+	                        parent = fields[0]
+	                    sequences[name] = seq
+	                    if parent is not None:
+							parents[name] = parent
+
+	            else:
+	                for line in block.split('\n'):
+	                    fields = line.split()
+	                    name = fields[1]
+	                    if fields[0] == 'root':
+	                        seq = ''.join(fields[2:])
+	                    else:
+	                        seq = ''.join(fields[3:])
+	                    sequences[name] += seq
+
+                parents = {name:(parents[name], sum(x!=y for x, y in zip(sequences[name], sequences[parents[name]]))) for name in parents}
+	        sequences = [SeqRecord(Seq(v), id=k, description="") for (k,v) in sequences.items()]
+
+		    # because phy format only allows 10 character ids, probably we need to expand the seed name
+	        if seed is not None:
+		        matches = 0
+		        for seq in sequences:
+		            if len(seq.id) == 10 and seq.id in seed:
+		                matches += 1
+		                parents[seed] = parents.pop(seq.id)
+		                seq.id = seed
+		        if matches == 0:
+		            raise RuntimeError('seed not found')
+		        elif matches > 1:
+		            raise RuntimeError('two many seed substring matches')
+
+			treedata.append((sequences, parents))
+
+	    return treedata[0] # <-- first one, kinda dumb
+
 
 
 # build a tree from a set of sequences and an adjacency dict.
@@ -197,7 +259,6 @@ def render_tree(fname, tree, annotations, highlight_node):
     tree = highlight_lineage(tree, highlight_node+'.*')
     tree.render(fname, tree_style=ts)
 
-
 def seqmeta_input(fname):
     with open(fname, 'r') as fhandle:
         return dict((row['unique_ids'], row) for row in csv.DictReader(fhandle))
@@ -214,7 +275,7 @@ def main():
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        '--dnaml', type=existing_file, default='outfile',
+        '--phylip_outfile', type=existing_file, default='outfile',
         help='dnaml outfile (verbose output with inferred ancestral sequences, option 5). [ default \'%(default)s\' ]')
     parser.add_argument(
         '--seqmeta', type=seqmeta_input,
@@ -229,10 +290,10 @@ def main():
     args = parser.parse_args()
 
     # basename of outputfiles is taken from --basename if supplied, otherwise basename of DNAML.
-    basename = args.basename if args.basename else os.path.basename(args.dnaml)
+    basename = args.basename if args.basename else os.path.basename(args.phylip_outfile)
     outbase = os.path.join(args.outdir, os.path.splitext(basename)[0])
 
-    sequences, parents = outfile2seqs(args.dnaml, seed=args.seed)
+    sequences, parents = outfile2seqs(args.phylip_outfile, seed=args.seed)
 
     if not sequences or not parents:
         raise RuntimeError("No sequences were available; are you sure this is a dnaml output file?")
@@ -267,5 +328,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-

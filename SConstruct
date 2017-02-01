@@ -8,12 +8,12 @@ This SConstruct does the following:
 * Runs process_partis.py for each seed/sequencing-run/parition combination, producing a metadata file of information
 * For each such parition, the cluster with the seed is analyzed:
     * Tree construction using `FastTree`
-    * Ancestral state reconstruction using `dnaml`
+    * Ancestral state reconstruction using `dnapars` or `dnaml`
     * Some SVG visualization
 * Results of all these analyses are then pointed to by a merged metadata file, which is then consumed by cftweb
 
-Clusters with only two sequences cannot be analyzed by dnaml or FastTree, and so these are skipped atuomatically.
-Additionally, some clusters end up with bad trees after a rerooting step, and also have trouble in our dnaml2tree step.
+Clusters with only two sequences cannot be analyzed by dnapars, dnaml, or FastTree, and so these are skipped atuomatically.
+Additionally, some clusters end up with bad trees after a rerooting step, and also have trouble in our dnaml2tree.py/dnapars.py step.
 These are left out of the final `metadata.json` file.
 Eventually, all of these cases should be caught and tombstone information should be left in the metadata file capturing as much infomration as possible.
 
@@ -64,48 +64,6 @@ env.PrependENVPath('PATH', 'bin')
 env.PrependENVPath('PATH', 'post_partis/scripts')
 env.PrependENVPath('PATH', 'tree')
 
-
-
-# Some environment sanity checks to make sure we have all prerequisits
-
-def cmd_exists(cmd):
-    return subprocess.call("type " + cmd, shell=True, 
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
-
-# only check for dependencies if we aren't in a dry-run.
-if not env.GetOption('no_exec'):
-    msg = ""
-    if not cmd_exists('dnaml'):
-        msg += '''
-           Required dependency command, 
-           `dnaml` not found on PATH
-           Consider using,
-                $ module use ~matsengrp/modules
-                $ module load phylip
-            '''
-
-    if not cmd_exists('seqmagick'):
-        msg += '''
-           Required dependency command, 
-           `seqmagick` not found on PATH
-           Consider using,
-                $ module load seqmagick
-            '''
-        
-    if not cmd_exists('FastTree'):
-        msg += '''
-           Required dependency command, 
-           `FastTree` not found on PATH
-           Consider using,
-                $ module load FastTree
-            '''
-    # if we are missing any prerequisites, print a message and exit
-    if len(msg):
-        warn(msg)
-        sys.exit(1)
-
-
-
 # Setting up command line arguments/options
 
 AddOption('--datapath',
@@ -126,6 +84,15 @@ AddOption('--outdir',
         default="output",
         help="directory in which to output results")
 
+AddOption('--treeprog',
+        dest='treeprog',
+        type='string',
+        nargs=1,
+        action='store',
+        metavar='dnapars/dnaml',
+        default='dnapars',
+        help="dnapars (default) or dnaml tree program")
+
 AddOption('--test',
         dest='test_run',
         action='store_true',
@@ -135,11 +102,59 @@ AddOption('--test',
 
 datapath = env.GetOption('datapath')
 outdir_base = env.GetOption('outdir') # we call this outdir_base in order to not conflict with nestly fns outdir arg
+treeprog = env.GetOption('treeprog')
 test_run = env.GetOption("test_run")
+
+# pruning is dependent on which program we use, dnapars seems to handle bigger trees more quickly
+if treeprog == 'dnapars':
+    prune_n = 300
+elif treeprog == 'dnaml':
+    prune_n = 100
 
 print("datapath = {}".format(datapath))
 print("outdir = {}".format(outdir_base))
+print("treeprog = {}".format(treeprog))
 print("test_run = {}".format(test_run))
+print('pruned size = {}'.format(prune_n))
+
+
+# Some environment sanity checks to make sure we have all prerequisits
+
+def cmd_exists(cmd):
+    return subprocess.call("type " + cmd, shell=True,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
+
+# only check for dependencies if we aren't in a dry-run.
+if not env.GetOption('no_exec'):
+    msg = ""
+    if not cmd_exists(treeprog):
+        msg += '''
+           Required dependency command,
+           `'''+treeprog+'''` not found on PATH
+           Consider using,
+                $ module use ~matsengrp/modules
+                $ module load phylip
+            '''
+
+    if not cmd_exists('seqmagick'):
+        msg += '''
+           Required dependency command,
+           `seqmagick` not found on PATH
+           Consider using,
+                $ module load seqmagick
+            '''
+
+    if not cmd_exists('FastTree'):
+        msg += '''
+           Required dependency command,
+           `FastTree` not found on PATH
+           Consider using,
+                $ module load FastTree
+            '''
+    # if we are missing any prerequisites, print a message and exit
+    if len(msg):
+        warn(msg)
+        sys.exit(1)
 
 
 
@@ -173,7 +188,7 @@ w.add_aggregate('svgfiles', list)
 # For the sake of testing, we allow for switching between the full set of seeds, as returned by `seeds_fn`, and a small test set (`test_seeds`).
 # This is controllable via the `--test` cli flag
 
-test_seeds = ["QB850.424-Vk", "QB850.043-Vk"]
+test_seeds = ["QB850.049-Vh", "QB850.043-Vh"]
 
 def seeds_fn(datapath):
     return os.listdir(path.join(datapath, 'seeds'))
@@ -380,7 +395,7 @@ def pruned_ids(outdir, c):
     return env.Command(
         path.join(outdir, "pruned_ids.txt"),
         c['fasttree'],
-        "python bin/prune.py --seed " + c['seed'] + " $SOURCE > $TARGET")
+        "python bin/prune.py --n " + str(prune_n) + " --seed " + c['seed'] + " $SOURCE > $TARGET")
 
 # prune out sequences to reduce taxa, making sure to cut out columns in the alignment that are now entirely
 # gaps from insertions in sequences that have been pruned out.
@@ -392,7 +407,7 @@ def pruned_seqs(outdir, c):
         "seqmagick convert --include-from-file $SOURCES - | " +
         "seqmagick convert --squeeze - $TARGET")
 
-# Convert to phylip for dnaml
+# Convert to phylip format for dnapars/dnaml
 @w.add_target()
 def phy(outdir, c):
     return env.Command(
@@ -400,56 +415,55 @@ def phy(outdir, c):
         c['pruned_seqs'],
         "seqmagick convert $SOURCE $TARGET")
 
-# Create a "config file" for dnaml (a persnickety old program with interactive menues...)
+# Create a config file for dnapars/dnaml (a persnickety old program with interactive menues...)
 @w.add_target()
-def dnaml_config(outdir, c):
+def treeprog_config(outdir, c):
     return env.Command(
-        path.join(outdir, "dnaml.cfg"),
+        path.join(outdir, treeprog+".cfg"),
         c['phy'],
-        "python bin/mkconfig.py $SOURCE > $TARGET")
+        'python bin/mkconfig.py $SOURCE ' + treeprog + ' > $TARGET')
 
-# Run dnaml by passing in the "config file" as stdin hoping the menues all stay sane
+# Run dnapars/dnaml by passing in the "config file" as stdin hoping the menues all stay sane
 # (Aside: There is a program for programatically responding to interactive menus if this gets any hairier)
 @w.add_target()
-def dnaml(outdir, c):
-    "run dnaml (from phylip package) to create tree with inferred sequences at internal nodes"
+def treeprog_run(outdir, c):
+    "run dnapars/dnaml (from phylip package) to create tree with inferred sequences at internal nodes"
     tgt = env.SRun(
-        map(lambda x: path.join(outdir, x), ["outtree", "outfile", "dnaml.log"]),
-        c['dnaml_config'],
-        'cd ' + outdir + ' && dnaml < ${SOURCE.file} > ${TARGETS[2].file}')
-    # Manually depend on phy so that we rerun dnaml if the input sequences change (without this, dnaml will
-    # only get rerun if one of the targets are removed or if the iput dnaml_config file is changed).
+        map(lambda x: path.join(outdir, x), ["outtree", "outfile", treeprog+".log"]),
+        c['treeprog_config'],
+        'cd ' + outdir + ' && ' + treeprog + ' < ${SOURCE.file} > ${TARGETS[2].file}')
+    # Manually depend on phy so that we rerun dnapars/dnaml if the input sequences change (without this, dnapars/dnaml will
+    # only get rerun if one of the targets are removed or if the iput treeprog_config file is changed).
     env.Depends(tgt, c['phy'])
     return tgt
 
 
 @w.add_target()
-def dnaml_tree(outdir, c):
-    """parse dnaml output into fasta and newick files, and make SVG format tree with ETE package.
+def treeprog_tree(outdir, c):
+    """parse dnapars/dnaml output into fasta and newick files, and make SVG format tree with ETE package.
     xvfb-run is needed because of issue https://github.com/etetoolkit/ete/issues/101"""
     tgt = env.Command(
             map(lambda x: path.join(outdir, x),
-                ["dnaml.svg", "dnaml.fa", "dnaml.seedLineage.fa", "dnaml.newick"]),
-            [c['dnaml'][1], c['seqmeta']],
+                ["outfile2tree.svg", "outfile2tree.fa", "outfile2tree.seedLineage.fa", "outfile2tree.newick"]),
+            [c['treeprog_run'][1], c['seqmeta']],
             # Note: the `-` prefix here tells scons to keep going if this command fails.
-            "- xvfb-run -a bin/dnaml2tree.py --seed " + c['seed'] +
-                " --dnaml ${SOURCES[0]} --seqmeta ${SOURCES[1]} --outdir ${TARGETS[0].dir} --basename dnaml")
-    # Manually depend on dnaml2tree.py script, since it doesn't fall in the first position within the command
+            "- xvfb-run -a bin/outfile2tree.py --seed " + c['seed'] + " --phylip_outfile ${SOURCES[0]} --seqmeta ${SOURCES[1]} --outdir ${TARGETS[0].dir} --basename outfile2tree")
+    # Manually depend on dnaml2tree.py/dnapars.py script, since it doesn't fall in the first position within the command
     # string.
-    env.Depends(tgt, 'bin/dnaml2tree.py')
+    env.Depends(tgt, 'bin/outfile2tree.py')
     # Do aggregate work
     c['svgfiles'].append(tgt[0])
     return tgt
 
 # Might want to switch back to this approach...
-#def extended_metadata(metadata, dnaml_tree_tgt):
-    #"Add dnaml_tree target(s) as metadata to the given metadata dict; used prior to metadata write."
+#def extended_metadata(metadata, dnapars_tree_tgt):
+    #"Add dnapars_tree target(s) as metadata to the given metadata dict; used prior to metadata write."
     #with open(
     #m = copy.copy(metadata)
-    #m['svg'] = path.relpath(str(dnaml_tree_tgt[0]), outdir_base)
-    #m['fasta'] = path.relpath(str(dnaml_tree_tgt[1]), outdir_base)
-    #m['seedlineage'] = path.relpath(str(dnaml_tree_tgt[2]), outdir_base)
-    #m['newick'] = path.relpath(str(dnaml_tree_tgt[3]), outdir_base)
+    #m['svg'] = path.relpath(str(dnapars_tree_tgt[0]), outdir_base)
+    #m['fasta'] = path.relpath(str(dnapars_tree_tgt[1]), outdir_base)
+    #m['seedlineage'] = path.relpath(str(dnapars_tree_tgt[2]), outdir_base)
+    #m['newick'] = path.relpath(str(dnapars_tree_tgt[3]), outdir_base)
     #del m['file']
     #return m
 
@@ -457,7 +471,7 @@ def dnaml_tree(outdir, c):
 def cluster_aa(outdir, c):
     return env.Command(
         path.join(outdir, 'cluster_aa.fa'),
-        c['dnaml_tree'][1],
+        c['treeprog_tree'][1],
         'seqmagick convert --translate dna2protein $SOURCE $TARGET')
 
 # TODO I think we can take this out now that we compute lineages dynamically in cftweb
@@ -465,7 +479,7 @@ def cluster_aa(outdir, c):
 def seedlineage_aa(outdir, c):
     return env.Command(
         path.join(outdir, 'seedlineage_aa.fa'),
-        c['dnaml_tree'][2],
+        c['treeprog_tree'][2],
         'seqmagick convert --translate dna2protein $SOURCE $TARGET')
 
 
@@ -475,24 +489,24 @@ def cluster_metadata(outdir, c):
     # specified in the input metadata.json file are relative to _its_ location, in our context, always base_outdir
     def relpath(tgt_path):
         return path.relpath(tgt_path, outdir_base)
-    def dnaml_tgt_relpath(i):
-        return relpath(str(c['dnaml_tree'][i]))
+    def treeprog_tgt_relpath(i):
+        return relpath(str(c['treeprog_tree'][i]))
     n = re.compile('run-viterbi-best-plus-(?P<step>.*)').match(c['partition']).group('step')
     tgt = env.Command(
             path.join(outdir, 'extended_metadata.json'),
-            [c['base_metadata'], partitions(c)] + c['dnaml_tree'],
+            [c['base_metadata'], partitions(c)] + c['treeprog_tree'],
             # Don't like the order assumptions on dnaml_tgts here...
             'assoc_logprob.py $SOURCE ${SOURCES[1]} -n ' + n + ' /dev/stdout | ' +
                 'json_assoc.py /dev/stdin $TARGET ' +
                 # Not 100% on this; Pick optimal attr/key name
                 #'best_partition ' + c['partition'] + ' ' +
                 'clustering_step ' + n + ' ' +
-                'svg ' + dnaml_tgt_relpath(0) + ' ' +
-                'fasta ' + dnaml_tgt_relpath(1) + ' ' +
-                'seedlineage ' + dnaml_tgt_relpath(2) + ' ' +
+                'svg ' + treeprog_tgt_relpath(0) + ' ' +
+                'fasta ' + treeprog_tgt_relpath(1) + ' ' +
+                'seedlineage ' + treeprog_tgt_relpath(2) + ' ' +
                 'cluster_aa ' + relpath(str(c['cluster_aa'][0])) + ' ' +
                 'seedlineage_aa ' + relpath(str(c['seedlineage_aa'][0])) + ' ' +
-                'newick ' + dnaml_tgt_relpath(3) + ' ')
+                'newick ' + treeprog_tgt_relpath(3) + ' ')
     # Note; we used to delete the 'file' attribute as well; not sure why or if that's necessary
     c['metadata'].append(tgt)
     return tgt
@@ -508,8 +522,8 @@ w.pop('seed')
 
 # Filtering out bad clusters:
 
-# As mentioned above, dnaml2tree fails for some clusters, so we'd like to filter these clusters out of the final metadata results.
-# We do this based on whether the svg targets of the dnaml2tree command point to actual files or not.
+# As mentioned above, dnaml2tree.py/dnapars.py fails for some clusters, so we'd like to filter these clusters out of the final metadata results.
+# We do this based on whether the svg targets of the dnaml2tree.py/dnapars.py command point to actual files or not.
 # Eventually it would be nice to let them pass through with information indicating there was a failure, and handle appropriately in cftweb.
 # We may also want to handle clusters that are too small similarly, but for now we're filtering them out at the very beginning of the pipeline.
 
@@ -534,7 +548,7 @@ def git(*args):
     return subprocess.check_output(['git'] + list(args))
 
 def write_metadata(target, source, env):
-    # Here's where we filter out the seeds with clusters that didn't compute through dnaml2tree.py
+    # Here's where we filter out the seeds with clusters that didn't compute through dnaml2tree.py/dnapars.py
     good_clusters = map(lambda x: node_metadata(x[1]), filter(lambda x: tgt_exists(x[0]), in_pairs(source)))
     metadata = {'clusters': good_clusters,
                 'build_info': {'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -574,5 +588,3 @@ def hints(outdir, c):
         print_hints)
     env.AlwaysBuild(hints)
     return hints
-
-

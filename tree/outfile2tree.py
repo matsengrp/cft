@@ -6,7 +6,7 @@ from ete3 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
 
 def outfile2seqs(outfile='outfile'):
     """
-    Give me a phylip dnaml outfile and I''ll give you a dictionary of sequences,
+    Give me a phylip dnapars outfile and I''ll give you a dictionary of sequences,
     including ancestral, and a dictionary of parent assignments with branch length.
     """
     # parse all sequences from phylip outfile
@@ -63,13 +63,13 @@ def outfile2seqs(outfile='outfile'):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='give me a phylip dnaml outfile and I'
+        description='give me a phylip dnapars outfile and I'
         'll give you an alignment (including ancestral sequences) and a tree')
     parser.add_argument(
         '--outfile',
         type=str,
         default='outfile',
-        help='dnaml outfile (verbose output with inferred ancestral sequences, option 5). Perhaps confusingly, this is the input file to this program'
+        help='dnapars outfile (verbose output with inferred ancestral sequences, option 5). Perhaps confusingly, this is the input file to this program'
     )
     parser.add_argument(
         '--naive',

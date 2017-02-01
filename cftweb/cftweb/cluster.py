@@ -105,7 +105,7 @@ class Cluster(object):
         #
         # "Hs-LN2-5RACE-IgG-new" is the name of the sequencing run,
         # 
-        # "Hs-LN4-5RACE-IgK-100k/QB850.043-Vk/cluster4/dnaml.seedLineage.fa"
+        # "Hs-LN4-5RACE-IgK-100k/QB850.043-Vk/cluster4/dnapars.seedLineage.fa"
         # Note; using the data seedlineage here since we've made the self.seedlineage absolute in path
         path = data['seedlineage']
         regex = re.compile(r'^(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
