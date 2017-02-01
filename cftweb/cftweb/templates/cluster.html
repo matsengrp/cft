@@ -280,6 +280,9 @@ $(function() {
       console.log("Seq mode link clicked for " + seqMode);
       updateQueryStringParameter('seq_mode', seqMode);
       });
+
+    // want to make the highlighted node bold for easier visual identification
+    $(".svg-container text:contains('{{ focus_node }}')").css("font-weight", "bold");
     });
 </script>
 
