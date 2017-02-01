@@ -22,10 +22,12 @@
           <th>V-gene</th>
           <td>{{ cluster.v_gene }}</td>
         </tr>
+        {% if cluster.gene == "Vh" %}
         <tr>
           <th>D-gene</th>
           <td>{{ cluster.d_gene }}</td>
         </tr>
+        {% endif %}
         <tr>
           <th>J-gene</th>
           <td>{{ cluster.j_gene }}</td>
