@@ -472,7 +472,7 @@ def cluster_aa(outdir, c):
     return env.Command(
         path.join(outdir, 'cluster_aa.fa'),
         c['treeprog_tree'][1],
-        'seqmagick convert --translate dna2protein $SOURCE $TARGET')
+        "sed -i 's/\?/N/g' $SOURCE && seqmagick convert --translate dna2protein $SOURCE $TARGET")
 
 # TODO I think we can take this out now that we compute lineages dynamically in cftweb
 @w.add_target()
@@ -480,7 +480,7 @@ def seedlineage_aa(outdir, c):
     return env.Command(
         path.join(outdir, 'seedlineage_aa.fa'),
         c['treeprog_tree'][2],
-        'seqmagick convert --translate dna2protein $SOURCE $TARGET')
+        "sed -i 's/\?/N/g' $SOURCE && seqmagick convert --translate dna2protein $SOURCE $TARGET")
 
 
 @w.add_target()
