@@ -205,13 +205,13 @@ class ClusterDB(object):
         # Build indices;
         # Right now We don't really _need_ to index timepoints and patients, but the tool may need to
         # eventually
-        for attr in ["seed", "patient", "timepoints"]:
+        for attr in ["seed", "seedid", "patient", "timepoints"]:
             self.__build_index__(attr)
 
     def __get_index_ids__(self, attr, vals):
         if not(type(vals) == list or type(vals) == set):
             vals = [vals]
-        return set.intersection(*(self.indices[v] for v in vals))
+        return set.intersection(*(self.indices[attr].get(v) for v in vals if self.indices[attr].get(v)))
 
     def get_by_id(self, id):
         return self.clusters[id]
@@ -258,6 +258,11 @@ class ClusterDB(object):
 
     def all(self, **kw_args):
         return self.query({}, **kw_args)
+
+    def clustering_step_siblings(self, cluster_id):
+        cluster = self.get_by_id(cluster_id)
+        # Again, as mentioned above, this set of things necessary for identification should be factored out
+        return self.query({'pid': cluster.pid, 'timepoint': cluster.timepoint, 'seed': cluster.seed})
 
 
 

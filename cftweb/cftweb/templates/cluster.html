@@ -38,7 +38,16 @@
         </tr>
         <tr>
           <th>Clustering step</th>
-          <td>{{ cluster.clustering_step }}</td>
+          <td>
+            {% for c in clustering_step_siblings %}
+              {% if c.id == cluster.id %}
+                <span style="font-weight: bold; padding: 5px;">{{ cluster.clustering_step }}</span>
+              {% else %}
+                <a href='{{ url_for('cluster_page', id=c.id) }}'
+                  style="padding: 2px;">{{c.clustering_step}}</a>
+              {% endif %}
+            {% endfor %}
+          </td>
         </tr>
         <tr>
           <th>Logprob</th>

@@ -110,6 +110,7 @@ def by_cluster(pid, timepoint, seedid):
 @app.route("/cluster/<id>/cluster.html")
 def cluster_page(id=None):
     cluster = app.config['CLUSTERS'].get_by_id(id)
+    clustering_step_siblings = app.config['CLUSTERS'].clustering_step_siblings(id)
 
     # We are now using the lineage kw_args param to get the lineage we want to display
     seed_name = cluster.seed
@@ -119,6 +120,7 @@ def cluster_page(id=None):
 
     renderdict = base_renderdict({
         'cluster': cluster,
+        'clustering_step_siblings': clustering_step_siblings,
         'focus_node': focus_node,
         'lineage_seqs': cluster.lineage_seqs(focus_node, seq_mode),
         'seed_seq': cluster.seed_seq(seq_mode),
