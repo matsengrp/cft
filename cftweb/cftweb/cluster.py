@@ -63,9 +63,9 @@ class Cluster(object):
         self.svg = os.path.join(dir, self.svg) if hasattr(self, 'svg') else "'svg' json attribute missing"
         self.fasta = os.path.join(dir, self.fasta) if hasattr(self, 'fasta') else "'fasta' json attribute missing"
         self.newick = os.path.join(dir, self.newick) if hasattr(self, 'newick') else "'newick' json attribute missing"
-        self.seedlineage = os.path.join(dir, self.seedlineage) if hasattr(self, 'seedlineage') else "'seedlineage' json attribute missing"
+        #self.seedlineage = os.path.join(dir, self.seedlineage) if hasattr(self, 'seedlineage') else "'seedlineage' json attribute missing"
         self.cluster_aa = os.path.join(dir, self.cluster_aa) if hasattr(self, 'cluster_aa') else "'cluster_aa' json attribute missing"
-        self.seedlineage_aa = os.path.join(dir, self.seedlineage_aa) if hasattr(self, 'seedlineage_aa') else "'seedlineage_aa' json attribute missing"
+        #self.seedlineage_aa = os.path.join(dir, self.seedlineage_aa) if hasattr(self, 'seedlineage_aa') else "'seedlineage_aa' json attribute missing"
 
         # Make sure that has_seed is a boolean attribute
         self.has_seed = self.has_seed == 'True'
@@ -87,9 +87,9 @@ class Cluster(object):
         #
         # "Hs-LN2-5RACE-IgG-new" is the name of the sequencing run,
         # 
-        # "Hs-LN4-5RACE-IgK-100k/QB850.043-Vk/cluster4/dnapars.seedLineage.fa"
+        # "Hs-LN4-5RACE-IgK-100k/QB850.043-Vk/cluster4/dnaml.seedLineage.fa"
         # Note; using the data seedlineage here since we've made the self.seedlineage absolute in path
-        path = data['seedlineage']
+        path = data['newick']
         regex = re.compile(r'^(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
         m = regex.match(path)
         if m:

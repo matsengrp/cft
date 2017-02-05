@@ -156,7 +156,10 @@ def cluster_fasta(id=None):
 @app.route("/download/fasta/<id>.seedlineage.fa")
 def seedlineage_fasta(id=None):
     cluster = app.config['CLUSTERS'].get_by_id(id)
-    return flask.send_file(cluster.seedlineage)
+    seqs = cluster.lineage_seqs(cluster.seed)
+
+    fasta = to_fasta(seqs)
+    return Response(fasta, mimetype="application/octet-stream")
 
 
 @app.route("/download/fasta/<id>_aa.fa")
@@ -167,7 +170,10 @@ def cluster_aa_fasta(id=None):
 @app.route("/download/fasta/<id>.seedlineage_aa.fa")
 def seedlineage_aa_fasta(id=None):
     cluster = app.config['CLUSTERS'].get_by_id(id)
-    return flask.send_file(cluster.seedlineage_aa)
+    seqs = cluster.lineage_seqs(cluster.seed, seq_mode='aa')
+
+    fasta = to_fasta(seqs)
+    return Response(fasta, mimetype="application/octet-stream")
 
 
 @app.route("/cluster/<id>/tree.svg")
