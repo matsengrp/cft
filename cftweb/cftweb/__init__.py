@@ -9,7 +9,7 @@ import subprocess
 from flask import Flask
 from flask_breadcrumbs import Breadcrumbs
 
-from cluster import Cluster
+import cluster
 
 import os.path
 os.environ['CFTWEB_SETTINGS'] = os.path.join(
@@ -74,11 +74,11 @@ def log_to_file(app):
 def before_first_request():
     options = app.config['OPTIONS']
 
-    objects = Cluster.fromfile(options.file)
+    clusters = cluster.ClusterDB.fromfile(options.file)
 
-    objects = [o for o in objects if o is not None]
-    objects = dict((g.id, g) for g in objects)
-    app.config['CLUSTERS'] = objects
+    app.config['CLUSTERS'] = clusters
+    # TODO Need to deal with the build_info as part of the cluster db... this is starting to look
+    # relational, like we'd want an actual database.
     with open(options.file) as fh:
         app.config['DATA_BUILD_INFO'] = json.load(fh)["build_info"]
 
@@ -98,3 +98,4 @@ def before_first_request():
 #    return 'Error', 500
 
 import views
+

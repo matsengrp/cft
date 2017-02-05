@@ -43,24 +43,6 @@ def load_template(name):
 # Potentially this will cause problems if a JSON attribute conflicts with an existing
 # instance attribute.
 class Cluster(object):
-    @classmethod
-    def fromfile(cls, filename):
-        # create a new cluster from json definition
-        c = []
-        array = []
-        print("fromfile attempting to open {}".format(filename))
-        try:
-            dir = os.path.abspath(os.path.dirname(filename))
-            with open(filename, 'rb') as fp:
-                print("fromfile reading {}".format(filename))
-                array = json.load(fp)["clusters"]
-            c = [cls(data, dir) for data in array if type(data) is dict]
-        except ValueError as e:
-            print(
-                "Missing or improperly formatted JSON file \"{}\" - ignored.".
-                format(filename))
-
-        return c
 
     def __init__(self, data, dir):
         super(Cluster, self).__init__()
@@ -133,6 +115,10 @@ class Cluster(object):
 
 
     # Public methods
+
+    def get(self, attr):
+        "Genneral purpose getter that takes an attr string and returns the corresponding attribute"
+        return self.__dict__.get(attr)
         
     def fasta(self):
         # return a string containing the fasta sequences
@@ -181,5 +167,97 @@ class Cluster(object):
         except Exception as e:
             svgstr = "%s".format(str(e))
         return svgstr
+
+
+# This should really be coupled to the mode of id hash creation for clusters
+def default_sort_key(c):
+    return (c.pid, c.timepoint, c.seed, c.clustering_step)
+
+
+class ClusterDB(object):
+    "This class acts as a DB or Index of cluster data, which we can query based on indexed parameters"
+    @classmethod
+    def fromfile(cls, filename):
+        "Load up clusters from a json file"
+        dir = os.path.abspath(os.path.dirname(filename))
+        with open(filename, 'rb') as fp:
+            print("fromfile reading {}".format(filename))
+            clusters = map(lambda x: Cluster(x, dir), json.load(fp)["clusters"])
+            return cls(clusters)
+
+    def __build_index__(self, attr):
+        """Builds an index for a cluster attribute, so that clusters can be queried for more efficiently by said
+        attributes."""
+        attr_index  = {}
+        for id, c in self.clusters.iteritems():
+            c_attr_val = c.get(attr)
+            try:
+                attr_index[c_attr_val].add(c.id)
+            except KeyError:
+                attr_index[c_attr_val] = set([c.id])
+        self.indices[attr] = attr_index
+
+    def __init__(self, clusters):
+        # We index clusters primarily by their primary id (should they/the-clusters be deciding ids or should
+        # we (the cluster-sets)? Seems like it's our consistency concern...)
+        self.indices = {}
+        self.clusters = dict((c.id, c) for c in clusters if c)
+        # Build indices;
+        # Right now We don't really _need_ to index timepoints and patients, but the tool may need to
+        # eventually
+        for attr in ["seed", "patient", "timepoints"]:
+            self.__build_index__(attr)
+
+    def __get_index_ids__(self, attr, vals):
+        if not(type(vals) == list or type(vals) == set):
+            vals = [vals]
+        return set.intersection(*(self.indices[v] for v in vals))
+
+    def get_by_id(self, id):
+        return self.clusters[id]
+
+    def get_by_ids(self, ids):
+        return map(self.get_by_id, ids)
+
+    def __query_param_ids__(self, attr, vals):
+        if not(type(vals) == list or type(vals) == set):
+            vals = [vals]
+        # If we're getting by our cluster ids, just select by our primary key
+        if attr == "id":
+            return self.get_by_ids(vals)
+        # If we have an index, use that
+        if self.indices.get(attr):
+            return self.__get_index_ids__(attr, vals)
+        # Otherwise, manually filter through
+        else:
+            return set(id for id, c in self.clusters.iteritems() if c.get(attr) in vals)
+
+    def query(self, params, sort_by=default_sort_key, page_n=None, per_page=10, first=False):
+        """Return cluster records matching the query `params` argument (cluster_attr -> specific values), and
+        optionally apply sorting and/or pagination to the results. Sort by can either be a fn or an attr str.
+        First returns the first matching value."""
+        # This returns the cluster ids which match the query params dictionary
+        if params:
+            ids = set.intersection(*(self.__query_param_ids__(k, v) for k, v in params.iteritems()))
+        else:
+            ids = self.clusters.keys()
+        # Use these to get the clusters
+        clusters = self.get_by_ids(ids)
+        # Rewire as a fn if we are passed a sort_by attr str
+        if type(sort_by) == str:
+            sort_by = lambda c: c.get(sort_by)
+        # If requested, sort by sort_by fn
+        if sort_by:
+            clusters = sorted(clusters, key=sort_by)
+        if page_n:
+            start = page_n * per_page
+            clusters = clusters[start : start + per_page]
+        if first:
+            return clusters[0]
+        return clusters
+
+    def all(self, **kw_args):
+        return self.query({}, **kw_args)
+
 
 

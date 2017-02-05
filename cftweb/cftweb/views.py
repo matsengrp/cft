@@ -41,8 +41,7 @@ def base_renderdict(updates={}):
 @app.route("/")
 @register_breadcrumb(app, '.', 'Index')
 def index():
-    clusters = app.config['CLUSTERS'].values()
-    clusters = sorted(clusters, key=lambda c: (c.pid, c.timepoint, c.seed, c.clustering_step))
+    clusters = app.config['CLUSTERS'].all(sort_by=lambda c: (c.pid, c.timepoint, c.seed, c.clustering_step))
     renderdict = base_renderdict({'clusters': clusters, 'heading': "All clusters"})
     return render_template('by_cluster.html', **renderdict)
 
@@ -50,41 +49,37 @@ def index():
 @app.route("/individuals.html")
 @register_breadcrumb(app, '.', 'By Patient')
 def by_pid():
-    clusters = app.config['CLUSTERS'].values()
+    clusters = app.config['CLUSTERS'].all()
     renderdict = base_renderdict({'clusters': clusters})
     return render_template('by_pid.html', **renderdict)
 
 
 
-def pid_bc():
+def pid_bcrumb():
     pid = request.view_args['pid']
     return [{'text': pid, 'url': url_for('by_timepoint', pid=pid)}]
 
 @app.route("/<pid>/timepoints.html")
 @register_breadcrumb(app, '.pid', '<ignored>',
-                     dynamic_list_constructor=pid_bc)
+                     dynamic_list_constructor=pid_bcrumb)
 def by_timepoint(pid):
-    clusters = app.config['CLUSTERS'].values()
-    clusters = [c for c in clusters if c.pid == pid]
+    clusters = app.config['CLUSTERS'].query({'pid': pid})
     renderdict = base_renderdict({
         'pid' : pid,
         'clusters': clusters})
     return render_template('by_timepoint.html', **renderdict)
 
 
-
-def timepoint_bc():
+def timepoint_bcrumb():
     pid = request.view_args['pid']
     timepoint = request.view_args['timepoint']
     return [{'text': timepoint, 'url': url_for('by_seed', pid=pid, timepoint=timepoint)}]
 
 @app.route("/<pid>/<timepoint>/seeds.html")
 @register_breadcrumb(app, '.pid.timepoint', '<ignored>',
-                     dynamic_list_constructor=timepoint_bc)
+                     dynamic_list_constructor=timepoint_bcrumb)
 def by_seed(pid, timepoint):
-    clusters = app.config['CLUSTERS'].values()
-    clusters = [c for c in clusters if c.pid == pid]
-    clusters = [c for c in clusters if c.timepoint == timepoint]
+    clusters = app.config['CLUSTERS'].query({'pid': pid, 'timepoint': timepoint})
     renderdict = base_renderdict({
         'pid' : pid,
         'timepoint' : timepoint,
@@ -92,8 +87,7 @@ def by_seed(pid, timepoint):
     return render_template('by_seed.html', **renderdict)
 
 
-
-def seed_bc():
+def seed_bcrumb():
     pid = request.view_args['pid']
     timepoint = request.view_args['timepoint']
     seedid = request.view_args['seedid']
@@ -101,14 +95,9 @@ def seed_bc():
 
 @app.route("/<pid>/<timepoint>/<seedid>/clusters.html")
 @register_breadcrumb(app, '.pid.timepoint.seed', '<ignored>',
-                     dynamic_list_constructor=seed_bc)
+                     dynamic_list_constructor=seed_bcrumb)
 def by_cluster(pid, timepoint, seedid):
-    clusters = app.config['CLUSTERS'].values()
-    clusters = [c for c in clusters if c.pid == pid]
-    clusters = [c for c in clusters if c.timepoint == timepoint]
-    clusters = [c for c in clusters if c.seedid == seedid]
-    clusters = sorted(clusters, key=lambda c: (c.seed, c.clustering_step))
-
+    clusters = app.config['CLUSTERS'].query({'pid': pid, 'timepoint': timepoint, 'seedid': seedid})
     renderdict = base_renderdict({
         'pid' : pid,
         'timepoint' : timepoint,
@@ -120,8 +109,7 @@ def by_cluster(pid, timepoint, seedid):
 
 @app.route("/cluster/<id>/cluster.html")
 def cluster_page(id=None):
-    clusters = app.config['CLUSTERS']
-    cluster = clusters[id]
+    cluster = app.config['CLUSTERS'].get_by_id(id)
 
     # We are now using the lineage kw_args param to get the lineage we want to display
     seed_name = cluster.seed
@@ -147,8 +135,7 @@ def to_fasta(seqs):
 
 @app.route("/cluster/<id>/lineage/<focus_node>.lineage.<seq_mode>.fa")
 def lineage_download(id, focus_node, seq_mode):
-    clusters = app.config['CLUSTERS']
-    cluster = clusters[id]
+    cluster = app.config['CLUSTERS'].get_by_id(id)
     seqs = cluster.lineage_seqs(focus_node, seq_mode)
 
     fasta = to_fasta(seqs)
@@ -157,41 +144,34 @@ def lineage_download(id, focus_node, seq_mode):
 
 @app.route("/download/fasta/<id>.fa")
 def cluster_fasta(id=None):
-    clusters = app.config['CLUSTERS']
-    cluster = clusters[id]
+    cluster = app.config['CLUSTERS'].get_by_id(id)
 
     fasta = to_fasta(cluster.sequences())
     return Response(fasta, mimetype="application/octet-stream")
 
 
+# TODO We may want to make seedlineage a function
 @app.route("/download/fasta/<id>.seedlineage.fa")
 def seedlineage_fasta(id=None):
-    clusters = app.config['CLUSTERS']
-    cluster = clusters[id]
-
+    cluster = app.config['CLUSTERS'].get_by_id(id)
     return flask.send_file(cluster.seedlineage)
 
 
 @app.route("/download/fasta/<id>_aa.fa")
 def cluster_aa_fasta(id=None):
-    clusters = app.config['CLUSTERS']
-    cluster = clusters[id]
-
+    cluster = app.config['CLUSTERS'].get_by_id(id)
     return flask.send_file(cluster.cluster_aa)
 
 @app.route("/download/fasta/<id>.seedlineage_aa.fa")
 def seedlineage_aa_fasta(id=None):
-    clusters = app.config['CLUSTERS']
-    cluster = clusters[id]
-
+    cluster = app.config['CLUSTERS'].get_by_id(id)
     return flask.send_file(cluster.seedlineage_aa)
 
 
 @app.route("/cluster/<id>/tree.svg")
 def svg_view(id=None):
-    clusters = app.config['CLUSTERS']
-    cluster = clusters[id]
-
+    # TODO should just have middleware for passing through the cluster
+    cluster = app.config['CLUSTERS'].get_by_id(id)
     return flask.send_file(cluster.svg)
 
 
