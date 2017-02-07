@@ -38,6 +38,7 @@ def load_template(name):
     return template
 
 
+
 # Cluster is a container for the json definition of a cluster.
 # Each json attribute will become an attribute of the Cluster instance.
 # Potentially this will cause problems if a JSON attribute conflicts with an existing
@@ -135,15 +136,25 @@ class Cluster(object):
             records = (SeqIO.to_dict if as_dict else list)(SeqIO.parse(fh, "fasta"))
         return records
 
-    def lineage_seqs(self, focus_node_name, seq_mode="dna"):
+    def multi_lineage_seqs(self, focus_node_names, seq_mode="dna"):
         tree = self.tree()
-        focus_node = tree.search_nodes(name=focus_node_name)[0]
-        lineage = [focus_node] + focus_node.get_ancestors()
+        naive_node = find_node(tree, '.*naive.*')
+        lineage_names = set()
+        for focus_node_name in focus_node_names:
+            focus_node = tree.search_nodes(name=focus_node_name)[0]
+            lineage = [focus_node] + focus_node.get_ancestors()
+            focus_lineage_names = set((n.get_distance(naive_node), n.name) for n in lineage)
+            lineage_names = set.union(lineage_names, focus_lineage_names.union())
+        lineage_names = map(lambda x: x[1], reversed(sorted(lineage_names)))
+        # Now we get the sequences and map lineage_names through them
         cluster_seqs = self.sequences(seq_mode=seq_mode, as_dict=True)
-        seqs = [cluster_seqs[n.name] for n in lineage if n.name in cluster_seqs]
+        seqs = [cluster_seqs[name] for name in lineage_names if name in cluster_seqs]
         # Add naive to the very bottom (we should really just rewrite things to ensure naive is the root)
         seqs.append(cluster_seqs["naive0"])
         return seqs
+
+    def lineage_seqs(self, focus_node_name, seq_mode="dna"):
+        return self.multi_lineage_seqs([focus_node_name], seq_mode=seq_mode)
 
     def seed_seq(self, seq_mode="dna"):
         return self.sequences(seq_mode=seq_mode, as_dict=True)[self.seed]

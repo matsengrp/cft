@@ -86,15 +86,21 @@
 </div>
 
 
+<!--Would be awesome if there was a nice way of making git glog like trees in the name asci column...-->
+
 <br/><br/>
-<h3>{{focus_node}} lineage alignment</h3>
+<h3>Lineage alignment:
+  {% for focus_node in focus_nodes %}
+  {{ focus_node }}{{ ',' if focus_node == focus_nodes[-1] else '' }}
+  {% endfor %}
+</h3>
 
 <div>
   <p>
     <a class="seq-mode-link" data="aa">Amino Acid</a> &nbsp;
     <a class="seq-mode-link" data="dna">Nucleotide</a>
   </p>
-  <a href="{{url_for("lineage_download", id=cluster.id, focus_node=focus_node, seq_mode=seq_mode)}}">Download</a>
+  <a href="{{url_for("lineage_download", id=cluster.id, focus_nodes=focus_nodes, seq_mode=seq_mode)}}">Download</a>
 </div>
 
 <div class="col-container">
@@ -136,12 +142,12 @@ $(function() {
       location.href = newUrl;
     }
 
-    // When our SVG tree's text nodes are clicks, update the focus_node query param (and reload) so the
+    // When our SVG tree's text nodes are clicks, update the focus_nodes query param (and reload) so the
     // corresponding lineage is loaded.
     $(".svg-container text").click(function() {
       var nodeName = $(this).html().split(" ")[0];
       console.log("Node clicked for " + nodeName);
-      updateQueryStringParameter('focus_node', nodeName);
+      updateQueryStringParameter('focus_nodes', nodeName);
       // TODO Should add an anchor so we zip down to the alignment...
       });
 
@@ -153,7 +159,7 @@ $(function() {
       });
 
     // want to make the highlighted node bold for easier visual identification
-    $(".svg-container text:contains('{{ focus_node }}')").css("font-weight", "bold");
+    $(".svg-container text:contains('{{ focus_nodes }}')").css("font-weight", "bold");
     });
 </script>
 
