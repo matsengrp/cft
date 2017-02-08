@@ -86,12 +86,10 @@
 </div>
 
 
-<!--Would be awesome if there was a nice way of making git glog like trees in the name asci column...-->
-
 <br/><br/>
 <h3>Lineage alignment:
   {% for focus_node in focus_nodes %}
-  {{ focus_node }}{{ ',' if focus_node == focus_nodes[-1] else '' }}
+  {{ focus_node }}{{ '' if focus_node == focus_nodes[-1] else ',' }}
   {% endfor %}
 </h3>
 
@@ -104,6 +102,15 @@
 </div>
 
 <div class="col-container">
+  <div class="scrollable resizable" style="width: 10%">
+    <div>&nbsp;</div>
+    <div class="ascii-art {{seq_mode}}"> </div>
+    <div>&nbsp;</div>
+    {% for rec in lineage_seqs %}
+    <div class="ascii-art {{seq_mode}}">{{rec.lineage_annotations | render_lineage_annotation}}</div>
+    {% endfor %}
+    <div>&nbsp;</div>
+  </div>
   <div class="scrollable resizable" style="width: 10%;">
     <div>&nbsp;</div>
     <div class="ascii-art {{seq_mode}}"> &gt; {{seed_seq.id}} </div>
@@ -141,13 +148,47 @@ $(function() {
       // Navigate to new url
       location.href = newUrl;
     }
+    function toggleVals(vals, val) {
+      var newvals = [];
+      var matches = false;
+      for (var i = 0; i < vals.length; i++) {
+        if (vals[i] != val) {
+          newvals.push(vals[i]);
+        }
+        else {
+          matches = true;
+        }
+      }
+      if (!matches) {
+        newvals.push(val);
+      }
+      return newvals;
+    }
+    function updateQueryStringMultiParameter(key, value) {
+      var currentUrl = window.location.href;
+      var re = new RegExp("([?&])" + key + "=(.*)?(&|$)", "i");
+      console.log(currentUrl.match(re));
+      if (currentUrl.match(re)) {
+        var vals = currentUrl.match(re)[2].split(',');
+        var newVals = toggleVals(vals, value).join(",");
+      }
+      else {
+        var newVals = value;
+      }
+      console.log('newvals: ', newVals);
+      updateQueryStringParameter(key, newVals);
+    }
 
     // When our SVG tree's text nodes are clicks, update the focus_nodes query param (and reload) so the
     // corresponding lineage is loaded.
-    $(".svg-container text").click(function() {
+    $(".svg-container text").mousedown(function(event) {
       var nodeName = $(this).html().split(" ")[0];
       console.log("Node clicked for " + nodeName);
-      updateQueryStringParameter('focus_nodes', nodeName);
+      if (event.which == 1) {
+        updateQueryStringParameter('focus_nodes', nodeName);
+      } else if (event.which == 3) {
+        updateQueryStringMultiParameter('focus_nodes', nodeName);
+      };
       // TODO Should add an anchor so we zip down to the alignment...
       });
 
@@ -158,8 +199,10 @@ $(function() {
       updateQueryStringParameter('seq_mode', seqMode);
       });
 
-    // want to make the highlighted node bold for easier visual identification
-    $(".svg-container text:contains('{{ focus_nodes }}')").css("font-weight", "bold");
+    // want to make the highlighted nodes bold for easier visual identification
+    {% for focus_node in focus_nodes %}
+    $(".svg-container text:contains('{{ focus_node }}')").css("font-weight", "bold");
+    {% endfor %}
     });
 </script>
 

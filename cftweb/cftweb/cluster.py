@@ -11,18 +11,14 @@ from __future__ import print_function
 
 import re
 import os
-import uuid
-import sys
 import json
 import pprint
-from ete3 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
+import copy
+from ete3 import Tree
 from jinja2 import Environment, FileSystemLoader
-from utils import iter_names_inorder, find_node, fake_seq, sort_tree
+from utils import find_node, sort_tree
 
-from Bio.Seq import Seq
 from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
-from Bio.Alphabet import IUPAC
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -137,21 +133,108 @@ class Cluster(object):
         return records
 
     def multi_lineage_seqs(self, focus_node_names, seq_mode="dna"):
+        "Note; order of focus_node_names is ignored; leaf order of self.tree is used."
+        # Note also that here we are requiring that these then be leaf node names, which we didn't used to.
+        # Consider relaxing this or submitting an issue.
+        #
+        # firt , sort the focus_nodes, as above
         tree = self.tree()
+        #print("all tips:", tree.get_leaves())
+        sorted_lineage_tips = [n for n in tree.get_leaves() if n.name in focus_node_names]
+        #print('focus node 2:', find_node(tree, focus_node_names[1]))
+        #print("focus node names", focus_node_names)
+        #print("sorted_lineage_tips", sorted_lineage_tips)
+        # get naive_node for reference, (and later appending, as of this writing)
         naive_node = find_node(tree, '.*naive.*')
-        lineage_names = set()
-        for focus_node_name in focus_node_names:
-            focus_node = tree.search_nodes(name=focus_node_name)[0]
-            lineage = [focus_node] + focus_node.get_ancestors()
-            focus_lineage_names = set((n.get_distance(naive_node), n.name) for n in lineage)
-            lineage_names = set.union(lineage_names, focus_lineage_names.union())
-        lineage_names = map(lambda x: x[1], reversed(sorted(lineage_names)))
-        # Now we get the sequences and map lineage_names through them
+        # Compute lineages in a few different shapes for different needs
+        lineages = map(lambda n: list(reversed([n] + n.get_ancestors() + [naive_node])), sorted_lineage_tips)
+        lineage_names = map(lambda ns: map(lambda n: n.name, ns), lineages)
+        print("lineages", lineage_names)
+        lineage_name_sets = map(set, lineage_names)
+        # Get a set of all node names in subtree
+        all_nodes = set.union(*lineage_name_sets)
+        #print("all nodes:", all_nodes)
+        # Now we have to sort the nodes (sequences), first by lineage order (when in same lineage), then by
+        # sort_fn when in separate lineages.
+        def shared_lineage_i(node1, node2):
+            "Takes node names node1 and node2"
+            print("Finding shared_lineage for:", node1, node2,)
+            shared_lineages = [i for i, name_set in enumerate(lineage_name_sets) if set([node1, node2]).issubset(name_set)]
+            try:
+                ans = shared_lineages[0]
+                print("val=", ans)
+                return ans
+                #return shared_lineages[0]
+            except IndexError:
+                print("val=", 'None')
+                return None
+        def node_comparator(node1, node2, sort_fn=lambda n: find_node(tree, n).get_distance(naive_node)):
+            if node1 == "naive0":
+                return -1
+            if node2 == "naive0":
+                return 1
+            lineage_i = shared_lineage_i(node1, node2)
+            if lineage_i == None:
+                return cmp(sort_fn(node1), sort_fn(node2))
+            else:
+                lineage = lineage_names[lineage_i]
+                return cmp(lineage.index(node1), lineage.index(node2))
+        # And finally, here we have our sorted_nodes
+        sorted_nodes = sorted(all_nodes, cmp=node_comparator)
+        print("sorted nodes:", [x for x in sorted_nodes])
+        # load up our sequences
         cluster_seqs = self.sequences(seq_mode=seq_mode, as_dict=True)
-        seqs = [cluster_seqs[name] for name in lineage_names if name in cluster_seqs]
-        # Add naive to the very bottom (we should really just rewrite things to ensure naive is the root)
-        seqs.append(cluster_seqs["naive0"])
-        return seqs
+        # Now we process our nodes (in sort order) returning seqrecords with annotations about what other
+        # lineages have been seen, where we have branches, which lineage the node is on, etc. Everything
+        # needed to build a git tree.
+        def lineage_stack_index(node_name):
+            #print("lineage stack called on:", node_name)
+            lineage = lineage_names[shared_lineage_i(node_name, node_name)]
+            return lineage.index(node_name)
+        def get(xs, n, missing=None):
+            try:
+                return xs[n]
+            except IndexError:
+                return missing
+        def process_lineage_node(processed_nodes, node_name):
+            try:
+                sequence = cluster_seqs[node_name]
+            except KeyError:
+                # If we can't find the node in seqs, we leave it out; only root?
+                #print("Can't find seq for:", node_name)
+                return processed_nodes
+            lineage_stack_i = lineage_stack_index(node_name) or 0
+            current_lineage_i = shared_lineage_i(node_name, node_name)
+            last_node = get(processed_nodes, -1)
+            #print("testing node name", last_node)
+            #print("testing result", last_node == None)
+            last_seen = [0] if not last_node else last_node.lineage_annotations['lineages_seen']
+            last_dead_lineages = [] if not last_node else last_node.lineage_annotations['dead_lineages']
+            seen = copy.copy(last_seen)
+            dead_lineages = copy.copy(last_dead_lineages)
+            branch_to = []
+            #lineage_stack = [get(names, lineage_stack_i) for names in lineage_names]
+            next_lineage_stack = [get(names, lineage_stack_i + 1) for names in lineage_names]
+            for i, _node_name in enumerate(next_lineage_stack):
+                if i not in seen:
+                    last_node_name = get(next_lineage_stack, i - 1)
+                    if last_node_name != _node_name and i -1 == current_lineage_i:
+                        seen.append(i)
+                        branch_to.append(i)
+            if node_name in focus_node_names:
+                dead_lineages.append(current_lineage_i)
+            annotations = {'node_name': node_name,
+                           'lineage_index': current_lineage_i,
+                           'lineage_stack_index': lineage_stack_i,
+                           'branch_to': branch_to,
+                           'lineages_seen': seen,
+                           'dead_lineages': dead_lineages}
+            sequence.lineage_annotations = annotations
+            return processed_nodes + [sequence]
+        # Apply process_lineage_nodes as a reduction, so we have access to the last_processed value
+        processed_nodes = list(reversed(reduce(process_lineage_node, sorted_nodes, [])))
+        print("processed_nodes:", [x.lineage_annotations for x in processed_nodes])
+        return processed_nodes
 
     def lineage_seqs(self, focus_node_name, seq_mode="dna"):
         return self.multi_lineage_seqs([focus_node_name], seq_mode=seq_mode)
