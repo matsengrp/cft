@@ -163,7 +163,8 @@ def render_lineage_annotation(annotation):
                 build_str += "|"
         else:
             build_str += " "
-        on_branch = annotation['branch_to'] and (i in range(annotation['lineage_index'], last_lineage))
+        branch_to = annotation['branch_to']
+        on_branch = branch_to and (i in range(annotation['lineage_index'], max(branch_to)))
         if on_branch:
             build_str += "--"
         else:

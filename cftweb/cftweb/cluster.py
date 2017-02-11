@@ -143,12 +143,11 @@ class Cluster(object):
         # get naive_node for reference, (and later appending, as of this writing)
         naive_node = find_node(tree, '.*naive.*')
         # Compute lineages in a few different shapes for different needs
-        lineages = map(lambda n: list(reversed([n] + n.get_ancestors() + [naive_node])), sorted_lineage_tips)
+        lineages = map(lambda n: [naive_node] + list(reversed(n.get_ancestors())) + [n], sorted_lineage_tips)
         sequences = self.sequences(seq_mode=seq_mode, as_dict=True)
         lineages = map(lambda ns: filter(lambda n: sequences.get(n.name), ns), lineages)
         lineage_names = map(lambda ns: map(lambda n: n.name, ns), lineages)
         lineage_name_sets = map(set, lineage_names)
-        #print("lineage_names", lineage_names)
         # Get a set of all node names in subtree
         all_nodes = set.union(*lineage_name_sets)
         # Now we have to sort the nodes (sequences), first by lineage order (when in same lineage), then by
@@ -207,10 +206,15 @@ class Cluster(object):
             dead_lineages = copy.copy(last_dead_lineages)
             branch_to = []
             next_lineage_stack = [get(names, lineage_stack_index + 1) for names in lineage_names]
+            # This is the hacky part of this; the way we iterate through things and figure out when we're
+            # branching; Wish we could use a pruned ete tree for this.
             for i, _node_name in enumerate(next_lineage_stack):
                 if i not in seen:
                     last_node_name = get(next_lineage_stack, i - 1)
-                    if last_node_name != _node_name and i - 1 == lineage_index:
+                    # Also need to make sure this is the branch from where this actually splits... splitting
+                    # is happening at wrong time todo
+                    next_this_stack = get(next_lineage_stack, lineage_index)
+                    if last_node_name != _node_name and last_node_name == next_this_stack and next_this_stack:
                         seen.append(i)
                         branch_to.append(i)
             if node_name in focus_node_names:
