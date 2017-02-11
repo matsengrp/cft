@@ -151,7 +151,6 @@ def annotate(seq, cluster, seq_mode="dna"):
 
 @app.template_filter()
 def render_lineage_annotation(annotation):
-    print("annotation:", annotation)
     last_lineage = max(annotation['lineages_seen'])
     build_str = ''
     for i in range(last_lineage + 1):

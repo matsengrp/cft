@@ -184,13 +184,18 @@ $(function() {
     $(".svg-container text").mousedown(function(event) {
       var nodeName = $(this).html().split(" ")[0];
       console.log("Node clicked for " + nodeName);
-      if (event.which == 1) {
-        updateQueryStringParameter('focus_nodes', nodeName);
-      } else if (event.which == 3) {
+      if (event.shiftKey) {
         updateQueryStringMultiParameter('focus_nodes', nodeName);
+        } else {
+        updateQueryStringParameter('focus_nodes', nodeName);
       };
-      // TODO Should add an anchor so we zip down to the alignment...
       });
+
+    //window.oncontextmenu = function(event) {
+      //event.preventDefault();
+      //event.stopPropogation();
+      //return false;
+    //}
 
     // When we click on the seq_mode links, it should toggle the seq_mode query param
     $(".seq-mode-link").click(function() {
