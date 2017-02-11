@@ -137,3 +137,38 @@ def annotate(seq, cluster, seq_mode="dna"):
         return annotate_aa(seq, cluster)
 
 
+# The below renders a seqrecords lineage annotation as one of the following lines
+#
+#      *
+#    * |
+#  * | |
+#  | | | *
+#  *-| | |
+#  |   *-|
+#  |   *
+#  *---|
+#  |
+
+@app.template_filter()
+def render_lineage_annotation(annotation):
+    last_lineage = max(annotation['lineages_seen'])
+    build_str = ''
+    for i in range(last_lineage + 1):
+        if i == annotation['lineage_index']:
+            build_str += "*"
+        elif i in annotation['lineages_seen'] and i not in annotation['dead_lineages']:
+            if i in annotation['branch_to']:
+                build_str += '/'
+            else:
+                build_str += "|"
+        else:
+            build_str += " "
+        branch_to = annotation['branch_to']
+        on_branch = branch_to and (i in range(annotation['lineage_index'], max(branch_to)))
+        if on_branch:
+            build_str += "--"
+        else:
+            build_str += "  "
+    return build_str
+ 
+

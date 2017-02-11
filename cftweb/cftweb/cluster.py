@@ -11,18 +11,14 @@ from __future__ import print_function
 
 import re
 import os
-import uuid
-import sys
 import json
 import pprint
-from ete3 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
+import copy
+from ete3 import Tree
 from jinja2 import Environment, FileSystemLoader
-from utils import iter_names_inorder, find_node, fake_seq, sort_tree
+from utils import find_node, sort_tree
 
-from Bio.Seq import Seq
 from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
-from Bio.Alphabet import IUPAC
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -36,6 +32,7 @@ def load_template(name):
     env.filters['strformat'] = str.format
     template = env.get_template(name)
     return template
+
 
 
 # Cluster is a container for the json definition of a cluster.
@@ -135,15 +132,110 @@ class Cluster(object):
             records = (SeqIO.to_dict if as_dict else list)(SeqIO.parse(fh, "fasta"))
         return records
 
-    def lineage_seqs(self, focus_node_name, seq_mode="dna"):
+    def multi_lineage_seqs(self, focus_node_names, seq_mode="dna"):
+        "Note; order of focus_node_names is ignored; leaf order of self.tree is used."
+        # Note also that here we are requiring that these then be leaf node names, which we didn't used to.
+        # Consider relaxing this or submitting an issue.
+        #
+        # firt , sort the focus_nodes, as above
         tree = self.tree()
-        focus_node = tree.search_nodes(name=focus_node_name)[0]
-        lineage = [focus_node] + focus_node.get_ancestors()
-        cluster_seqs = self.sequences(seq_mode=seq_mode, as_dict=True)
-        seqs = [cluster_seqs[n.name] for n in lineage if n.name in cluster_seqs]
-        # Add naive to the very bottom (we should really just rewrite things to ensure naive is the root)
-        seqs.append(cluster_seqs["naive0"])
-        return seqs
+        sorted_lineage_tips = [n for n in tree.get_leaves() if n.name in focus_node_names]
+        # get naive_node for reference, (and later appending, as of this writing)
+        naive_node = find_node(tree, '.*naive.*')
+        # Compute lineages in a few different shapes for different needs
+        lineages = map(lambda n: [naive_node] + list(reversed(n.get_ancestors())) + [n], sorted_lineage_tips)
+        sequences = self.sequences(seq_mode=seq_mode, as_dict=True)
+        lineages = map(lambda ns: filter(lambda n: sequences.get(n.name), ns), lineages)
+        lineage_names = map(lambda ns: map(lambda n: n.name, ns), lineages)
+        lineage_name_sets = map(set, lineage_names)
+        # Get a set of all node names in subtree
+        all_nodes = set.union(*lineage_name_sets)
+        # Now we have to sort the nodes (sequences), first by lineage order (when in same lineage), then by
+        # sort_fn when in separate lineages.
+        dists = dict((node.name, node.get_distance(naive_node)) for nodes in lineages for node in nodes)
+        # We're going to imperatively iterate through, like a savage animal.
+        # We'll keep track of sorted_nodes and _stack_cursor, the former being our end result, the latter
+        # being our position in the stack (keeping track of what positions in each lineage have been visited).
+        def get(xs, n, missing=None):
+            try:
+                return xs[n]
+            except IndexError:
+                return missing
+        # Need to be able to grab the node pointed to by a cursor easily
+        def node_name_by_cursor(cursor):
+            i = cursor['lineage']
+            j = cursor['lineage_slice'][i]
+            return lineage_names[i][j]
+        # This iterator gives us the next possible positions
+        def next_cursors(cursor):
+            for i, j in enumerate(cursor['lineage_slice']):
+                if j + 1 < len(lineage_names[i]):
+                    previous_cursor_node_name = None if i == 0 else get(lineage_names[i-1], j + 1)
+                    this_cursor_node_name = lineage_names[i][j + 1]
+                    # We only yield a new cursor if 0th lineage, or if we share with the last lineage (already
+                    # yeilded)
+                    if previous_cursor_node_name != this_cursor_node_name:
+                        c = copy.deepcopy(cursor)
+                        c['lineage'] = i
+                        c['node_name'] = this_cursor_node_name
+                        # We increment every value in the cursor lineage_slice till the names change
+                        for k in range(i, len(cursor['lineage_slice'])):
+                            if get(lineage_names[k], j + 1) == this_cursor_node_name:
+                                c['lineage_slice'][k] += 1
+                        yield c
+        # Our stack cursor structure
+        sorted_nodes = []
+        _stack_cursor = {'lineage': 0, 'lineage_slice': [0 for _ in lineage_names]}
+        # precompute distances for sorting between lineages
+        while len(sorted_nodes) < len(all_nodes):
+            cursors_by_dist = [(dists[node_name_by_cursor(cursor)], cursor) for cursor in next_cursors(_stack_cursor)]
+            if not cursors_by_dist:
+                break
+            dist, cursor = min(cursors_by_dist)
+            node_name = node_name_by_cursor(cursor)
+            _stack_cursor = cursor
+            sequence = sequences[node_name]
+            lineage_index = cursor['lineage'] # this is which lineage in the stack we have
+            lineage_stack_index = cursor['lineage_slice'][lineage_index] # this is the index in the lineage
+
+            # computing branch points, lineages seen, and dead lineages
+            last_node = get(sorted_nodes, -1)
+            last_seen = [0] if not last_node else last_node.lineage_annotations['lineages_seen']
+            last_dead_lineages = [] if not last_node else last_node.lineage_annotations['dead_lineages']
+            seen = copy.copy(last_seen)
+            dead_lineages = copy.copy(last_dead_lineages)
+            branch_to = []
+            next_lineage_stack = [get(names, lineage_stack_index + 1) for names in lineage_names]
+            # This is the hacky part of this; the way we iterate through things and figure out when we're
+            # branching; Wish we could use a pruned ete tree for this.
+            for i, _node_name in enumerate(next_lineage_stack):
+                if i not in seen:
+                    last_node_name = get(next_lineage_stack, i - 1)
+                    # Also need to make sure this is the branch from where this actually splits... splitting
+                    # is happening at wrong time todo
+                    next_this_stack = get(next_lineage_stack, lineage_index)
+                    if last_node_name != _node_name and last_node_name == next_this_stack and next_this_stack:
+                        seen.append(i)
+                        branch_to.append(i)
+            if node_name in focus_node_names:
+                dead_lineages.append(lineage_index)
+
+            # target
+            annotations = {'node_name': node_name,
+                           'lineage_index': lineage_index,
+                           'lineage_stack_index': lineage_stack_index,
+                           'branch_to': branch_to,
+                           'lineages_seen': seen,
+                           'dead_lineages': dead_lineages}
+            sequence.lineage_annotations = annotations
+            sorted_nodes.append(sequence)
+
+        processed_nodes = list(reversed(sorted_nodes))
+        return processed_nodes
+
+
+    def lineage_seqs(self, focus_node_name, seq_mode="dna"):
+        return self.multi_lineage_seqs([focus_node_name], seq_mode=seq_mode)
 
     def seed_seq(self, seq_mode="dna"):
         return self.sequences(seq_mode=seq_mode, as_dict=True)[self.seed]

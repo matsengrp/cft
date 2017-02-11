@@ -114,15 +114,16 @@ def cluster_page(id=None):
 
     # We are now using the lineage kw_args param to get the lineage we want to display
     seed_name = cluster.seed
-    focus_node = request.args.get('focus_node', seed_name)
+    focus_nodes = request.args.get('focus_nodes', seed_name).split(",")
 
     seq_mode = request.args.get('seq_mode', 'aa') # also accepts 'dna' for dna; defaults to amino acid
 
     renderdict = base_renderdict({
         'cluster': cluster,
         'clustering_step_siblings': clustering_step_siblings,
-        'focus_node': focus_node,
-        'lineage_seqs': cluster.lineage_seqs(focus_node, seq_mode),
+        'focus_nodes': focus_nodes,
+        'lineage_seqs': cluster.multi_lineage_seqs(focus_nodes, seq_mode),
+        #'lineage_seqs': cluster.lineage_seqs(focus_nodes, seq_mode),
         'seed_seq': cluster.seed_seq(seq_mode),
         'seq_mode': seq_mode,
         'svg': cluster.svgstr()})
@@ -135,10 +136,10 @@ def to_fasta(seqs):
     return fp.getvalue()
 
 
-@app.route("/cluster/<id>/lineage/<focus_node>.lineage.<seq_mode>.fa")
-def lineage_download(id, focus_node, seq_mode):
+@app.route("/cluster/<id>/lineage/<focus_nodes>.lineage.<seq_mode>.fa")
+def lineage_download(id, focus_nodes, seq_mode):
     cluster = app.config['CLUSTERS'].get_by_id(id)
-    seqs = cluster.lineage_seqs(focus_node, seq_mode)
+    seqs = cluster.lineage_seqs(focus_nodes, seq_mode)
 
     fasta = to_fasta(seqs)
     return Response(fasta, mimetype="application/octet-stream")

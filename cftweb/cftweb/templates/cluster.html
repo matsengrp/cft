@@ -87,17 +87,30 @@
 
 
 <br/><br/>
-<h3>{{focus_node}} lineage alignment</h3>
+<h3>Lineage alignment:
+  {% for focus_node in focus_nodes %}
+  {{ focus_node }}{{ '' if focus_node == focus_nodes[-1] else ',' }}
+  {% endfor %}
+</h3>
 
 <div>
   <p>
     <a class="seq-mode-link" data="aa">Amino Acid</a> &nbsp;
     <a class="seq-mode-link" data="dna">Nucleotide</a>
   </p>
-  <a href="{{url_for("lineage_download", id=cluster.id, focus_node=focus_node, seq_mode=seq_mode)}}">Download</a>
+  <a href="{{url_for("lineage_download", id=cluster.id, focus_nodes=focus_nodes, seq_mode=seq_mode)}}">Download</a>
 </div>
 
 <div class="col-container">
+  <div class="scrollable resizable" style="width: 10%">
+    <div>&nbsp;</div>
+    <div class="ascii-art {{seq_mode}}"> </div>
+    <div>&nbsp;</div>
+    {% for rec in lineage_seqs %}
+    <div class="ascii-art {{seq_mode}}">{{rec.lineage_annotations | render_lineage_annotation}}</div>
+    {% endfor %}
+    <div>&nbsp;</div>
+  </div>
   <div class="scrollable resizable" style="width: 10%;">
     <div>&nbsp;</div>
     <div class="ascii-art {{seq_mode}}"> &gt; {{seed_seq.id}} </div>
@@ -135,15 +148,54 @@ $(function() {
       // Navigate to new url
       location.href = newUrl;
     }
+    function toggleVals(vals, val) {
+      var newvals = [];
+      var matches = false;
+      for (var i = 0; i < vals.length; i++) {
+        if (vals[i] != val) {
+          newvals.push(vals[i]);
+        }
+        else {
+          matches = true;
+        }
+      }
+      if (!matches) {
+        newvals.push(val);
+      }
+      return newvals;
+    }
+    function updateQueryStringMultiParameter(key, value) {
+      var currentUrl = window.location.href;
+      var re = new RegExp("([?&])" + key + "=(.*)?(&|$)", "i");
+      console.log(currentUrl.match(re));
+      if (currentUrl.match(re)) {
+        var vals = currentUrl.match(re)[2].split(',');
+        var newVals = toggleVals(vals, value).join(",");
+      }
+      else {
+        var newVals = value;
+      }
+      console.log('newvals: ', newVals);
+      updateQueryStringParameter(key, newVals);
+    }
 
-    // When our SVG tree's text nodes are clicks, update the focus_node query param (and reload) so the
+    // When our SVG tree's text nodes are clicks, update the focus_nodes query param (and reload) so the
     // corresponding lineage is loaded.
-    $(".svg-container text").click(function() {
+    $(".svg-container text").mousedown(function(event) {
       var nodeName = $(this).html().split(" ")[0];
       console.log("Node clicked for " + nodeName);
-      updateQueryStringParameter('focus_node', nodeName);
-      // TODO Should add an anchor so we zip down to the alignment...
+      if (event.shiftKey) {
+        updateQueryStringMultiParameter('focus_nodes', nodeName);
+        } else {
+        updateQueryStringParameter('focus_nodes', nodeName);
+      };
       });
+
+    //window.oncontextmenu = function(event) {
+      //event.preventDefault();
+      //event.stopPropogation();
+      //return false;
+    //}
 
     // When we click on the seq_mode links, it should toggle the seq_mode query param
     $(".seq-mode-link").click(function() {
@@ -152,8 +204,10 @@ $(function() {
       updateQueryStringParameter('seq_mode', seqMode);
       });
 
-    // want to make the highlighted node bold for easier visual identification
+    // want to make the highlighted nodes bold for easier visual identification
+    {% for focus_node in focus_nodes %}
     $(".svg-container text:contains('{{ focus_node }}')").css("font-weight", "bold");
+    {% endfor %}
     });
 </script>
 
