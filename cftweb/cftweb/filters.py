@@ -137,17 +137,18 @@ def annotate(seq, cluster, seq_mode="dna"):
         return annotate_aa(seq, cluster)
 
 
-# The below renders a seqrecords lineage annotation as one of the following lines
+# The below renders a seqrecord's lineage annotation as one of the following rows of ascii art representing
+# the lineage/tree sorting.
 #
 #      *
 #    * |
 #  * | |
 #  | | | *
-#  *-| | |
-#  |   *-|
+#  *-/ | |
+#  |   *-/
 #  |   *
-#  *---|
-#  |
+#  *---/
+#  *
 
 @app.template_filter()
 def render_lineage_annotation(annotation):
