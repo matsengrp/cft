@@ -28,8 +28,6 @@ import sys
 import csv
 import subprocess
 import glob
-import shutil
-import functools
 import sconsutils
 import datetime
 import getpass
@@ -263,31 +261,21 @@ def process_partis_(outdir, c):
                 '--partis_log ' + path.join(input_dir(c), 'partition.log ') +
                 '--cluster_base cluster ' +
                 '--melted_base seqmeta ' +
-                '--output_dir ' + outdir)
+                '--output_dir ' + outdir + ' ' +
+                '--paths-relative-to ' + outdir_base)
 
 @w.add_target()
 def base_metadata(outdir, c):
     return c['process_partis_'][0]
 
 @w.add_target()
+def inseqs(outdir, c):
+    return c['process_partis_'][1]
+
+@w.add_target()
 def seqmeta(outdir, c):
     return c['process_partis_'][2]
 
-
-# To get the input sequences we need to read in the file output by process_partis to figure out what the input fasta was,
-# and then for convenience copy it over locally
-
-def extract_inseqs(outdir, target, source, env):
-    with open(str(source[0]), "r") as source_handle:
-        metadata = json.load(source_handle)[0]
-        shutil.copy(path.join(outdir, metadata['file']), str(target[0]))
-
-@w.add_target()
-def inseqs(outdir, c):
-    return env.Command(
-        path.join(outdir, "inseqs.fasta"),
-        c['base_metadata'],
-        functools.partial(extract_inseqs, outdir))
 
 # Forget why we do this; Chris W. seems to think it may not have been as necessary as original thought.
 # Regardless of what the deal was with this, I think we can take it out once we add an alignment for inseqs

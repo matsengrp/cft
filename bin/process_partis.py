@@ -66,6 +66,9 @@ def parse_args():
         default='.',
         help='directory for output files')
     parser.add_argument(
+        '--paths-relative-to',
+        help='files pointed to from metadata.json file will be speicfied relative to this path; defaults to --output-dir')
+    parser.add_argument(
         '--melted_base',
         help='basename for melted data output',
         default='melted')
@@ -85,6 +88,10 @@ def parse_args():
     #parser.add_argument('--select_clustering', dest='select_clustering',
     #        help='choose a row from partition file for a different cluster',
     #        default=0, type=int)
+
+    # default paths_relative_to is just whatever the output dir is
+    args = parser.parse_args()
+    args.paths_relative_to = args.paths_relative_to or args.output_dir
 
     return parser.parse_args()
 
@@ -202,7 +209,7 @@ def process_data(annot_file, part_file, chain, glpath):
     return output_df
 
 
-def write_json(df, fname, mod_date, cluster_base, annotations, partition, meta):
+def write_json(df, fname, mod_date, cluster_base, annotations, partition, meta, outdir, paths_relative_to):
     """
     Write metatdata to json file from dataframe
     """
@@ -237,7 +244,7 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition, meta):
     def jsonify(df, cluster_id, mod_date, cluster_base, meta):
         data = df.iloc[0]
         return merge_two_dicts({
-            'file': cluster_base+cluster_id+'.fa',
+            'file': os.path.relpath(os.path.join(outdir, cluster_base+cluster_id+'.fa'), paths_relative_to),
             'cluster_id': cluster_id,
             'n_seqs': len(df), # Note... this count naive; good idea?
             'v_gene': data['v_gene'],
@@ -364,7 +371,9 @@ def main():
                args.cluster_base,
                args.annotations,
                args.partition,
-               meta)
+               meta,
+               args.output_dir,
+               args.paths_relative_to)
 
 
 if __name__ == '__main__':
