@@ -70,7 +70,7 @@ AddOption('--datapath',
               nargs=1,
               action='store',
               metavar='DIR',
-              default="/fh/fast/matsen_e/processed-data/partis/kate-qrs-2016-09-09/new",
+              default="/fh/fast/matsen_e/processed-data/partis/kate-qrs-2016-09-09/latest",
               help='partis output directory')
 
 AddOption('--outdir',
