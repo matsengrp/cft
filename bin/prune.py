@@ -4,9 +4,9 @@
 prune a newick tree based on distnace from root-->seed lineage
 print taxa from pruned tree
 """
-import argparse, sys
+import argparse
 from ete3 import Tree
-from dnaml2tree import find_node, reroot_tree
+from outfile2tree import find_node, reroot_tree
 
 def main():
 
