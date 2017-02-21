@@ -26,6 +26,7 @@ import os
 import re
 import sys
 import csv
+import time
 import subprocess
 import glob
 import sconsutils
@@ -97,11 +98,19 @@ AddOption('--test',
         default=False,
         help="Setting this flag does a test run for just a couple of seeds")
 
+AddOption('--dataset-id',
+        dest='dataset_id',
+        metavar='IDENTIFIER',
+        help="""Assing a dataset identitifier for distinguishing between multiple datasets loaded into cftweb;
+                Defaults to <datapath-basename>-<treeprog>-<date>""")
+
 
 datapath = env.GetOption('datapath')
 outdir_base = env.GetOption('outdir') # we call this outdir_base in order to not conflict with nestly fns outdir arg
 treeprog = env.GetOption('treeprog')
 test_run = env.GetOption("test_run")
+dataset_id = env.GetOption('dataset_id') or path.basename(path.realpath(datapath)) + '-' + treeprog + '-' + time.strftime('%Y.%m.%d')
+
 
 # pruning is dependent on which program we use, dnapars seems to handle bigger trees more quickly
 if treeprog == 'dnapars':
@@ -114,6 +123,7 @@ print("outdir = {}".format(outdir_base))
 print("treeprog = {}".format(treeprog))
 print("test_run = {}".format(test_run))
 print('pruned size = {}'.format(prune_n))
+print('dataset id = {}'.format(dataset_id))
 
 
 # Some environment sanity checks to make sure we have all prerequisits
@@ -488,6 +498,7 @@ def cluster_metadata(outdir, c):
                 'json_assoc.py /dev/stdin $TARGET ' +
                 # Not 100% on this; Pick optimal attr/key name
                 #'best_partition ' + c['partition'] + ' ' +
+                'dataset_id ' + dataset_id + ' ' +
                 'clustering_step ' + n + ' ' +
                 'svg ' + treeprog_tgt_relpath(0) + ' ' +
                 'fasta ' + treeprog_tgt_relpath(1) + ' ' +
@@ -539,6 +550,7 @@ def write_metadata(target, source, env):
     # Here's where we filter out the seeds with clusters that didn't compute through dnaml2tree.py/dnapars.py
     good_clusters = map(lambda x: node_metadata(x[1]), filter(lambda x: tgt_exists(x[0]), in_pairs(source)))
     metadata = {'clusters': good_clusters,
+                'dataset_id': dataset_id,
                 'build_info': {'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                                'command': " ".join(sys.argv),
                                'workdir': os.getcwd(),
