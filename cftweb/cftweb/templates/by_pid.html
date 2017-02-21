@@ -1,7 +1,7 @@
 {% extends "base.jinja" %}
 {% block page_css %}
 <style>
- tr.clickable-row { cursor: pointer; } 
+  tr.clickable-row { cursor: pointer; } 
 </style>
 <script>
 jQuery(document).ready(function($) {
@@ -16,34 +16,31 @@ jQuery(document).ready(function($) {
 <h2>Clusters Grouped by Patient</h2>
 <div class="row">
   <div class="col-md-6">
-    <table class="table  table-striped table-hover">
+    <table class="table table-striped table-hover">
       <thead>
-	<tr>
-	<th>Patient ID</th>
-	<th>timepoints</th>
-	<th>seeds</th>
-	<th>clusters</th>
-	</tr>
+        <tr>
+        <th>Patient ID</th>
+        <th>timepoints</th>
+        <th>seeds</th>
+        <th>clusters</th>
+        </tr>
       </thead>
       <tbody>
-	
-	{% for group in clusters|groupby('pid') %}
-	{% set tplist = group.list| map(attribute='timepoint')| list| unique -%}
-	{% set ntp = tplist | length -%}
-	{% set slist = group.list| map(attribute='seedid')| list| unique -%}
-	{% set ns = slist | length -%}
-	{% set nc = group.list | length -%}
-
-	<tr class='clickable-row' data-href='{{ url_for('by_timepoint', pid=group.grouper) }}'>
-	  <td>{{ group.grouper }}</td>
-	  <td>{{ ntp }} timepoint{{ "s" if ntp > 1 else ""}}</td>
-	  <td>{{ ns }} seed{{ "s" if ns > 1 else ""}}</td>
-	  <td>{{ nc }} cluster{{ "s" if nc > 1 else ""}}</td>
-	</tr>
-	{%-endfor-%}
+      {% for group in clusters | groupby('pid') %}
+      {% set tplist = group.list | map(attribute='timepoint') | list | unique -%}
+      {% set ntp = tplist | length -%}
+      {% set slist = group.list | map(attribute='seedid') | list | unique -%}
+      {% set ns = slist | length -%}
+      {% set nc = group.list | length -%}
+        <tr class='clickable-row' data-href='{{ url_for('by_timepoint', pid=group.grouper) }}'>
+          <td>{{ group.grouper }}</td>
+          <td>{{ ntp }} timepoint{{ "s" if ntp > 1 else ""}}</td>
+          <td>{{ ns }} seed{{ "s" if ns > 1 else ""}}</td>
+          <td>{{ nc }} cluster{{ "s" if nc > 1 else ""}}</td>
+        </tr>
+      {%-endfor-%}
       </tbody>
     </table>
-    
   </div>
 </div>
 {% endblock %}
