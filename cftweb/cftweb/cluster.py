@@ -107,7 +107,7 @@ class Cluster(object):
         # These identifiers may have to change if addition information is needed to maintain uniqueness, and
         # when possible care should be taken to retain existing ids. But for now this is only a soft guarantee.
         
-        self.id = "c{}".format(hash((self.seed, self.timepoint, self.clustering_step)))
+        self.id = "c{}".format(hash((self.dataset, self.seed, self.timepoint, self.clustering_step)))
 
 
 
@@ -269,13 +269,15 @@ def default_sort_key(c):
 class ClusterDB(object):
     "This class acts as a DB or Index of cluster data, which we can query based on indexed parameters"
     @classmethod
-    def fromfile(cls, filename):
-        "Load up clusters from a json file"
-        dir = os.path.abspath(os.path.dirname(filename))
-        with open(filename, 'rb') as fp:
-            print("fromfile reading {}".format(filename))
-            clusters = map(lambda x: Cluster(x, dir), json.load(fp)["clusters"])
-            return cls(clusters)
+    def fromfiles(cls, filenames):
+        def fromfile(filename):
+            dir = os.path.abspath(os.path.dirname(filename))
+            with open(filename, 'rb') as fp:
+                print("fromfiles reading {}".format(filename))
+                dataset = json.load(fp)
+                dataset['clusters'] = map(lambda x: Cluster(x, dir), dataset["clusters"])
+                return dataset
+        return cls(map(fromfile, filenames))
 
     def __build_index__(self, attr):
         """Builds an index for a cluster attribute, so that clusters can be queried for more efficiently by said
@@ -289,16 +291,23 @@ class ClusterDB(object):
                 attr_index[c_attr_val] = set([c.id])
         self.indices[attr] = attr_index
 
-    def __init__(self, clusters):
+    def __init__(self, datasets):
         # We index clusters primarily by their primary id (should they/the-clusters be deciding ids or should
         # we (the cluster-sets)? Seems like it's our consistency concern...)
         self.indices = {}
-        self.clusters = dict((c.id, c) for c in clusters if c)
+        self.clusters = dict((c.id, c) for dataset in datasets for c in dataset['clusters'] if c)
+        self.build_info = dict((d['dataset_id'], d['build_info']) for d in datasets)
         # Build indices;
-        # Right now We don't really _need_ to index timepoints and patients, but the tool may need to
-        # eventually
-        for attr in ["seed", "seedid", "patient", "timepoints"]:
+        # Right now We don't really _need_ to index timepoints, patients, and datasets but the tool may need to
+        # eventually support larger numbers of these things, and whereas with a real file based db it's not
+        # worth indexing if your number of unique values is on the order of the page block size, since
+        # everything is in memory in our implementation here, we still gain some efficiency, at the cost of a
+        # little extra memory consumption, so what the hey.
+        for attr in ["seed", "seedid", "subject_id", "timepoints", "dataset_id"]:
             self.__build_index__(attr)
+
+    def build_info(self, dataset_id):
+        return copy.copy(self.build_info.get(dataset_id, {}))
 
     def __get_index_ids__(self, attr, vals):
         if not(type(vals) == list or type(vals) == set):

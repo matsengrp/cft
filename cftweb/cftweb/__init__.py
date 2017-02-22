@@ -74,13 +74,9 @@ def log_to_file(app):
 def before_first_request():
     options = app.config['OPTIONS']
 
-    clusters = cluster.ClusterDB.fromfile(options.file)
+    clusters = cluster.ClusterDB.fromfiles(options.files)
 
     app.config['CLUSTERS'] = clusters
-    # TODO Need to deal with the build_info as part of the cluster db... this is starting to look
-    # relational, like we'd want an actual database.
-    with open(options.file) as fh:
-        app.config['DATA_BUILD_INFO'] = json.load(fh)["build_info"]
 
     # Configure logging
     if not app.debug:
