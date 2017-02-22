@@ -336,7 +336,7 @@ def main():
         os.makedirs(args.output_dir)
 
     # get metadata
-    regex = re.compile(r'^(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
+    regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seed_id>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
     path = '/'.join(args.output_dir.split('/')[-3:])
     m = regex.match(path)
     meta = {}

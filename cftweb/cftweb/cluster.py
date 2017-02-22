@@ -87,10 +87,10 @@ class Cluster(object):
         # "Hs-LN4-5RACE-IgK-100k/QB850.043-Vk/cluster4/dnaml.seedLineage.fa"
         # Note; using the data seedlineage here since we've made the self.seedlineage absolute in path
         path = data['newick']
-        regex = re.compile(r'^(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
+        regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
         m = regex.match(path)
         if m:
-            self.pid = m.group('pid')
+            self.subject_id = m.group('subject_id')
             self.seedid = m.group('seedid')
             self.gene = m.group('gene')
             self.timepoint = m.group('timepoint')
@@ -263,7 +263,7 @@ class Cluster(object):
 
 # This should really be coupled to the mode of id hash creation for clusters
 def default_sort_key(c):
-    return (c.pid, c.timepoint, c.seed, c.clustering_step)
+    return (c.subject_id, c.timepoint, c.seed, c.clustering_step)
 
 
 class ClusterDB(object):
@@ -354,7 +354,7 @@ class ClusterDB(object):
     def clustering_step_siblings(self, cluster_id):
         cluster = self.get_by_id(cluster_id)
         # Again, as mentioned above, this set of things necessary for identification should be factored out
-        return self.query({'pid': cluster.pid, 'timepoint': cluster.timepoint, 'seed': cluster.seed})
+        return self.query({'subject_id': cluster.subject_id, 'timepoint': cluster.timepoint, 'seed': cluster.seed})
 
 
 
