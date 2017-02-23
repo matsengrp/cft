@@ -576,7 +576,7 @@ import textwrap
 def print_hints(target, source, env):
     msg = """\
 		hint: to run the cft web interface,
-			$ cd cftweb && python -m cftweb --file {}
+			$ cd cftweb && python -m cftweb {}
 	""".format(os.path.abspath(str(source[0])))
     print(textwrap.dedent(msg))
 
