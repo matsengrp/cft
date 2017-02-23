@@ -32,7 +32,7 @@ jQuery(document).ready(function($) {
       {% set slist = group.list | map(attribute='seedid') | list | unique -%}
       {% set ns = slist | length -%}
       {% set nc = group.list | length -%}
-        <tr class='clickable-row' data-href='{{ url_for('by_timepoint', subject_id=group.grouper) }}'>
+        <tr class='clickable-row' data-href='{{ url_for('by_timepoint', dataset_id=dataset_id, subject_id=group.grouper) }}'>
           <td>{{ group.grouper }}</td>
           <td>{{ ntp }} timepoint{{ "s" if ntp > 1 else ""}}</td>
           <td>{{ ns }} seed{{ "s" if ns > 1 else ""}}</td>

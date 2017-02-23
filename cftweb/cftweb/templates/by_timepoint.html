@@ -28,7 +28,7 @@ jQuery(document).ready(function($) {
 	{% for group in clusters|groupby('timepoint') %}
 	{% set seedlist = group.list| map(attribute='seedid')| list| unique -%}
 	{% set nseeds = seedlist | length -%}
-	{% set url = url_for('by_seed', subject_id=subject_id, timepoint=group.grouper) if nseeds > 1 else url_for('by_cluster', subject_id=subject_id, timepoint=group.grouper, seedid=seedlist[0]) -%}
+	{% set url = url_for('by_seed', dataset_id=dataset_id, subject_id=subject_id, timepoint=group.grouper) if nseeds > 1 else url_for('by_cluster', subject_id=subject_id, timepoint=group.grouper, seedid=seedlist[0]) -%}
 	<tr class='clickable-row' data-href='{{ url }}'>
 	  <td>{{ subject_id }}</td>
 	  <td>{{ group.grouper }}</td>
