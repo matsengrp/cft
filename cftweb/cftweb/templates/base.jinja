@@ -30,7 +30,11 @@
   $(function() {
       $("a.btn-origins-toggle").click(function(event) {
           $(this).siblings("div.origins").toggleClass("hidden");
-      })
+      });
+
+      $("option.dataset-option").click(function(event) {
+        location.href = $(this).attr('href');
+      });
   });
   
   </script>
@@ -61,8 +65,17 @@
           <ul class="nav navbar-nav navbar-right">
             <li><a href='{{ url_for('by_subject', dataset_id=dataset_id) }}'>By Subject</a></li>
             <li><a href='{{ url_for('index', dataset_id=dataset_id) }}'>By Cluster</a></li>
-            <!--<li><a href="#">Profile</a></li>-->
-            <!--<li><a href="#">Help</a></li>-->
+            <li style="margin-left: 20px; margin-right: 20px;">
+            <select class="form-control" style="margin: 8px;">
+              {%- for dataset in datasets -%}
+              <option
+                {{ 'selected="selected"' if dataset == dataset_id else '' }}
+                class="dataset-option" href="{{ url_for('index', dataset_id=dataset) }}">
+                  {{ dataset }}
+                </option>
+              {%- endfor -%}
+              </select>
+            </li>
           </ul>
           <!--<form class="navbar-form navbar-right">-->
             <!--<input type="text" class="form-control" placeholder="Search...">-->

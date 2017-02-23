@@ -37,6 +37,8 @@ def get_view_args(attrs):
 # datasets, feels weird)
 def base_renderdict(params):
     renderdict = app.config['CLUSTERS'].build_info(params['dataset_id'])
+    renderdict['datasets'] = app.config['CLUSTERS']._build_info.keys()
+    print("datasets:", renderdict['datasets'])
     renderdict.update(app.config['CFTWEB_BUILD_INFO'])
     renderdict['commit_url'] = "https://github.com/matsengrp/cft/tree/" + renderdict["commit"]
     renderdict['short_commit'] = renderdict["commit"][0:10]
