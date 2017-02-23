@@ -25,8 +25,13 @@ _ = filters
 def dict_subset(d, attrs):
     return {k: d[k] for k in attrs}
 
+def get_view_args(attrs):
+    cluster_id = request.view_args.get('id')
+    params = app.config['CLUSTERS'].get_by_id(cluster_id).__dict__ if cluster_id else request.view_args
+    return dict_subset(params, attrs)
+
+
 def base_renderdict(params):
-    # God damn mutability...
     renderdict = app.config['CLUSTERS'].build_info(params['dataset_id'])
     renderdict.update(app.config['CFTWEB_BUILD_INFO'])
     renderdict['commit_url'] = "https://github.com/matsengrp/cft/tree/" + renderdict["commit"]
@@ -57,7 +62,7 @@ def by_cluster_response(params):
 
 
 def clusters_bcrumb():
-    params = dict_subset(request.view_args, ['dataset_id'])
+    params = get_view_args(['dataset_id'])
     return [{'text': params['dataset_id'] + ' clusters', 'url': url_for('index', **params)}]
 
 @app.route('/<dataset_id>/clusters')
@@ -75,7 +80,7 @@ def home():
 
 
 def subjects_bcrumb():
-    params = dict_subset(request.view_args, ['dataset_id'])
+    params = get_view_args(['dataset_id'])
     return [{'text': params['dataset_id'] + ' subjects', 'url': url_for('by_subject', **params)}]
 
 @app.route("/<dataset_id>/subjects")
@@ -87,7 +92,7 @@ def by_subject(**params):
 
 
 def subject_id_bcrumb():
-    params = dict_subset(request.view_args, ['dataset_id', 'subject_id'])
+    params = get_view_args(['dataset_id', 'subject_id'])
     return [{'text': params['subject_id'], 'url': url_for('by_subject', **params)}]
 
 @app.route("/<dataset_id>/timepoints/<subject_id>")
@@ -100,7 +105,7 @@ def by_timepoint(**params):
 
 
 def timepoint_bcrumb():
-    params = dict_subset(request.view_args, ['dataset_id', 'subject_id', 'timepoint'])
+    params = get_view_args(['dataset_id', 'subject_id', 'timepoint'])
     return [{'text': params['timepoint'], 'url': url_for('by_timepoint', **params)}]
 
 @app.route("/<dataset_id>/seeds/<subject_id>/<timepoint>")
@@ -113,7 +118,7 @@ def by_seed(**params):
 
 
 def seed_bcrumb():
-    params = dict_subset(request.view_args, ['dataset_id', 'subject_id', 'timepoint', 'seedid'])
+    params = get_view_args(['dataset_id', 'subject_id', 'timepoint', 'seedid'])
     return [{'text': params['seedid'], 'url': url_for('by_seed', **params)}]
 
 @app.route("/<dataset_id>/clusters/<subject_id>/<timepoint>/<seedid>")
@@ -123,7 +128,14 @@ def by_cluster(**params):
     return by_cluster_response(params)
 
 
+def cluster_bcrumb():
+    cluster_id = request.view_args['id']
+    cluster = app.config['CLUSTERS'].get_by_id(cluster_id)
+    return [{'text': cluster.clustering_step, 'url': url_for('cluster_page', id=cluster_id)}]
+
 @app.route("/cluster/<id>")
+@register_breadcrumb(app, '.subjects.timepoints.seeds.clusters.cluster', '',
+                     dynamic_list_constructor=cluster_bcrumb)
 def cluster_page(id=None):
     cluster = app.config['CLUSTERS'].get_by_id(id)
     clustering_step_siblings = app.config['CLUSTERS'].clustering_step_siblings(id)
