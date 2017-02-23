@@ -107,7 +107,7 @@ class Cluster(object):
         # These identifiers may have to change if addition information is needed to maintain uniqueness, and
         # when possible care should be taken to retain existing ids. But for now this is only a soft guarantee.
         
-        self.id = "c{}".format(hash((self.dataset, self.seed, self.timepoint, self.clustering_step)))
+        self.id = "c{}".format(hash((self.dataset_id, self.seed, self.timepoint, self.clustering_step)))
 
 
 
@@ -283,20 +283,20 @@ class ClusterDB(object):
         """Builds an index for a cluster attribute, so that clusters can be queried for more efficiently by said
         attributes."""
         attr_index  = {}
-        for id, c in self.clusters.iteritems():
+        for id, c in self._clusters.iteritems():
             c_attr_val = c.get(attr)
             try:
                 attr_index[c_attr_val].add(c.id)
             except KeyError:
                 attr_index[c_attr_val] = set([c.id])
-        self.indices[attr] = attr_index
+        self._indices[attr] = attr_index
 
     def __init__(self, datasets):
         # We index clusters primarily by their primary id (should they/the-clusters be deciding ids or should
         # we (the cluster-sets)? Seems like it's our consistency concern...)
-        self.indices = {}
-        self.clusters = dict((c.id, c) for dataset in datasets for c in dataset['clusters'] if c)
-        self.build_info = dict((d['dataset_id'], d['build_info']) for d in datasets)
+        self._indices = {}
+        self._clusters = dict((c.id, c) for dataset in datasets for c in dataset['clusters'] if c)
+        self._build_info = dict((d['dataset_id'], d['build_info']) for d in datasets)
         # Build indices;
         # Right now We don't really _need_ to index timepoints, patients, and datasets but the tool may need to
         # eventually support larger numbers of these things, and whereas with a real file based db it's not
@@ -307,15 +307,15 @@ class ClusterDB(object):
             self.__build_index__(attr)
 
     def build_info(self, dataset_id):
-        return copy.copy(self.build_info.get(dataset_id, {}))
+        return copy.copy(self._build_info.get(dataset_id, {}))
 
     def __get_index_ids__(self, attr, vals):
         if not(type(vals) == list or type(vals) == set):
             vals = [vals]
-        return set.intersection(*(self.indices[attr].get(v) for v in vals if self.indices[attr].get(v)))
+        return set.intersection(*(self._indices[attr].get(v) for v in vals if self._indices[attr].get(v)))
 
     def get_by_id(self, id):
-        return self.clusters[id]
+        return self._clusters[id]
 
     def get_by_ids(self, ids):
         return map(self.get_by_id, ids)
@@ -327,11 +327,11 @@ class ClusterDB(object):
         if attr == "id":
             return self.get_by_ids(vals)
         # If we have an index, use that
-        if self.indices.get(attr):
+        if self._indices.get(attr):
             return self.__get_index_ids__(attr, vals)
         # Otherwise, manually filter through
         else:
-            return set(id for id, c in self.clusters.iteritems() if c.get(attr) in vals)
+            return set(id for id, c in self._clusters.iteritems() if c.get(attr) in vals)
 
     def query(self, params, sort_by=default_sort_key, page_n=None, per_page=10, first=False):
         """Return cluster records matching the query `params` argument (cluster_attr -> specific values), and
@@ -341,7 +341,7 @@ class ClusterDB(object):
         if params:
             ids = set.intersection(*(self.__query_param_ids__(k, v) for k, v in params.iteritems()))
         else:
-            ids = self.clusters.keys()
+            ids = self._clusters.keys()
         # Use these to get the clusters
         clusters = self.get_by_ids(ids)
         # Rewire as a fn if we are passed a sort_by attr str

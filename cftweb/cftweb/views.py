@@ -22,16 +22,15 @@ import filters
 # annoying error indicator hack; semantically irrelevant; need to load filters for filters to be loaded somewhere in html templates
 _ = filters
 
-def base_renderdict(dataset_id, updates={}):
+def base_renderdict(params):
     # God damn mutability...
-    renderdict = app.config['CLUSTERS'].build_info(dataset_id)
+    renderdict = app.config['CLUSTERS'].build_info(params['dataset_id'])
     renderdict.update(app.config['CFTWEB_BUILD_INFO'])
     renderdict['commit_url'] = "https://github.com/matsengrp/cft/tree/" + renderdict["commit"]
     renderdict['short_commit'] = renderdict["commit"][0:10]
     renderdict['app_commit_url'] = "https://github.com/matsengrp/cft/tree/" + renderdict["app_commit"]
     renderdict['app_short_commit'] = renderdict["app_commit"][0:10]
-    renderdict['dataset_id'] = dataset_id
-    renderdict.update(updates)
+    renderdict.update(params)
     return renderdict
 
 
@@ -47,20 +46,20 @@ def base_renderdict(dataset_id, updates={}):
 #   /clusters/c03943943
 
 
-def by_cluster_response(query):
-    query = {k: v for k, v in query.iteritems() if v != None}
-    clusters = app.config['CLUSTERS'].query(query)
-    renderdict = base_renderdict({'clusters': clusters})
+def by_cluster_response(params):
+    params = {k: v for k, v in params.iteritems() if v != None}
+    renderdict = base_renderdict(params)
+    renderdict['clusters'] = app.config['CLUSTERS'].query(params)
     return render_template('by_cluster.html', **renderdict)
 
 
 @app.route('/')
-@app.route('<dataset_id>/clusters')
+@app.route('/<dataset_id>/clusters')
 @register_breadcrumb(app, '.', 'Cluster Index')
 def index(dataset_id=None):
     # For now, just pick some random build; Would be nice to troll through the build info and pick something
     # more sensible based on date and dnaml/dnapars preference.
-    dataset_id = dataset_id or app.config['CLUSTERS'].build_info.keys()[0]
+    dataset_id = dataset_id or app.config['CLUSTERS']._build_info.keys()[0]
     return by_cluster_response({'dataset_id': dataset_id})
 
 
