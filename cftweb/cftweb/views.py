@@ -22,15 +22,19 @@ import filters
 # annoying error indicator hack; semantically irrelevant; need to load filters for filters to be loaded somewhere in html templates
 _ = filters
 
+# Utility function for subsetting dicts to create minimal cluster query and routing params
 def dict_subset(d, attrs):
     return {k: d[k] for k in attrs}
 
+# Applies above utility function towards request.view_args for query/routing params and such
 def get_view_args(attrs):
     cluster_id = request.view_args.get('id')
     params = app.config['CLUSTERS'].get_by_id(cluster_id).__dict__ if cluster_id else request.view_args
     return dict_subset(params, attrs)
 
-
+# Default dictionary of data to render; should probably be cleaned up a bit, since the build info could be
+# left nested under a single attr pretty easily (since only used in one place, and since can change between
+# datasets, feels weird)
 def base_renderdict(params):
     renderdict = app.config['CLUSTERS'].build_info(params['dataset_id'])
     renderdict.update(app.config['CFTWEB_BUILD_INFO'])
@@ -41,6 +45,9 @@ def base_renderdict(params):
     renderdict.update(params)
     return renderdict
 
+
+# ROUTING SCHEME!
+# ===============
 
 # This is the more or less what the routing scheme looks like.
 # At the very top level we have our dataset ids; everything nests nicely within this.
@@ -61,6 +68,9 @@ def by_cluster_response(params):
     return render_template('by_cluster.html', **renderdict)
 
 
+# Cluster index
+# -------------
+
 def clusters_bcrumb():
     params = get_view_args(['dataset_id'])
     return [{'text': params['dataset_id'] + ' clusters', 'url': url_for('index', **params)}]
@@ -79,6 +89,9 @@ def home():
     return flask.redirect(url_for('index', dataset_id=dataset_id))
 
 
+# Subjects index
+# --------------
+
 def subjects_bcrumb():
     params = get_view_args(['dataset_id'])
     return [{'text': params['dataset_id'] + ' subjects', 'url': url_for('by_subject', **params)}]
@@ -91,18 +104,24 @@ def by_subject(**params):
     return render_template('by_subject.html', **base_renderdict(params))
 
 
-def subject_id_bcrumb():
+# Subject > timepoints
+# --------------------
+
+def subject_bcrumb():
     params = get_view_args(['dataset_id', 'subject_id'])
     return [{'text': params['subject_id'], 'url': url_for('by_subject', **params)}]
 
 @app.route("/<dataset_id>/timepoints/<subject_id>")
 @register_breadcrumb(app, '.subjects.timepoints', '',
-                     dynamic_list_constructor=subject_id_bcrumb)
+                     dynamic_list_constructor=subject_bcrumb)
 def by_timepoint(**params):
     params['clusters'] = app.config['CLUSTERS'].query(params)
     renderdict = base_renderdict(params)
     return render_template('by_timepoint.html', **renderdict)
 
+
+# Subject > timepoint > seeds
+# ---------------------------
 
 def timepoint_bcrumb():
     params = get_view_args(['dataset_id', 'subject_id', 'timepoint'])
@@ -117,6 +136,9 @@ def by_seed(**params):
     return render_template('by_seed.html', **renderdict)
 
 
+# Subject > timepoint > seed > cluster steps
+# ------------------------------------------
+
 def seed_bcrumb():
     params = get_view_args(['dataset_id', 'subject_id', 'timepoint', 'seedid'])
     return [{'text': params['seedid'], 'url': url_for('by_seed', **params)}]
@@ -127,6 +149,9 @@ def seed_bcrumb():
 def by_cluster(**params):
     return by_cluster_response(params)
 
+
+# Cluster page
+# ------------
 
 def cluster_bcrumb():
     cluster_id = request.view_args['id']
@@ -158,6 +183,10 @@ def cluster_page(id=None):
         'svg': cluster.svgstr()})
 
     return render_template('cluster.html', **renderdict)
+
+
+# Secondary cluster routes/handlers (downloads etc)
+# -------------------------------------------------
 
 def to_fasta(seqs):
     fp = StringIO()
