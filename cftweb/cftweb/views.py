@@ -22,6 +22,9 @@ import filters
 # annoying error indicator hack; semantically irrelevant; need to load filters for filters to be loaded somewhere in html templates
 _ = filters
 
+def dict_subset(d, attrs):
+    return {k: d[k] for k in attrs}
+
 def base_renderdict(params):
     # God damn mutability...
     renderdict = app.config['CLUSTERS'].build_info(params['dataset_id'])
@@ -53,30 +56,42 @@ def by_cluster_response(params):
     return render_template('by_cluster.html', **renderdict)
 
 
-@app.route('/')
+def clusters_bcrumb():
+    params = dict_subset(request.view_args, ['dataset_id'])
+    return [{'text': params['dataset_id'] + ' clusters', 'url': url_for('index', **params)}]
+
 @app.route('/<dataset_id>/clusters')
-@register_breadcrumb(app, '.', 'Cluster Index')
+@register_breadcrumb(app, '.clusterindex', 'Cluster Index',
+        dynamic_list_constructor=clusters_bcrumb)
 def index(dataset_id=None):
-    # For now, just pick some random build; Would be nice to troll through the build info and pick something
-    # more sensible based on date and dnaml/dnapars preference.
-    dataset_id = dataset_id or app.config['CLUSTERS']._build_info.keys()[0]
     return by_cluster_response({'dataset_id': dataset_id})
 
+@app.route('/')
+def home():
+    # For now, just pick some random build; Would be nice to troll through the build info and pick something
+    # more sensible based on date and dnaml/dnapars preference.
+    dataset_id = app.config['CLUSTERS']._build_info.keys()[0]
+    return flask.redirect(url_for('index', dataset_id=dataset_id))
+
+
+def subjects_bcrumb():
+    params = dict_subset(request.view_args, ['dataset_id'])
+    return [{'text': params['dataset_id'] + ' subjects', 'url': url_for('by_subject', **params)}]
 
 @app.route("/<dataset_id>/subjects")
-@register_breadcrumb(app, '.', 'By Subject')
+@register_breadcrumb(app, '.subjects', 'By Subject',
+        dynamic_list_constructor=subjects_bcrumb)
 def by_subject(**params):
-    clusters = app.config['CLUSTERS'].query(params)
-    renderdict = base_renderdict({'clusters': clusters})
-    return render_template('by_subject.html', **renderdict)
+    params['clusters'] = app.config['CLUSTERS'].query(params)
+    return render_template('by_subject.html', **base_renderdict(params))
 
 
 def subject_id_bcrumb():
-    subject_id = request.view_args['subject_id']
-    return [{'text': subject_id, 'url': url_for('by_timepoint', subject_id=subject_id)}]
+    params = dict_subset(request.view_args, ['dataset_id', 'subject_id'])
+    return [{'text': params['subject_id'], 'url': url_for('by_subject', **params)}]
 
 @app.route("/<dataset_id>/timepoints/<subject_id>")
-@register_breadcrumb(app, '.subject_id', '<ignored>',
+@register_breadcrumb(app, '.subjects.timepoints', '',
                      dynamic_list_constructor=subject_id_bcrumb)
 def by_timepoint(**params):
     params['clusters'] = app.config['CLUSTERS'].query(params)
@@ -85,12 +100,11 @@ def by_timepoint(**params):
 
 
 def timepoint_bcrumb():
-    subject_id = request.view_args['subject_id']
-    timepoint = request.view_args['timepoint']
-    return [{'text': timepoint, 'url': url_for('by_seed', subject_id=subject_id, timepoint=timepoint)}]
+    params = dict_subset(request.view_args, ['dataset_id', 'subject_id', 'timepoint'])
+    return [{'text': params['timepoint'], 'url': url_for('by_timepoint', **params)}]
 
 @app.route("/<dataset_id>/seeds/<subject_id>/<timepoint>")
-@register_breadcrumb(app, '.subject_id.timepoint', '<ignored>',
+@register_breadcrumb(app, '.subjects.timepoints.seeds', '',
                      dynamic_list_constructor=timepoint_bcrumb)
 def by_seed(**params):
     params['clusters'] = app.config['CLUSTERS'].query(params)
@@ -99,13 +113,11 @@ def by_seed(**params):
 
 
 def seed_bcrumb():
-    subject_id = request.view_args['subject_id']
-    timepoint = request.view_args['timepoint']
-    seedid = request.view_args['seedid']
-    return [{'text': seedid, 'url': url_for('by_seed', subject_id=subject_id, timepoint=timepoint, seedid=seedid)}]
+    params = dict_subset(request.view_args, ['dataset_id', 'subject_id', 'timepoint', 'seedid'])
+    return [{'text': params['seedid'], 'url': url_for('by_seed', **params)}]
 
 @app.route("/<dataset_id>/clusters/<subject_id>/<timepoint>/<seedid>")
-@register_breadcrumb(app, '.subject_id.timepoint.seed', '<ignored>',
+@register_breadcrumb(app, '.subjects.timepoints.seeds.clusters', '',
                      dynamic_list_constructor=seed_bcrumb)
 def by_cluster(**params):
     return by_cluster_response(params)
@@ -124,6 +136,7 @@ def cluster_page(id=None):
 
     renderdict = base_renderdict({
         'cluster': cluster,
+        'dataset_id': cluster.dataset_id,
         'clustering_step_siblings': clustering_step_siblings,
         'focus_nodes': focus_nodes,
         'lineage_seqs': cluster.multi_lineage_seqs(focus_nodes, seq_mode),
