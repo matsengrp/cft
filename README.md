@@ -109,8 +109,10 @@ Before exiting, the build will prompt you with the directions for how to execute
 This should look something like:
 
 ```
-cd cftweb && python -m cftweb --file /path/to/output/metadata.json
+cd cftweb && python -m cftweb /path/to/output/metadata.json
 ```
+
+You may specify multiple json files in this fashion as long as each has a unique `dataset_id` attribute.
 
 The default port is `5000`.
 If someone else is running the web server on the same machine (or something else using that port), you can set a different one using the `-P` flag.

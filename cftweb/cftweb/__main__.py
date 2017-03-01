@@ -16,9 +16,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='python -m cftbweb', description=__doc__)
 
     parser.add_argument(
-        '-f',
-        '--file',
-        help="""Name of metadata file: [default "%(default)s"]""")
+        "files",
+        nargs='+',
+        help="Metadata file names")
 
     parser.add_argument(
         '-H',

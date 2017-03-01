@@ -87,10 +87,10 @@ class Cluster(object):
         # "Hs-LN4-5RACE-IgK-100k/QB850.043-Vk/cluster4/dnaml.seedLineage.fa"
         # Note; using the data seedlineage here since we've made the self.seedlineage absolute in path
         path = data['newick']
-        regex = re.compile(r'^(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
+        regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
         m = regex.match(path)
         if m:
-            self.pid = m.group('pid')
+            self.subject_id = m.group('subject_id')
             self.seedid = m.group('seedid')
             self.gene = m.group('gene')
             self.timepoint = m.group('timepoint')
@@ -107,7 +107,7 @@ class Cluster(object):
         # These identifiers may have to change if addition information is needed to maintain uniqueness, and
         # when possible care should be taken to retain existing ids. But for now this is only a soft guarantee.
         
-        self.id = "c{}".format(hash((self.seed, self.timepoint, self.clustering_step)))
+        self.id = "c{}".format(hash((self.dataset_id, self.seed, self.timepoint, self.clustering_step)))
 
 
 
@@ -263,50 +263,59 @@ class Cluster(object):
 
 # This should really be coupled to the mode of id hash creation for clusters
 def default_sort_key(c):
-    return (c.pid, c.timepoint, c.seed, c.clustering_step)
+    return (c.subject_id, c.timepoint, c.seed, c.clustering_step)
 
 
 class ClusterDB(object):
     "This class acts as a DB or Index of cluster data, which we can query based on indexed parameters"
     @classmethod
-    def fromfile(cls, filename):
-        "Load up clusters from a json file"
-        dir = os.path.abspath(os.path.dirname(filename))
-        with open(filename, 'rb') as fp:
-            print("fromfile reading {}".format(filename))
-            clusters = map(lambda x: Cluster(x, dir), json.load(fp)["clusters"])
-            return cls(clusters)
+    def fromfiles(cls, filenames):
+        def fromfile(filename):
+            dir = os.path.abspath(os.path.dirname(filename))
+            with open(filename, 'rb') as fp:
+                print("fromfiles reading {}".format(filename))
+                dataset = json.load(fp)
+                dataset['clusters'] = map(lambda x: Cluster(x, dir), dataset["clusters"])
+                return dataset
+        return cls(map(fromfile, filenames))
 
     def __build_index__(self, attr):
         """Builds an index for a cluster attribute, so that clusters can be queried for more efficiently by said
         attributes."""
         attr_index  = {}
-        for id, c in self.clusters.iteritems():
+        for id, c in self._clusters.iteritems():
             c_attr_val = c.get(attr)
             try:
                 attr_index[c_attr_val].add(c.id)
             except KeyError:
                 attr_index[c_attr_val] = set([c.id])
-        self.indices[attr] = attr_index
+        self._indices[attr] = attr_index
 
-    def __init__(self, clusters):
+    def __init__(self, datasets):
         # We index clusters primarily by their primary id (should they/the-clusters be deciding ids or should
         # we (the cluster-sets)? Seems like it's our consistency concern...)
-        self.indices = {}
-        self.clusters = dict((c.id, c) for c in clusters if c)
+        self._indices = {}
+        self._clusters = dict((c.id, c) for dataset in datasets for c in dataset['clusters'] if c)
+        self._build_info = dict((d['dataset_id'], d['build_info']) for d in datasets)
         # Build indices;
-        # Right now We don't really _need_ to index timepoints and patients, but the tool may need to
-        # eventually
-        for attr in ["seed", "seedid", "patient", "timepoints"]:
+        # Right now We don't really _need_ to index timepoints, patients, and datasets but the tool may need to
+        # eventually support larger numbers of these things, and whereas with a real file based db it's not
+        # worth indexing if your number of unique values is on the order of the page block size, since
+        # everything is in memory in our implementation here, we still gain some efficiency, at the cost of a
+        # little extra memory consumption, so what the hey.
+        for attr in ["seed", "seedid", "subject_id", "timepoints", "dataset_id"]:
             self.__build_index__(attr)
+
+    def build_info(self, dataset_id):
+        return copy.copy(self._build_info.get(dataset_id, {}))
 
     def __get_index_ids__(self, attr, vals):
         if not(type(vals) == list or type(vals) == set):
             vals = [vals]
-        return set.intersection(*(self.indices[attr].get(v) for v in vals if self.indices[attr].get(v)))
+        return set.intersection(*(self._indices[attr].get(v) for v in vals if self._indices[attr].get(v)))
 
     def get_by_id(self, id):
-        return self.clusters[id]
+        return self._clusters[id]
 
     def get_by_ids(self, ids):
         return map(self.get_by_id, ids)
@@ -318,11 +327,11 @@ class ClusterDB(object):
         if attr == "id":
             return self.get_by_ids(vals)
         # If we have an index, use that
-        if self.indices.get(attr):
+        if self._indices.get(attr):
             return self.__get_index_ids__(attr, vals)
         # Otherwise, manually filter through
         else:
-            return set(id for id, c in self.clusters.iteritems() if c.get(attr) in vals)
+            return set(id for id, c in self._clusters.iteritems() if c.get(attr) in vals)
 
     def query(self, params, sort_by=default_sort_key, page_n=None, per_page=10, first=False):
         """Return cluster records matching the query `params` argument (cluster_attr -> specific values), and
@@ -332,7 +341,7 @@ class ClusterDB(object):
         if params:
             ids = set.intersection(*(self.__query_param_ids__(k, v) for k, v in params.iteritems()))
         else:
-            ids = self.clusters.keys()
+            ids = self._clusters.keys()
         # Use these to get the clusters
         clusters = self.get_by_ids(ids)
         # Rewire as a fn if we are passed a sort_by attr str
@@ -354,7 +363,7 @@ class ClusterDB(object):
     def clustering_step_siblings(self, cluster_id):
         cluster = self.get_by_id(cluster_id)
         # Again, as mentioned above, this set of things necessary for identification should be factored out
-        return self.query({'pid': cluster.pid, 'timepoint': cluster.timepoint, 'seed': cluster.seed})
+        return self.query({'subject_id': cluster.subject_id, 'timepoint': cluster.timepoint, 'seed': cluster.seed})
 
 
 
