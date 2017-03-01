@@ -363,7 +363,7 @@ class ClusterDB(object):
     def clustering_step_siblings(self, cluster_id):
         cluster = self.get_by_id(cluster_id)
         # Again, as mentioned above, this set of things necessary for identification should be factored out
-        return self.query({'subject_id': cluster.subject_id, 'timepoint': cluster.timepoint, 'seed': cluster.seed})
+        return self.query({'dataset_id': cluster.dataset_id, 'subject_id': cluster.subject_id, 'timepoint': cluster.timepoint, 'seed': cluster.seed})
 
 
 
