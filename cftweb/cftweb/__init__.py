@@ -9,7 +9,7 @@ import subprocess
 from flask import Flask
 from flask_breadcrumbs import Breadcrumbs
 
-from cluster import Cluster
+import cluster
 
 import os.path
 os.environ['CFTWEB_SETTINGS'] = os.path.join(
@@ -28,7 +28,7 @@ app.config['CFTWEB_BUILD_INFO'] = {
         'app_workdir': os.getcwd(),
         'app_user': getpass.getuser(),
         'app_commit': git('rev-parse', 'HEAD'),
-        'app_status': git('status', '--porcelain')}
+        'app_status': git('status', '--porcelain', '.')}
 
 # Initialize Flask-Breadcrumbs
 Breadcrumbs(app=app)
@@ -74,13 +74,9 @@ def log_to_file(app):
 def before_first_request():
     options = app.config['OPTIONS']
 
-    objects = Cluster.fromfile(options.file)
+    clusters = cluster.ClusterDB.fromfiles(options.files)
 
-    objects = [o for o in objects if o is not None]
-    objects = dict((g.id, g) for g in objects)
-    app.config['CLUSTERS'] = objects
-    with open(options.file) as fh:
-        app.config['DATA_BUILD_INFO'] = json.load(fh)["build_info"]
+    app.config['CLUSTERS'] = clusters
 
     # Configure logging
     if not app.debug:
@@ -98,3 +94,4 @@ def before_first_request():
 #    return 'Error', 500
 
 import views
+

@@ -13,68 +13,8 @@ div.breadcrumbs {
 }
 
 div.build-info {
-  /*background-color: #f9fafc;*/
   margin-top: 50px;
   padding-bottom: 20px;
-}
-
-
-/*
- * Global add-ons
- */
-
-.sub-header {
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
-}
-
-/*
- * Top navigation
- * Hide default border to remove 1px line.
- */
-.navbar-fixed-top {
-  border: 0;
-}
-
-/*
- * Sidebar
- */
-
-/* Hide for mobile, show later */
-.sidebar {
-  display: none;
-}
-@media (min-width: 768px) {
-  .sidebar {
-    position: fixed;
-    top: 51px;
-    bottom: 0;
-    left: 0;
-    z-index: 1000;
-    display: block;
-    padding: 20px;
-    overflow-x: hidden;
-    overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
-    background-color: #f5f5f5;
-    border-right: 1px solid #eee;
-  }
-}
-
-/* Sidebar navigation */
-.nav-sidebar {
-  margin-right: -21px; /* 20px padding + 1px border */
-  margin-bottom: 20px;
-  margin-left: -20px;
-}
-.nav-sidebar > li > a {
-  padding-right: 20px;
-  padding-left: 20px;
-}
-.nav-sidebar > .active > a,
-.nav-sidebar > .active > a:hover,
-.nav-sidebar > .active > a:focus {
-  color: #fff;
-  background-color: #428bca;
 }
 
 
@@ -91,26 +31,154 @@ div.build-info {
     padding-left: 40px;
   }
 }
-.main .page-header {
-  margin-top: 0;
-}
+
 
 
 /*
- * Placeholder dashboard ideas
+ * Cluster view styles!
+ * ====================
+ *
+ * The following set up the top level resizeable columns, ASCII art styling, SVG styling, etc
  */
 
-.placeholders {
-  margin-bottom: 30px;
-  text-align: center;
+.col-container {
+  width: 100%;
 }
-.placeholders h4 {
-  margin-bottom: 0;
+.scrollable {
+  overflow-x: scroll;
 }
-.placeholder {
-  margin-bottom: 20px;
+.resizable {
+  resize: horizontal;
+  float: left;
 }
-.placeholder img {
-  display: inline-block;
-  border-radius: 50%;
+.ascii-art {
+  /* float: right; */
+  font-size: 12px;
+  white-space: pre;
+  font-family: monospace;
 }
+.svg-container text {
+  cursor: pointer;
+}
+.seq-mode-link {
+  cursor: pointer;
+}
+/* We can make the amino acid alignment a little bigger, since shorter */
+.ascii-art.aa {
+  font-size: 15px;
+}
+
+
+
+/* Alignment styling
+ * --------------------
+ *
+ * Here specifically we introduce our styling for nucleotide alignments
+ */
+
+/* The alignment coloring/styling */
+span.Vgene {
+  background-color: #b2d28e
+}
+span.N {
+  background-color: #8fbbd9
+}
+span.Dgene {
+  background-color: #ecaf80
+}
+span.Jgene {
+  background-color: #aba7d4
+}
+span.mutation {
+  color: red
+}
+span.CDR3 {
+  font-weight: bold
+}
+
+/* 20-color amino acid colorings from here:
+  http://www.imgt.org/IMGTScientificChart/RepresentationRules/colormenu.phpS */
+/* - Arg - Arginine */
+span.aa-r {
+  background-color: #E60606
+}
+/* - Lys - Lysine */
+span.aa-k {
+ background-color: #C64200
+}
+/* - Gln - Glutamine */
+span.aa-q {
+  background-color: #FF6600
+}
+/* - Asn - Asparagine */
+span.aa-n {
+  background-color: #FF9900
+}
+/* - Glu - Glutamic Acid */
+span.aa-e {
+  background-color: #FFCC00
+}
+/* - Asp - Aspartic Acid */
+span.aa-d {
+  background-color: #FFCC99
+}
+/* - His - Histidine */
+span.aa-h {
+  background-color: #FFFF99
+}
+/* - Pro - Proline */
+span.aa-p {
+  background-color: #FFFF00
+}
+/* - Tyr - Tyrosine */
+span.aa-y {
+  background-color: #CCFFCC
+}
+/* - Trp - Tryptophan */
+span.aa-w {
+  background-color: #CC99FF
+}
+/* - Ser - Serine */
+span.aa-s {
+  background-color: #CCFF99
+}
+/* - Thr - Threonine */
+span.aa-t {
+  background-color: #00FF99
+}
+/* - Gly - Glycine */
+span.aa-g {
+  background-color: #00FF00
+}
+/* - Ala - Alanine */
+span.aa-a {
+  background-color: #CCFFFF
+}
+/* - Met - Methionine */
+span.aa-m {
+  background-color: #99CCFF
+}
+/* - Cys - Cysteine */
+span.aa-c {
+  background-color: #00FFFF
+}
+/* - Phe - Phenylalanine */
+span.aa-f {
+  background-color: #00CCFF
+}
+/* - Leu - Leucine */
+span.aa-l {
+  background-color: #3366FF;
+  color: white
+}
+/* - Val - Valine */
+span.aa-v {
+  background-color: #0000FF;
+  color: white
+}
+/* - Ile - Isoleucine */
+span.aa-i {
+  background-color: #000080;
+  color: white
+}
+

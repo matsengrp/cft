@@ -30,11 +30,11 @@ seqmagick convert $Npad $phylip
 
 rm $Npad
 
-# get the line number of the naive, for outgroup rooting in dnaml
+# get the line number of the naive, for outgroup rooting in dnapars
 naiveLine=`tail -n +2 $phylip | grep -n $naive | cut -f1 -d ':'`
 
-# run phylip's dnaml, producing new outfile and outtree
-dnaml <<STDIN
+# run phylip's dnapars, producing new outfile and outtree
+dnapars <<STDIN
 $phylip
 O
 $naiveLine

@@ -10,7 +10,7 @@ import pandas as pd
 import argparse
 import os
 import os.path
-import itertools
+import warnings
 import json
 import time
 import re
@@ -65,6 +65,17 @@ def parse_args():
         '--output_dir',
         default='.',
         help='directory for output files')
+    parser.add_argument(
+        '--paths-relative-to',
+        help='files pointed to from metadata.json file will be speicfied relative to this path; defaults to --output-dir')
+    parser.add_argument(
+        '--melted_base',
+        help='basename for melted data output',
+        default='melted')
+    parser.add_argument(
+        '-F', '--remove-frameshifts',
+        help='if set, tries to remove seqs with frameshift indels from the output',
+        action="store_true")
     log_or_param_dir = parser.add_mutually_exclusive_group(required=True)
     log_or_param_dir.add_argument(
         '--partis_log',
@@ -77,6 +88,10 @@ def parse_args():
     #parser.add_argument('--select_clustering', dest='select_clustering',
     #        help='choose a row from partition file for a different cluster',
     #        default=0, type=int)
+
+    # default paths_relative_to is just whatever the output dir is
+    args = parser.parse_args()
+    args.paths_relative_to = args.paths_relative_to or args.output_dir
 
     return parser.parse_args()
 
@@ -131,6 +146,23 @@ def process_log_file(log_file):
     return chain, inferred_gls
 
 
+def indel_offset(indelfo):
+    return sum(map(lambda indel: indel['len'] * (1 if indel['type'] == 'insertion' else -1),
+                   indelfo['indels']))
+
+def infer_frameshifts(line):
+    attrs = ['stops', 'indelfos', 'input_seqs']
+    def infer_(args):
+        stop, indelfo, input_seq = args
+        aa = Seq(input_seq).translate()
+        stop_count = aa.count("*")
+        # We say it's a frameshift if the indell offsets don't leave us with a multiple of three, and if there
+        # are stop codons. Can tweak this down the road, but for now...
+        return bool(stop_count > 0 and indel_offset(indelfo) % 3)
+    return map(infer_,
+               zip(*map(lambda x: line[x], attrs)))
+
+
 def process_data(annot_file, part_file, chain, glpath):
     """
     Melt data into dataframe from annotations and partition files
@@ -159,7 +191,9 @@ def process_data(annot_file, part_file, chain, glpath):
         utils.process_input_line(line)
         utils.add_implicit_info(glfo, line)
         current_df['unique_ids'] = line['unique_ids'] + ['naive{}'.format(idx)]
-        current_df['seqs'] = line['seqs'] + [line['naive_seq']]
+        current_df['seqs'] = line['input_seqs'] + [line['naive_seq']]
+        current_df['frameshifts'] = infer_frameshifts(line) + [False] # mocking last entry
+        current_df['mut_freqs'] = line['mut_freqs'] + [0.0] # mocking last entry
         for col in to_keep:
             current_df[col] = line[col]
         current_df['cluster'] = str(idx)
@@ -175,7 +209,7 @@ def process_data(annot_file, part_file, chain, glpath):
     return output_df
 
 
-def write_json(df, fname, mod_date, cluster_base, annotations, partition, meta):
+def write_json(df, fname, mod_date, cluster_base, annotations, partition, meta, outdir, paths_relative_to):
     """
     Write metatdata to json file from dataframe
     """
@@ -210,8 +244,9 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition, meta):
     def jsonify(df, cluster_id, mod_date, cluster_base, meta):
         data = df.iloc[0]
         return merge_two_dicts({
-            'file': cluster_base+cluster_id+'.fa',
+            'file': os.path.relpath(os.path.join(outdir, cluster_base+cluster_id+'.fa'), paths_relative_to),
             'cluster_id': cluster_id,
+            'n_seqs': len(df), # Note... this count naive; good idea?
             'v_gene': data['v_gene'],
             'v_start': data['v_start'],
             'v_end': data['v_end'],
@@ -252,28 +287,42 @@ def write_fasta(df, fname):
 
     
 def write_separate_fasta(df, output_dir, cluster_base):
-    for k,g in df.groupby(['cluster']):
+    # Remove frameshift seqs if requested
+    for k, g in df.groupby(['cluster']):
         fname = os.path.join(output_dir, cluster_base+'{}.fa'.format(k))
         write_fasta(g, fname)
 
 
+def handle_frameshifts(df, remove_frameshifts=False):
+    frameshifted_seqs = list(df[df.frameshifts].unique_ids)
+    if frameshifted_seqs:
+        if remove_frameshifts:
+            print "Removing frameshifted seqs:", frameshifted_seqs
+            df = df[- df.frameshifts]
+        else:
+            warnings.warn("Found possible frameshifted input_seqs: " + str(frameshifted_seqs))
+    return df
+
+def seqmeta_path(output_dir, cluster_base, k):
+    return os.path.join(output_dir, cluster_base+'{}.seqmeta.csv'.format(k))
+
+
 def write_melted_partis(df, fname):
     """
-    Cassie and other Overbaugh group members sometimes prefer output
-    in a csv file with cluster assignments so they can be sorted by other
-    metadata related to the read.
-
-    Here we'll just scrape out the cluster information and read IDs and
-    output them into a flattened csv file.
+    Spits out a csv with rows corresponding to sequences, and columns corresonding to data about seqs.
+    Cassie and other Overbaugh group members sometimes prefer this read-level format. It's also useful in
+    various parts of the cft pipeline.
     """
-
     df.to_csv(
         fname,
         index=False,
         columns=[
             'unique_ids', 'v_gene', 'd_gene', 'j_gene', 'cdr3_length',
-            'cluster', 'has_seed'
-        ])
+            'cluster', 'has_seed', 'frameshifts', 'mut_freqs'])
+
+
+def melted_path(output_dir, melted_base):
+    return os.path.join(output_dir, melted_base + '.csv')
 
 
 def main():
@@ -287,7 +336,7 @@ def main():
         os.makedirs(args.output_dir)
 
     # get metadata
-    regex = re.compile(r'^(?P<pid>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
+    regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seed_id>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
     path = '/'.join(args.output_dir.split('/')[-3:])
     m = regex.match(path)
     meta = {}
@@ -307,12 +356,14 @@ def main():
                                       chain,
                                       inferred_gls)
 
+    write_melted_partis(melted_annotations,
+                        melted_path(args.output_dir, args.melted_base))
+
+    melted_annotations = handle_frameshifts(melted_annotations, args.remove_frameshifts)
+
     write_separate_fasta(melted_annotations,
                          args.output_dir,
                          args.cluster_base)
-
-    write_melted_partis(melted_annotations,
-                        os.path.join(args.output_dir, 'melted.csv'))
 
     write_json(melted_annotations,
                os.path.join(args.output_dir, 'metadata.json'),
@@ -320,7 +371,9 @@ def main():
                args.cluster_base,
                args.annotations,
                args.partition,
-               meta)
+               meta,
+               args.output_dir,
+               args.paths_relative_to)
 
 
 if __name__ == '__main__':

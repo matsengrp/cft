@@ -12,7 +12,7 @@ build:
         fingerprint: 16:27:ac:a5:76:28:2d:36:63:1b:56:4d:eb:df:a6:48
         type: rsa
 
-    # Build the phylip tools so we can use dnaml.
+    # Build the phylip tools so we can use dnapars.
     # first we need to install the C compiler...
     - install-packages:
         packages: build-essential xvfb FastTree
@@ -25,7 +25,7 @@ build:
 
     # download and build phylip sources.
     - script:
-        name: Build dnaml
+        name: Build dnapars
         code: |
           wget http://evolution.gs.washington.edu/phylip/download/phylip-3.696.tar.gz
           tar xzf phylip-3.696.tar.gz && rm phylip-3.696.tar.gz
