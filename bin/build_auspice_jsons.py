@@ -39,15 +39,11 @@ def with_layout(tree):
         parent = parents.get(node)
         if parent is not None:
             node.xvalue = parent.xvalue + node.branch_length
-            # Just setting all tvalues (time values) to 0 for now; We can eventually place timepoints data in here
-            #if self.is_timetree:
-                #node.tvalue = node.numdate - self.tree.root.numdate
-            #else:
-                #node.tvalue = 0
         else:
             node.xvalue = 0
-            #node.tvalue = 0
-        node.tvalue = 0
+        # This is a terrible terrible hack to get some more interesting data to look at; really should just add timepoint
+        #node.tvalue = 0
+        node.tvalue = int(2000 + node.xvalue * 100)
         # Assing yvalues for terminal nodes
         if node.is_terminal():
             node.yvalue = yvalue
