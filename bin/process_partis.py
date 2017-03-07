@@ -163,7 +163,7 @@ def infer_frameshifts(line):
                zip(*map(lambda x: line[x], attrs)))
 
 
-def process_data(annot_file, part_file, chain, glpath):
+def process_data(annot_file, part_file, locus, glpath):
     """
     Melt data into dataframe from annotations and partition files
     """
@@ -183,7 +183,7 @@ def process_data(annot_file, part_file, chain, glpath):
 
     output_df = pd.DataFrame()
     annotations = pd.read_csv(annot_file, dtype=object)
-    glfo = glutils.read_glfo(glpath, chain=chain)
+    glfo = glutils.read_glfo(glpath, locus)
     to_keep = ['v_gene', 'd_gene', 'j_gene', 'cdr3_length']
     for idx, cluster in annotations.fillna('').iterrows():
         current_df = pd.DataFrame()
@@ -231,6 +231,11 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition, meta, 
     # This currently will only work if the output files are spat into a directory
     # of the form "/path/to/output/QA255.016-Vh/Hs-LN2-5RACE-IgG-new/*.fa"
     # Otherwise no new fields will be added.
+    #
+    # Update: Now that we're merging timepoints this is actually shifting somewhat.
+    # Things looks generally more like the following, without any timepoint information:
+    #
+    #     QB850.430-Vh/QB850-h-IgG
 
     def merge_two_dicts(dict1, dict2):
         """
@@ -336,7 +341,8 @@ def main():
         os.makedirs(args.output_dir)
 
     # get metadata
-    regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seed_id>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
+    #regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seed_id>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
+    regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seed_id>[0-9]*)-(?P<gene>[^/]*)/.*')
     path = '/'.join(args.output_dir.split('/')[-3:])
     m = regex.match(path)
     meta = {}
@@ -351,9 +357,12 @@ def main():
         chain = meta['gene'][1].lower()
         inferred_gls = args.param_dir + '/hmm/germline-sets'
 
+    # I'm not 100% positive about this; But the values here are the directories in partis/data/germlines/human
+    locus = dict(h="igh", k="igk", l="igl", a="tra", b="trb", d="trd", g="trg")[chain]
+
     melted_annotations = process_data(args.annotations,
                                       args.partition,
-                                      chain,
+                                      locus,
                                       inferred_gls)
 
     write_melted_partis(melted_annotations,

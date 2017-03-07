@@ -196,7 +196,8 @@ w.add_aggregate('svgfiles', list)
 # For the sake of testing, we allow for switching between the full set of seeds, as returned by `seeds_fn`, and a small test set (`test_seeds`).
 # This is controllable via the `--test` cli flag
 
-test_seeds = ["QB850.049-Vh", "QB850.043-Vh"]
+#test_seeds = ["QB850.049-Vh", "QB850.043-Vh"]
+test_seeds = ["QB850.405-Vh", "QB850.430-Vh", "QB850.091-Vh"]
 
 def seeds_fn(datapath):
     return os.listdir(path.join(datapath, 'seeds'))
@@ -213,7 +214,10 @@ w.add('seed', seeds)
 # Next we nest on parameter sets; I believe these correspond to sequencing runs.
 # They're the things that look like "Hs-LN2-5RACE-IgG", and are nested within each seed's output directory.
 
-w.add('parameter_set', lambda c: map(lambda x: path.basename(x), glob.glob(path.join(datapath, 'seeds', c['seed'], "*"))))
+merged_timepoints_glob = "Q*-*-Ig*"
+w.add('parameter_set',
+      lambda c: map(lambda x: path.basename(x),
+                    glob.glob(path.join(datapath, 'seeds', c['seed'], merged_timepoints_glob))))
 
 
 # Some helpers at the seed level
