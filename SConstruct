@@ -512,10 +512,10 @@ def cluster_metadata(outdir, c):
 
 
 @w.add_target()
-def uaspice_files(outdir, c):
+def auspice_files(outdir, c):
     tgt = env.Command(
             [path.join(outdir, x) for x in ['tree.json', 'sequence.json']],
-            [c['dnaml_tree'][3], c['dnaml_tree'][1]],
+            [c['treeprog_tree'][3], c['treeprog_tree'][1]],
             'build_auspice_jsons.py $SOURCES $TARGETS')
     return tgt
 
