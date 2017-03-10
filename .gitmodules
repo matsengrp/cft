@@ -4,3 +4,6 @@
 [submodule "auspice"]
 	path = auspice
 	url = https://github.com/nextstrain/auspice.git
+[submodule "datascripts"]
+	path = datascripts
+	url = git@github.com:psathyrella/datascripts.git
