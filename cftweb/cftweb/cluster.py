@@ -306,6 +306,9 @@ class ClusterDB(object):
         for attr in ["seed", "seedid", "subject_id", "timepoints", "dataset_id"]:
             self.__build_index__(attr)
 
+    def dataset_ids(self):
+        return sorted(self._build_info.keys())
+
     def build_info(self, dataset_id):
         return copy.copy(self._build_info.get(dataset_id, {}))
 
