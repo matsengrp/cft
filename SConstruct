@@ -80,8 +80,7 @@ AddOption('--outdir',
         nargs=1,
         action='store',
         metavar='DIR',
-        default="output",
-        help="directory in which to output results")
+        help="directory in which to output results; defaults to `output/<dataset-tag>-<datapath-basename>-<treeprog>")
 
 AddOption('--treeprog',
         dest='treeprog',
@@ -101,15 +100,24 @@ AddOption('--test',
 AddOption('--dataset-id',
         dest='dataset_id',
         metavar='IDENTIFIER',
-        help="""Assing a dataset identitifier for distinguishing between multiple datasets loaded into cftweb;
-                Defaults to <datapath-basename>-<treeprog>-<date>""")
+        help="""Assign a dataset identitifier for distinguishing between multiple datasets loaded into cftweb;
+                Defaults to [<dataset-tag>-]<datapath-basename>-<treeprog>-<date>""")
+
+AddOption('--dataset-tag',
+        dest='dataset_tag',
+        metavar='TAG',
+        help="Adds a tag to the beginning of the automatically generated dataset id")
 
 
-datapath = env.GetOption('datapath')
-outdir_base = env.GetOption('outdir') # we call this outdir_base in order to not conflict with nestly fns outdir arg
+# prefer realpath so that running latest vs explicit vN doesn't require rerun; also need for defaults below
+datapath = path.realpath(env.GetOption('datapath'))
 treeprog = env.GetOption('treeprog')
 test_run = env.GetOption("test_run")
-dataset_id = env.GetOption('dataset_id') or path.basename(path.realpath(datapath)) + '-' + treeprog + '-' + time.strftime('%Y.%m.%d')
+dataset_tag = env.GetOption('dataset_tag') or path.basename(path.dirname(datapath))[:-11] + '-' + path.basename(datapath)
+dataset_base = dataset_tag + '-' + treeprog
+# we call this outdir_base in order to not conflict with nestly fns outdir arg
+outdir_base = env.GetOption('outdir') or path.join('output', dataset_base)
+dataset_id = env.GetOption('dataset_id') or dataset_base + '-' + time.strftime('%Y.%m.%d')
 
 
 # pruning is dependent on which program we use, dnapars seems to handle bigger trees more quickly
