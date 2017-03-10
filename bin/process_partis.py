@@ -122,14 +122,14 @@ def process_log_file(log_file):
     else:
         chain = call_args[1+call_args.index('--chain')]
 
-    if not '--param_dir' in call_args:
+    if not '--parameter-dir' in call_args:
         # currently we use IMGT germlines if no cached parameters provided.
         # we have no other way of getting this information since it's printed
         # to stdout if it's not provided. should we assume it's always
         # provided?
         inferred_gls = partis_path + '/data/germlines/human'
     else:
-        inferred_gls = call_args[1+call_args.index('--param_dir')] + \
+        inferred_gls = call_args[1+call_args.index('--parameter-dir')] + \
                 '/hmm/germline-sets'
 
     # if the parameter file is not an absolute path then we don't know where
@@ -352,13 +352,15 @@ def main():
         raise Exception('--output_dir needs to be of the form "/path/to/output/QA255.016-Vh/Hs-LN2-5RACE-IgG"')
 
     if args.partis_log is not None:
+        print("Inferring chain and gls from partis log")
         chain, inferred_gls = process_log_file(args.partis_log)
     else:
+        print("Inferring chain and gls from path and param dir cl arg")
         chain = meta['gene'][1].lower()
         inferred_gls = args.param_dir + '/hmm/germline-sets'
 
     # I'm not 100% positive about this; But the values here are the directories in partis/data/germlines/human
-    locus = dict(h="igh", k="igk", l="igl", a="tra", b="trb", d="trd", g="trg")[chain]
+    locus = dict(h='igh', k='igk', l='igl', a='tra', b='trb', d='trd', g='trg')[chain]
 
     melted_annotations = process_data(args.annotations,
                                       args.partition,
