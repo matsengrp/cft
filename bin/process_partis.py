@@ -99,7 +99,7 @@ def parse_args():
 def process_log_file(log_file):
     """
     Get function call from log file that will include information about
-    location of inferred germlines, which chain we're using, etc.
+    location of inferred germlines, which locus we're using, etc.
     """
 
     # assumes function call is first line of log file
@@ -116,11 +116,12 @@ def process_log_file(log_file):
         # information for us.
         raise Exception('First line of provided log file not a valid partis command: {}'.format(call))
 
-    if not '--chain' in call_args:
+    if not '--locus' in call_args:
         # partis default is heavy chain
-        chain = 'h'
+        warnings.warn("Couldn't infer locus from log file; assuming igh")
+        locus = 'igh'
     else:
-        chain = call_args[1+call_args.index('--chain')]
+        locus = call_args[1+call_args.index('--locus')]
 
     if not '--parameter-dir' in call_args:
         # currently we use IMGT germlines if no cached parameters provided.
@@ -143,7 +144,7 @@ def process_log_file(log_file):
     if not os.path.isdir(inferred_gls):
         raise ValueError('Invalid parameter directory: ' + str(inferred_gls))
 
-    return chain, inferred_gls
+    return locus, inferred_gls
 
 
 def indel_offset(indelfo):
@@ -353,14 +354,13 @@ def main():
 
     if args.partis_log is not None:
         print("Inferring chain and gls from partis log")
-        chain, inferred_gls = process_log_file(args.partis_log)
+        locus, inferred_gls = process_log_file(args.partis_log)
     else:
         print("Inferring chain and gls from path and param dir cl arg")
         chain = meta['gene'][1].lower()
+        # I'm not 100% positive about this; But the values here are the directories in partis/data/germlines/human
+        locus = dict(h='igh', k='igk', l='igl', a='tra', b='trb', d='trd', g='trg')[chain]
         inferred_gls = args.param_dir + '/hmm/germline-sets'
-
-    # I'm not 100% positive about this; But the values here are the directories in partis/data/germlines/human
-    locus = dict(h='igh', k='igk', l='igl', a='tra', b='trb', d='trd', g='trg')[chain]
 
     melted_annotations = process_data(args.annotations,
                                       args.partition,
