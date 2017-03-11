@@ -68,8 +68,8 @@ def annotated_tree(tree):
 # Most of our work here is in just constructing dictionary representations of our tree and sequences.
 
 repr_attrs = ['xvalue', 'yvalue', 'tvalue']
-repr_attr_trans = {'strain': 'name'}
-
+repr_attr_trans = {'strain': 'name',
+                   'clade': 'name'}
 
 def clade_repr(clade):
     rep = dict()
@@ -80,12 +80,33 @@ def clade_repr(clade):
         rep[x] = clade_dict[x]
     if clade.clades:
         rep['children'] = map(clade_repr, clade.clades)
+    rep['muts'] = []
+    rep['aa_muts'] = []
+    rep['attr'] = {
+                   'region': 'africa',
+                   'country': 'nigeria',
+                   'city': 'lagos',
+                   'num_date': rep['tvalue'],
+                   'date': str(rep['tvalue']) + '-02-13',
+                   'div': rep['xvalue']
+                   }
     return rep
 
 
 def tree_repr(tree):
     tree = annotated_tree(tree)
     return clade_repr(tree.root)
+
+
+
+# Sequence representation
+# =======================
+
+def seq_repr(seqrecord):
+    return {'nuc': str(seqrecord.seq)}
+
+def seqs_repr(seqrecords):
+    return {seqrecord.id: seq_repr(seqrecord) for seqrecord in seqrecords}
 
 
 
@@ -114,6 +135,7 @@ def get_args():
 def main():
     args = get_args()
     json.dump(tree_repr(args.input_tree), args.json_tree)
+    json.dump(seqs_repr(args.input_seqs), args.json_seqs)
     args.json_tree.close()
     args.json_seqs.close()
 
