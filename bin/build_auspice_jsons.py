@@ -4,6 +4,7 @@ import argparse
 import copy
 import numpy as np
 import json
+import csv
 from Bio import SeqIO, Phylo
 
 
@@ -71,7 +72,10 @@ repr_attrs = ['xvalue', 'yvalue', 'tvalue']
 repr_attr_trans = {'strain': 'name',
                    'clade': 'name'}
 
-def clade_repr(clade):
+#def seq_muts(seqs, seqid):
+
+
+def clade_repr(clade, seqs, seqmeta):
     rep = dict()
     clade_dict = clade.__dict__
     for x, y in repr_attr_trans.iteritems():
@@ -79,7 +83,7 @@ def clade_repr(clade):
     for x in repr_attrs:
         rep[x] = clade_dict[x]
     if clade.clades:
-        rep['children'] = map(clade_repr, clade.clades)
+        rep['children'] = [clade_repr(c, seqs, seqmeta) for c in clade.clades]
     rep['muts'] = []
     rep['aa_muts'] = []
     rep['attr'] = {
@@ -93,9 +97,9 @@ def clade_repr(clade):
     return rep
 
 
-def tree_repr(tree):
+def tree_repr(tree, seqs, seqmeta):
     tree = annotated_tree(tree)
-    return clade_repr(tree.root)
+    return clade_repr(tree.root, seqs, seqmeta)
 
 
 
@@ -106,7 +110,7 @@ def seq_repr(seqrecord):
     return {'nuc': str(seqrecord.seq)}
 
 def seqs_repr(seqrecords):
-    return {seqrecord.id: seq_repr(seqrecord) for seqrecord in seqrecords}
+    return {id: seq_repr(seqrecord) for id, seqrecord in seqrecords.iteritems()}
 
 
 
@@ -117,12 +121,18 @@ def tree_arg(filename):
     return Phylo.parse(filename, "newick").next()
 
 def seqs_arg(filename):
-    return SeqIO.parse(filename, "fasta")
+    return SeqIO.to_dict(SeqIO.parse(filename, "fasta"))
+
+def csv_arg(filename):
+    with open(filename) as fh:
+        return {row['sequence']: row for row in csv.DictReader(fh)}
+
 
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('input_tree', type=tree_arg)
     parser.add_argument('input_seqs', type=seqs_arg)
+    parser.add_argument('input_seqmeta', type=csv_arg)
     parser.add_argument('json_tree', type=argparse.FileType('w'))
     parser.add_argument('json_seqs', type=argparse.FileType('w'))
     return parser.parse_args()
@@ -134,7 +144,7 @@ def get_args():
 
 def main():
     args = get_args()
-    json.dump(tree_repr(args.input_tree), args.json_tree)
+    json.dump(tree_repr(args.input_tree, args.input_seqs, args.input_seqmeta), args.json_tree)
     json.dump(seqs_repr(args.input_seqs), args.json_seqs)
     args.json_tree.close()
     args.json_seqs.close()
