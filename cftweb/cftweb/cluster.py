@@ -70,14 +70,14 @@ class Cluster(object):
 
         # TEMPORARY HACK!
         #
-        # We want to know the individual (patient) identifier, the
+        # We want to know the individual (subject) identifier, the
         # timepoint (when sampled), the seed sequence name, and the
         # gene name.  Ideally this would be explicitly provided in the
         # json data, but instead we must extract it from the
         # paths provided in the json data.
         #
         # Given a partial path like, "QA255.016-Vh/Hs-LN2-5RACE-IgG-new"
-        # "QA255" 	- individual (patient) identification
+        # "QA255" 	- individual (subject) identification
         # "016" 	- seed sequence name
         # "Vh" 		- gene name.  Vh and Vk are the V heavy chain (IgG) vs. V kappa (there is also Vl which mean V lambda)
         # "LN2" 	- timepoint.  LN1 and LN2 are early timepoints and LN3 and LN4 are late timepoints.
@@ -87,7 +87,7 @@ class Cluster(object):
         # "Hs-LN4-5RACE-IgK-100k/QB850.043-Vk/cluster4/dnaml.seedLineage.fa"
         # Note; using the data seedlineage here since we've made the self.seedlineage absolute in path
         path = data['newick']
-        regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
+        regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>.*)-5RACE')
         m = regex.match(path)
         if m:
             self.subject_id = m.group('subject_id')
