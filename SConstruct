@@ -80,8 +80,7 @@ AddOption('--outdir',
         nargs=1,
         action='store',
         metavar='DIR',
-        default="output",
-        help="directory in which to output results")
+        help="directory in which to output results; defaults to `output/<dataset-tag>-<datapath-basename>-<treeprog>")
 
 AddOption('--treeprog',
         dest='treeprog',
@@ -101,15 +100,24 @@ AddOption('--test',
 AddOption('--dataset-id',
         dest='dataset_id',
         metavar='IDENTIFIER',
-        help="""Assing a dataset identitifier for distinguishing between multiple datasets loaded into cftweb;
-                Defaults to <datapath-basename>-<treeprog>-<date>""")
+        help="""Assign a dataset identitifier for distinguishing between multiple datasets loaded into cftweb;
+                Defaults to [<dataset-tag>-]<datapath-basename>-<treeprog>-<date>""")
+
+AddOption('--dataset-tag',
+        dest='dataset_tag',
+        metavar='TAG',
+        help="Adds a tag to the beginning of the automatically generated dataset id")
 
 
-datapath = env.GetOption('datapath')
-outdir_base = env.GetOption('outdir') # we call this outdir_base in order to not conflict with nestly fns outdir arg
+# prefer realpath so that running latest vs explicit vN doesn't require rerun; also need for defaults below
+datapath = path.realpath(env.GetOption('datapath'))
 treeprog = env.GetOption('treeprog')
 test_run = env.GetOption("test_run")
-dataset_id = env.GetOption('dataset_id') or path.basename(path.realpath(datapath)) + '-' + treeprog + '-' + time.strftime('%Y.%m.%d')
+dataset_tag = env.GetOption('dataset_tag') or path.basename(path.dirname(datapath))[:-11] + '-' + path.basename(datapath)
+dataset_base = dataset_tag + '-' + treeprog
+# we call this outdir_base in order to not conflict with nestly fns outdir arg
+outdir_base = env.GetOption('outdir') or path.join('output', dataset_base)
+dataset_id = env.GetOption('dataset_id') or dataset_base + '-' + time.strftime('%Y.%m.%d')
 
 
 # pruning is dependent on which program we use, dnapars seems to handle bigger trees more quickly
@@ -196,7 +204,8 @@ w.add_aggregate('svgfiles', list)
 # For the sake of testing, we allow for switching between the full set of seeds, as returned by `seeds_fn`, and a small test set (`test_seeds`).
 # This is controllable via the `--test` cli flag
 
-test_seeds = ["QB850.049-Vh", "QB850.043-Vh"]
+#test_seeds = ["QB850.049-Vh", "QB850.043-Vh"]
+test_seeds = ["QB850.405-Vh", "QB850.430-Vh", "QB850.091-Vh"]
 
 def seeds_fn(datapath):
     return os.listdir(path.join(datapath, 'seeds'))
@@ -213,7 +222,10 @@ w.add('seed', seeds)
 # Next we nest on parameter sets; I believe these correspond to sequencing runs.
 # They're the things that look like "Hs-LN2-5RACE-IgG", and are nested within each seed's output directory.
 
-w.add('parameter_set', lambda c: map(lambda x: path.basename(x), glob.glob(path.join(datapath, 'seeds', c['seed'], "*"))))
+merged_timepoints_glob = "Q*-*-Ig*"
+w.add('parameter_set',
+      lambda c: map(lambda x: path.basename(x),
+                    glob.glob(path.join(datapath, 'seeds', c['seed'], merged_timepoints_glob))))
 
 
 # Some helpers at the seed level
@@ -258,19 +270,22 @@ w.add('partition', annotations)
 def annotation(c):
     return path.join(input_dir(c), c['partition'] + '.csv')
 
+def partis_log(c):
+    return path.join(input_dir(c), 'partition.log')
+
 @w.add_target()
 def process_partis_(outdir, c):
     # Should get this to explicitly depend on cluster0.fa
     return env.Command(
-            [path.join(outdir, x) for x in ['metadata.json', 'cluster0.fa', 'seqmeta.csv']],
+            [path.join(outdir, x) for x in ['metadata.json', 'cluster0.fa', 'base_seqmeta.csv']],
             [partitions(c), annotation(c)],
             'process_partis.py -F ' +
                 '--partition ${SOURCES[0]} ' +
                 '--annotations ${SOURCES[1]} ' +
                 #'--param_dir ' + parameter_dir(c) + ' '
-                '--partis_log ' + path.join(input_dir(c), 'partition.log ') +
+                '--partis_log ' + partis_log(c) + ' ' +
                 '--cluster_base cluster ' +
-                '--melted_base seqmeta ' +
+                '--melted_base base_seqmeta ' +
                 '--output_dir ' + outdir + ' ' +
                 '--paths-relative-to ' + outdir_base)
 
@@ -283,7 +298,7 @@ def inseqs(outdir, c):
     return c['process_partis_'][1]
 
 @w.add_target()
-def seqmeta(outdir, c):
+def base_seqmeta(outdir, c):
     return c['process_partis_'][2]
 
 
@@ -404,6 +419,31 @@ def pruned_seqs(outdir, c):
         [c['pruned_ids'], c['aligned_inseqs']],
         "seqmagick convert --include-from-file $SOURCES - | " +
         "seqmagick convert --squeeze - $TARGET")
+
+infname_regex = re.compile('.*--infname\s+(?P<infname_base>\S+)\.fa')
+@w.add_target()
+def merge_translations(outdir, c):
+    "Returns the filename of the translation file for the merge operation, which includes timepoint info"
+    with open(partis_log(c), 'r') as fh:
+        partis_command = fh.readline()
+    infname_base = infname_regex.match(partis_command).group('infname_base')
+    return infname_base + '-translations.csv'
+
+@w.add_target()
+def timepoint_mapping(outdir, c):
+    "Subset the merge_translations mapping to just the sequence name and the timepoint for the pruned seqs"
+    return env.Command(
+        path.join(outdir, "timepoint_mapping.csv"),
+        [c['pruned_ids'], c['merge_translations']],
+        "csvgrep -c new -f $SOURCES | sed '1 s/new/sequence/' | csvcut -c sequence,timepoint > $TARGET")
+
+@w.add_target()
+def seqmeta(outdir, c):
+    "Merge the base_seqmeta from process_partis with the timepoint mappings"
+    return env.Command(
+        path.join(outdir, 'seqmeta.csv'),
+        [c['base_seqmeta'], c['timepoint_mapping']],
+        'csvjoin -c unique_ids,sequence $SOURCES > $TARGET')
 
 # Convert to phylip format for dnapars/dnaml
 @w.add_target()

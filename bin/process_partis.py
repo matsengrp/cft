@@ -99,7 +99,7 @@ def parse_args():
 def process_log_file(log_file):
     """
     Get function call from log file that will include information about
-    location of inferred germlines, which chain we're using, etc.
+    location of inferred germlines, which locus we're using, etc.
     """
 
     # assumes function call is first line of log file
@@ -116,20 +116,21 @@ def process_log_file(log_file):
         # information for us.
         raise Exception('First line of provided log file not a valid partis command: {}'.format(call))
 
-    if not '--chain' in call_args:
+    if not '--locus' in call_args:
         # partis default is heavy chain
-        chain = 'h'
+        warnings.warn("Couldn't infer locus from log file; assuming igh")
+        locus = 'igh'
     else:
-        chain = call_args[1+call_args.index('--chain')]
+        locus = call_args[1+call_args.index('--locus')]
 
-    if not '--param_dir' in call_args:
+    if not '--parameter-dir' in call_args:
         # currently we use IMGT germlines if no cached parameters provided.
         # we have no other way of getting this information since it's printed
         # to stdout if it's not provided. should we assume it's always
         # provided?
         inferred_gls = partis_path + '/data/germlines/human'
     else:
-        inferred_gls = call_args[1+call_args.index('--param_dir')] + \
+        inferred_gls = call_args[1+call_args.index('--parameter-dir')] + \
                 '/hmm/germline-sets'
 
     # if the parameter file is not an absolute path then we don't know where
@@ -143,7 +144,7 @@ def process_log_file(log_file):
     if not os.path.isdir(inferred_gls):
         raise ValueError('Invalid parameter directory: ' + str(inferred_gls))
 
-    return chain, inferred_gls
+    return locus, inferred_gls
 
 
 def indel_offset(indelfo):
@@ -163,7 +164,7 @@ def infer_frameshifts(line):
                zip(*map(lambda x: line[x], attrs)))
 
 
-def process_data(annot_file, part_file, chain, glpath):
+def process_data(annot_file, part_file, locus, glpath):
     """
     Melt data into dataframe from annotations and partition files
     """
@@ -183,7 +184,7 @@ def process_data(annot_file, part_file, chain, glpath):
 
     output_df = pd.DataFrame()
     annotations = pd.read_csv(annot_file, dtype=object)
-    glfo = glutils.read_glfo(glpath, chain=chain)
+    glfo = glutils.read_glfo(glpath, locus)
     to_keep = ['v_gene', 'd_gene', 'j_gene', 'cdr3_length']
     for idx, cluster in annotations.fillna('').iterrows():
         current_df = pd.DataFrame()
@@ -231,6 +232,11 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition, meta, 
     # This currently will only work if the output files are spat into a directory
     # of the form "/path/to/output/QA255.016-Vh/Hs-LN2-5RACE-IgG-new/*.fa"
     # Otherwise no new fields will be added.
+    #
+    # Update: Now that we're merging timepoints this is actually shifting somewhat.
+    # Things looks generally more like the following, without any timepoint information:
+    #
+    #     QB850.430-Vh/QB850-h-IgG
 
     def merge_two_dicts(dict1, dict2):
         """
@@ -336,7 +342,8 @@ def main():
         os.makedirs(args.output_dir)
 
     # get metadata
-    regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seed_id>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
+    #regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seed_id>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
+    regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seed_id>[0-9]*)-(?P<gene>[^/]*)/.*')
     path = '/'.join(args.output_dir.split('/')[-3:])
     m = regex.match(path)
     meta = {}
@@ -346,14 +353,18 @@ def main():
         raise Exception('--output_dir needs to be of the form "/path/to/output/QA255.016-Vh/Hs-LN2-5RACE-IgG"')
 
     if args.partis_log is not None:
-        chain, inferred_gls = process_log_file(args.partis_log)
+        print("Inferring chain and gls from partis log")
+        locus, inferred_gls = process_log_file(args.partis_log)
     else:
+        print("Inferring chain and gls from path and param dir cl arg")
         chain = meta['gene'][1].lower()
+        # I'm not 100% positive about this; But the values here are the directories in partis/data/germlines/human
+        locus = dict(h='igh', k='igk', l='igl', a='tra', b='trb', d='trd', g='trg')[chain]
         inferred_gls = args.param_dir + '/hmm/germline-sets'
 
     melted_annotations = process_data(args.annotations,
                                       args.partition,
-                                      chain,
+                                      locus,
                                       inferred_gls)
 
     write_melted_partis(melted_annotations,

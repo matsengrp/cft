@@ -20,7 +20,6 @@ jQuery(document).ready(function($) {
       <thead>
         <tr>
           <th>Subject ID</th>
-          <th>Timepoint</th>
           <th>Seed</th>
           <th>V-gene</th>
           <th>D-gene</th>
@@ -35,7 +34,6 @@ jQuery(document).ready(function($) {
         {% for c in clusters %}
         <tr class='clickable-row' data-href='{{ url_for('cluster_page', id=c.id ) }}'>
           <td>{{ c.subject_id }}</td>
-          <td>{{ c.timepoint }}</td>
           <td>{{ c.seed }}</td>
           <td>{{ c.v_gene }}</td>
           <td>{{ c.d_gene if c.gene == "Vh" else "-" }}</td>
