@@ -23,10 +23,10 @@ from Bio.SeqRecord import SeqRecord
 # iterate over recognized sections in the phylip output file.
 def sections(fh):
     patterns = {
-        "sequences": "\s+node\s+Reconstructed\s+sequence",
-        "parents": "\s+Between\s+And\s+Length\s+Approx.\s+Confidence Limits"
-    }
-    patterns = {k: re.compile(v) for (k,v) in patterns.items()}
+        "parents": "\s+between\s+and\s+length",
+        ("sequences", 'dnaml'): "\s*node\s+reconstructed\s+sequence",
+        ('sequences', 'dnapars'): "from\s+to\s+any steps"}
+    patterns = {k: re.compile(v, re.IGNORECASE) for (k,v) in patterns.items()}
     for line in fh:
         for k, pat in patterns.items():
             if pat.match(line):
@@ -34,14 +34,37 @@ def sections(fh):
                 break
 
 
-# iterate over entries in the sequences section
-def parse_seqdict(fh):
-    #  152        sssssssssG AGGTGCAGCT GTTGGAGTCT GGGGGAGGCT TGGTACAGCC TGGGGGGTCC
-    seqs = defaultdict(str)
-    pat = re.compile("^\s*(?P<id>[a-zA-Z0-9>_.-]*)\s+(?P<seq>[a-zA-Z \-]+)")
+# iterate over entries in the distance section
+def iter_parents(fh):
+    #  152          >naive2           0.01208     (     zero,     0.02525) **
+    #pat = re.compile("^\s*(?P<parent>[0-9]+)\s+(?P<child>[a-zA-z0-9>_.-]+)\s+(?P<distance>[0-9]+\.[0-9]+)")
+    pat = re.compile("\s*(?P<parent>\w+)\s+(?P<child>[\w>_.-]+)\s+(?P<distance>\d+\.\d+)")
+    # drop the header underline
     fh.next()
+    matches = 0
     for line in fh:
         m = pat.match(line)
+        if m:
+            matches += 1
+            yield (m.group("child"), (m.group("parent"), float(m.group("distance"))))
+        # We only want to break at the very end of the block of matches; dnaml has an extra blank line between
+        # header and rows that dnapars doesn't
+        elif not matches:
+            continue
+        else:
+            break
+
+
+# iterate over entries in the sequences section
+def parse_seqdict(fh, mode='dnaml'):
+    #  152        sssssssssG AGGTGCAGCT GTTGGAGTCT GGGGGAGGCT TGGTACAGCC TGGGGGGTCC
+    seqs = defaultdict(str)
+    patterns = {
+        'dnaml': re.compile("^\s*(?P<id>[a-zA-Z0-9>_.-]*)\s+(?P<seq>[a-zA-Z \-]+)"),
+        'dnapars': re.compile("^\s*\S+\s+(?P<id>[a-zA-Z0-9>_.-]*)\s+(yes\s+|no\s+)?(?P<seq>[a-zA-Z \-]+)")}
+    fh.next()
+    for line in fh:
+        m = patterns[mode].match(line)
         if m:
             seqs[m.group("id")] += m.group("seq").replace(" ", "")
         elif line.rstrip() == '':
@@ -51,117 +74,40 @@ def parse_seqdict(fh):
     return seqs
 
 
-# iterate over entries in the distance section
-def iter_parents(fh):
-    #  152          >naive2           0.01208     (     zero,     0.02525) **
-    pat = re.compile("^\s*(?P<parent>[0-9]+)\s+(?P<child>[a-zA-z0-9>_.-]+)\s+(?P<distance>[0-9]+(\.[0-9]+))")
-    fh.next()
-    fh.next()
-    for line in fh:
-        # print("\"{}\"".format(line))
-        m = pat.match(line)
-        if m:
-            yield (m.group("child"), (m.group("parent"), float(m.group("distance"))))
-        else:
-            break
-
-
 # parse the dnaml output file and return data strictures containing a
 # list biopython.SeqRecords and a dict containing adjacency
 # relationships and distances between nodes.
 def outfile2seqs(outfile='outfile', seed=None):
-	'''parse phylip outfile'''
-	try:
-	    sequences = []
-	    parents = {}
-	    with open(outfile, 'rU') as fh:
-	        for sect in sections(fh):
-	            if sect == 'sequences':
-	                d = parse_seqdict(fh)
-	                sequences = [ SeqRecord(Seq(v), id=k, description="") for (k,v) in d.items()]
-	            elif sect == 'parents':
-	                parents = { k: v for k, v in iter_parents(fh) }
-	            else:
-	                raise RuntimeError("unrecognized phylip setion = {}".format(sect))
-	    # a necessary, but not sufficient, condition for this to be a valid tree is
-	    # that exactly one node is parentless
-	    if not len(parents) == len(sequences) - 1:
-	        raise RuntimeError('invalid results attempting to parse {}: there are {} parentless sequences'.format(outfile, len(sequences) - len(parents)))
+    '''parse phylip outfile'''
+    sequences = []
+    parents = {}
+    with open(outfile, 'rU') as fh:
+        for sect in sections(fh):
+            if sect == 'parents':
+                parents = { k: v for k, v in iter_parents(fh) }
+            elif sect[0] == 'sequences':
+                d = parse_seqdict(fh, sect[1])
+                sequences = [ SeqRecord(Seq(v), id=k, description="") for (k,v) in d.items()]
+            else:
+                raise RuntimeError("unrecognized phylip setion = {}".format(sect))
+    # sanity check;  a valid tree should have exactly one node that is parentless
+    if not len(parents) == len(sequences) - 1:
+        raise RuntimeError('invalid results attempting to parse {}: there are {} parentless sequences'.format(outfile, len(sequences) - len(parents)))
 
-	    # because phy format only allows 10 character ids, probably we need to expand the seed name
-	    if seed is not None:
-	        matches = 0
-	        for seq in sequences:
-	            if len(seq.id) == 10 and seq.id in seed:
-	                matches += 1
-	                parents[seed] = parents.pop(seq.id)
-	                seq.id = seed
-	        if matches == 0:
-	            raise RuntimeError('seed not found')
-	        elif matches > 1:
-	            raise RuntimeError('two many seed substring matches')
+    # because phy format only allows 10 character ids, we need to expand the seed name
+    if seed is not None:
+        matches = 0
+        for seq in sequences:
+            if len(seq.id) == 10 and seq.id in seed:
+                matches += 1
+                parents[seed] = parents.pop(seq.id)
+                seq.id = seed
+        if matches == 0:
+            raise RuntimeError('seed not found')
+        elif matches > 1:
+            raise RuntimeError('two many seed substring matches')
 
-	    return sequences, parents
-
-	except: # <-- if that didn't work, maybe it's a dnapars outfile
-	    # parse phylip outfile
-	    outfiledat = [block.split('\n\n\n')[0].split('\n\n') for block in open(outfile, 'r').read().split('From    To     Any Steps?    State at upper node')[1:]]
-
-	    # a list that will contain seq dict and parent dict for each tree found in output
-	    treedata = []
-
-	    for i, tree in enumerate(outfiledat):
-	        sequences = {}
-	        parents = {}
-	        names = []
-	        for j, block in enumerate(tree):
-	            if j == 0:
-	                for line in block.split('\n'):
-	                    fields = line.split()
-	                    if len(fields) == 0:
-	                        continue
-	                    name = fields[1]
-	                    names.append(name)
-	                    if fields[0] == 'root':
-	                        seq = ''.join(fields[2:])
-	                        parent = None
-	                    else:
-	                        seq = ''.join(fields[3:])
-	                        parent = fields[0]
-	                    sequences[name] = seq
-	                    if parent is not None:
-							parents[name] = parent
-
-	            else:
-	                for line in block.split('\n'):
-	                    fields = line.split()
-	                    name = fields[1]
-	                    if fields[0] == 'root':
-	                        seq = ''.join(fields[2:])
-	                    else:
-	                        seq = ''.join(fields[3:])
-	                    sequences[name] += seq
-
-                parents = {name:(parents[name], sum(x!=y for x, y in zip(sequences[name], sequences[parents[name]]))) for name in parents}
-	        sequences = [SeqRecord(Seq(v), id=k, description="") for (k,v) in sequences.items()]
-
-		    # because phy format only allows 10 character ids, probably we need to expand the seed name
-	        if seed is not None:
-		        matches = 0
-		        for seq in sequences:
-		            if len(seq.id) == 10 and seq.id in seed:
-		                matches += 1
-		                parents[seed] = parents.pop(seq.id)
-		                seq.id = seed
-		        if matches == 0:
-		            raise RuntimeError('seed not found')
-		        elif matches > 1:
-		            raise RuntimeError('two many seed substring matches')
-
-			treedata.append((sequences, parents))
-
-	    return treedata[0] # <-- first one, kinda dumb
-
+    return sequences, parents
 
 
 # build a tree from a set of sequences and an adjacency dict.
@@ -191,6 +137,7 @@ def build_tree(sequences, parents):
     if orphan_nodes != 1:
         raise RuntimeError("The tree is not properly rooted; expected a single root but there are {}.".format(orphan_nodes))
     return tree
+
 
 def find_node(tree, pattern):
     regex = re.compile(pattern).search
@@ -247,10 +194,12 @@ def timepoint_colors(annotations):
     # note:      ^^^ this bit    converts into a hex
     return dict(zip(timepoints, colors))
 
+
 def timepoint_legend(ts, tp_colors):
     for timepoint, color in tp_colors.iteritems():
         ts.legend.add_face(ete3.faces.CircleFace(12, color, "circle"), 0)
         ts.legend.add_face(ete3.faces.TextFace(timepoint), 1)
+
 
 def render_tree(fname, tree, annotations, highlight_node):
     "render tree SVG"
@@ -280,6 +229,7 @@ def render_tree(fname, tree, annotations, highlight_node):
     # highlight lineage from seed to root.
     tree = highlight_lineage(tree, highlight_node+'.*')
     tree.render(fname, tree_style=ts)
+
 
 def seqmeta_input(fname):
     with open(fname, 'r') as fhandle:
