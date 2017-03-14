@@ -70,14 +70,14 @@ class Cluster(object):
 
         # TEMPORARY HACK!
         #
-        # We want to know the individual (patient) identifier, the
+        # We want to know the individual (subject) identifier, the
         # the seed sequence name, and the
         # gene name.  Ideally this would be explicitly provided in the
         # json data, but instead we must extract it from the
         # paths provided in the json data.
         #
         # Given a partial path like, "QA255.016-Vh/Hs-LN2-5RACE-IgG-new"
-        # "QA255" 	- individual (patient) identification
+        # "QA255" 	- individual (subject) identification
         # "016" 	- seed sequence name
         # "Vh" 		- gene name.  Vh and Vk are the V heavy chain (IgG) vs. V kappa (there is also Vl which mean V lambda)
         #
@@ -303,6 +303,9 @@ class ClusterDB(object):
         # little extra memory consumption, so what the hey.
         for attr in ["seed", "seedid", "subject_id", "dataset_id"]:
             self.__build_index__(attr)
+
+    def dataset_ids(self):
+        return sorted(self._build_info.keys())
 
     def build_info(self, dataset_id):
         return copy.copy(self._build_info.get(dataset_id, {}))
