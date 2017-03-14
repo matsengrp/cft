@@ -37,7 +37,7 @@ def get_view_args(attrs):
 # datasets, feels weird)
 def base_renderdict(params):
     renderdict = app.config['CLUSTERS'].build_info(params['dataset_id'])
-    renderdict['datasets'] = app.config['CLUSTERS']._build_info.keys()
+    renderdict['datasets'] = app.config['CLUSTERS'].dataset_ids()
     print("datasets:", renderdict['datasets'])
     renderdict.update(app.config['CFTWEB_BUILD_INFO'])
     renderdict['commit_url'] = "https://github.com/matsengrp/cft/tree/" + renderdict["commit"]
@@ -87,7 +87,7 @@ def index(dataset_id=None):
 def home():
     # For now, just pick some random build; Would be nice to troll through the build info and pick something
     # more sensible based on date and dnaml/dnapars preference.
-    dataset_id = app.config['CLUSTERS']._build_info.keys()[0]
+    dataset_id = app.config['CLUSTERS'].dataset_ids()[0]
     return flask.redirect(url_for('index', dataset_id=dataset_id))
 
 
