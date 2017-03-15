@@ -35,9 +35,8 @@ def sections(fh):
 
 
 # iterate over entries in the distance section
-def iter_parents(fh):
+def iter_edges(fh):
     #  152          >naive2           0.01208     (     zero,     0.02525) **
-    #pat = re.compile("^\s*(?P<parent>[0-9]+)\s+(?P<child>[a-zA-z0-9>_.-]+)\s+(?P<distance>[0-9]+\.[0-9]+)")
     pat = re.compile("\s*(?P<parent>\w+)\s+(?P<child>[\w>_.-]+)\s+(?P<distance>\d+\.\d+)")
     # drop the header underline
     fh.next()
@@ -46,7 +45,7 @@ def iter_parents(fh):
         m = pat.match(line)
         if m:
             matches += 1
-            yield (m.group("child"), (m.group("parent"), float(m.group("distance"))))
+            yield (m.group("child"), m.group("parent"), float(m.group("distance")))
         # We only want to break at the very end of the block of matches; dnaml has an extra blank line between
         # header and rows that dnapars doesn't
         elif not matches:
@@ -77,35 +76,26 @@ def parse_seqdict(fh, mode='dnaml'):
 # parse the dnaml output file and return data strictures containing a
 # list biopython.SeqRecords and a dict containing adjacency
 # relationships and distances between nodes.
-def outfile2seqs(outfile='outfile', seed=None):
+def parse_outfile(outfile, seqmeta):
     '''parse phylip outfile'''
-    sequences = []
-    parents = {}
+    name_map = {seq_id[0:10]: seq_id for seq_id in seqmeta}
+    if len(name_map) != len(seqmeta):
+        raise RuntimeError("Conflicting shortened names!")
+    def full_name(x):
+        return name_map.get(x, x)
     with open(outfile, 'rU') as fh:
         for sect in sections(fh):
             if sect == 'parents':
-                parents = { k: v for k, v in iter_parents(fh) }
+                parents = { full_name(parent): (full_name(child), dist) for parent, child, dist in iter_edges(fh) }
             elif sect[0] == 'sequences':
                 d = parse_seqdict(fh, sect[1])
-                sequences = [ SeqRecord(Seq(v), id=k, description="") for (k,v) in d.items()]
+                sequences = [ SeqRecord(Seq(seq), id=full_name(seq_id), description="")
+                                for seq_id, seq in d.items() ]
             else:
                 raise RuntimeError("unrecognized phylip setion = {}".format(sect))
     # sanity check;  a valid tree should have exactly one node that is parentless
     if not len(parents) == len(sequences) - 1:
         raise RuntimeError('invalid results attempting to parse {}: there are {} parentless sequences'.format(outfile, len(sequences) - len(parents)))
-
-    # because phy format only allows 10 character ids, we need to expand the seed name
-    if seed is not None:
-        matches = 0
-        for seq in sequences:
-            if len(seq.id) == 10 and seq.id in seed:
-                matches += 1
-                parents[seed] = parents.pop(seq.id)
-                seq.id = seed
-        if matches == 0:
-            raise RuntimeError('seed not found')
-        elif matches > 1:
-            raise RuntimeError('two many seed substring matches')
 
     return sequences, parents
 
@@ -269,7 +259,7 @@ def main():
     basename = args.basename if args.basename else os.path.basename(args.phylip_outfile)
     outbase = os.path.join(args.outdir, os.path.splitext(basename)[0])
 
-    sequences, parents = outfile2seqs(args.phylip_outfile, seed=args.seed)
+    sequences, parents = parse_outfile(args.phylip_outfile, args.seqmeta)
 
     if not sequences or not parents:
         raise RuntimeError("No sequences were available; are you sure this is a dnaml output file?")
