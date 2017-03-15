@@ -13,6 +13,7 @@ import re
 import os
 import json
 import pprint
+import warnings
 import copy
 from ete3 import Tree
 from jinja2 import Environment, FileSystemLoader
@@ -56,13 +57,12 @@ class Cluster(object):
         # the json file.
         #
         # Should really trigger a warning if any of these things happens...
-
-        self.svg = os.path.join(dir, self.svg) if hasattr(self, 'svg') else "'svg' json attribute missing"
-        self.fasta = os.path.join(dir, self.fasta) if hasattr(self, 'fasta') else "'fasta' json attribute missing"
-        self.newick = os.path.join(dir, self.newick) if hasattr(self, 'newick') else "'newick' json attribute missing"
-        #self.seedlineage = os.path.join(dir, self.seedlineage) if hasattr(self, 'seedlineage') else "'seedlineage' json attribute missing"
-        self.cluster_aa = os.path.join(dir, self.cluster_aa) if hasattr(self, 'cluster_aa') else "'cluster_aa' json attribute missing"
-        #self.seedlineage_aa = os.path.join(dir, self.seedlineage_aa) if hasattr(self, 'seedlineage_aa') else "'seedlineage_aa' json attribute missing"
+        for attr in ['svg', 'fasta', 'newick', 'cluster_aa']:
+            val = self.__dict__.get(attr)
+            if val:
+                self.__dict__ = os.path.join(dir, val)
+            else:
+                warnings.warn("Attr '{}' is missing for cluster:\n{}".format(attr, self.__dict__))
 
         # Make sure that has_seed is a boolean attribute
         self.has_seed = self.has_seed == 'True'
