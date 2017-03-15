@@ -231,12 +231,12 @@ def render_tree(fname, tree, annotations, highlight_node):
     tree.render(fname, tree_style=ts)
 
 
-def seqmeta_input(fname):
-    with open(fname, 'r') as fhandle:
-        return dict((row['unique_ids'], row) for row in csv.DictReader(fhandle))
 
+def get_args():
+    def seqmeta_input(fname):
+        with open(fname, 'r') as fhandle:
+            return dict((row['unique_ids'], row) for row in csv.DictReader(fhandle))
 
-def main():
     def existing_file(fname):
         """
         Argparse type for an existing file
@@ -247,19 +247,23 @@ def main():
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        '--phylip_outfile', type=existing_file, default='outfile',
-        help='dnaml outfile (verbose output with inferred ancestral sequences, option 5). [ default \'%(default)s\' ]')
+        'phylip_outfile', type=existing_file,
+        help='dnaml outfile (verbose output with inferred ancestral sequences, option 5).')
     parser.add_argument(
-        '--seqmeta', type=seqmeta_input,
+        'seqmeta', type=seqmeta_input,
         help="Sequence metadata file for annotating mut_freqs")
     parser.add_argument(
         '--outdir', default='.',
-        help='output directory where results are left.  [ default \'%(default)s\' ]')
+        help="output directory where results are left.  [default '%(default)s']")
     parser.add_argument(
-        '--basename', help='basename of output files.   [ default \'basename(DNAML)\' ]')
+        '--basename', help="basename of output files.   [default 'basename(DNAML)']")
     parser.add_argument(
-        '--seed', type=str, help='id of leaf [default \'seed\']', default='seed')
-    args = parser.parse_args()
+        '--seed', type=str, help="id of leaf [default 'seed']", default='seed')
+    return parser.parse_args()
+
+
+def main():
+    args = get_args()
 
     # basename of outputfiles is taken from --basename if supplied, otherwise basename of DNAML.
     basename = args.basename if args.basename else os.path.basename(args.phylip_outfile)
@@ -300,3 +304,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

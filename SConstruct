@@ -485,7 +485,8 @@ def treeprog_tree(outdir, c):
                 ["outfile2tree.svg", "outfile2tree.fa", "outfile2tree.seedLineage.fa", "outfile2tree.newick"]),
             [c['treeprog_run'][1], c['seqmeta']],
             # Note: the `-` prefix here tells scons to keep going if this command fails.
-            "- xvfb-run -a bin/outfile2tree.py --seed " + c['seed'] + " --phylip_outfile ${SOURCES[0]} --seqmeta ${SOURCES[1]} --outdir ${TARGETS[0].dir} --basename outfile2tree")
+            "- xvfb-run -a bin/outfile2tree.py --seed " + c['seed'] + " --outdir " + outdir + 
+                " --basename outfile2tree $SOURCES")
     # Manually depend on dnaml2tree.py/dnapars.py script, since it doesn't fall in the first position within the command
     # string.
     env.Depends(tgt, 'bin/outfile2tree.py')
