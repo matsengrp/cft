@@ -8,7 +8,7 @@ import shutil
 from os import path
 
 
-path_attrs_to_copy = ['cluster_aa', 'fasta', 'newick', 'seedlineage', 'seedlineage_aa', 'svg']
+path_attrs_to_copy = ['cluster_aa', 'fasta', 'newick', 'svg']
 
 
 def copy_file(inbase, outbase, filepath):

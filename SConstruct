@@ -480,13 +480,13 @@ def treeprog_run(outdir, c):
 def treeprog_tree(outdir, c):
     """parse dnapars/dnaml output into fasta and newick files, and make SVG format tree with ETE package.
     xvfb-run is needed because of issue https://github.com/etetoolkit/ete/issues/101"""
+    basename = 'outfile2tree'
     tgt = env.Command(
-            map(lambda x: path.join(outdir, x),
-                ["outfile2tree.svg", "outfile2tree.fa", "outfile2tree.seedLineage.fa", "outfile2tree.newick"]),
+            [path.join(outdir, basename + '.' + ext) for ext in ['svg', 'fa', 'newick']],
             [c['treeprog_run'][1], c['seqmeta']],
             # Note: the `-` prefix here tells scons to keep going if this command fails.
             "- xvfb-run -a bin/outfile2tree.py --seed " + c['seed'] + " --outdir " + outdir + 
-                " --basename outfile2tree $SOURCES")
+                " --basename " + basename + " $SOURCES")
     # Manually depend on dnaml2tree.py/dnapars.py script, since it doesn't fall in the first position within the command
     # string.
     env.Depends(tgt, 'bin/outfile2tree.py')
@@ -501,8 +501,7 @@ def treeprog_tree(outdir, c):
     #m = copy.copy(metadata)
     #m['svg'] = path.relpath(str(dnapars_tree_tgt[0]), outdir_base)
     #m['fasta'] = path.relpath(str(dnapars_tree_tgt[1]), outdir_base)
-    #m['seedlineage'] = path.relpath(str(dnapars_tree_tgt[2]), outdir_base)
-    #m['newick'] = path.relpath(str(dnapars_tree_tgt[3]), outdir_base)
+    #m['newick'] = path.relpath(str(dnapars_tree_tgt[2]), outdir_base)
     #del m['file']
     #return m
 
@@ -512,15 +511,6 @@ def cluster_aa(outdir, c):
         path.join(outdir, 'cluster_aa.fa'),
         c['treeprog_tree'][1],
         "sed -i 's/\?/N/g' $SOURCE && seqmagick convert --translate dna2protein $SOURCE $TARGET")
-
-# TODO I think we can take this out now that we compute lineages dynamically in cftweb
-@w.add_target()
-def seedlineage_aa(outdir, c):
-    return env.Command(
-        path.join(outdir, 'seedlineage_aa.fa'),
-        c['treeprog_tree'][2],
-        "sed -i 's/\?/N/g' $SOURCE && seqmagick convert --translate dna2protein $SOURCE $TARGET")
-
 
 @w.add_target()
 def cluster_metadata(outdir, c):
@@ -543,10 +533,8 @@ def cluster_metadata(outdir, c):
                 'clustering_step ' + n + ' ' +
                 'svg ' + treeprog_tgt_relpath(0) + ' ' +
                 'fasta ' + treeprog_tgt_relpath(1) + ' ' +
-                'seedlineage ' + treeprog_tgt_relpath(2) + ' ' +
                 'cluster_aa ' + relpath(str(c['cluster_aa'][0])) + ' ' +
-                'seedlineage_aa ' + relpath(str(c['seedlineage_aa'][0])) + ' ' +
-                'newick ' + treeprog_tgt_relpath(3) + ' ')
+                'newick ' + treeprog_tgt_relpath(2) + ' ')
     # Note; we used to delete the 'file' attribute as well; not sure why or if that's necessary
     c['metadata'].append(tgt)
     return tgt
