@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-	Given an outputfile from the PHYLIP tool `dnaml`, produce and an alignment (including ancestral sequences) and a tree.
+Given an outputfile from one of the PHYLIP tools - `dnaml` or `dnapars` - produce an alignment (including
+ancestral sequences), a newick tree (with matching internal node lables), and an svg rendering of said tree.
 """
 from __future__ import print_function
 
@@ -273,7 +274,7 @@ def main():
     tree = reroot_tree(tree, 'naive.*')
 
     # write newick file
-    fname = outbase + '.newick'
+    fname = outbase + '.nwk'
     tree.write(format=1, format_root_node=True, outfile=fname)
 
     render_tree(outbase+'.svg', tree, args.seqmeta, args.seed)
