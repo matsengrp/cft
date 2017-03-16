@@ -80,10 +80,10 @@ AddOption('--outdir',
         nargs=1,
         action='store',
         metavar='DIR',
-        help="directory in which to output results; defaults to `output/<dataset-tag>-<datapath-basename>-<treeprog>")
+        help="directory in which to output results; defaults to `output/<dataset-tag>-<datapath-basename>-<asr-prog>")
 
-AddOption('--treeprog',
-        dest='treeprog',
+AddOption('--asr-prog',
+        dest='asr_prog',
         type='string',
         nargs=1,
         action='store',
@@ -101,7 +101,7 @@ AddOption('--dataset-id',
         dest='dataset_id',
         metavar='IDENTIFIER',
         help="""Assign a dataset identitifier for distinguishing between multiple datasets loaded into cftweb;
-                Defaults to [<dataset-tag>-]<datapath-basename>-<treeprog>-<date>""")
+                Defaults to [<dataset-tag>-]<datapath-basename>-<asr-prog>-<date>""")
 
 AddOption('--dataset-tag',
         dest='dataset_tag',
@@ -111,24 +111,24 @@ AddOption('--dataset-tag',
 
 # prefer realpath so that running latest vs explicit vN doesn't require rerun; also need for defaults below
 datapath = path.realpath(env.GetOption('datapath'))
-treeprog = env.GetOption('treeprog')
+asr_prog = env.GetOption('asr_prog')
 test_run = env.GetOption("test_run")
 dataset_tag = env.GetOption('dataset_tag') or path.basename(path.dirname(datapath))[:-11] + '-' + path.basename(datapath)
-dataset_base = dataset_tag + '-' + treeprog
+dataset_base = dataset_tag + '-' + asr_prog
 # we call this outdir_base in order to not conflict with nestly fns outdir arg
 outdir_base = env.GetOption('outdir') or path.join('output', dataset_base)
 dataset_id = env.GetOption('dataset_id') or dataset_base + '-' + time.strftime('%Y.%m.%d')
 
 
 # pruning is dependent on which program we use, dnapars seems to handle bigger trees more quickly
-if treeprog == 'dnapars':
+if asr_prog == 'dnapars':
     prune_n = 300
-elif treeprog == 'dnaml':
+elif asr_prog == 'dnaml':
     prune_n = 100
 
 print("datapath = {}".format(datapath))
 print("outdir = {}".format(outdir_base))
-print("treeprog = {}".format(treeprog))
+print("asr_prog = {}".format(asr_prog))
 print("test_run = {}".format(test_run))
 print('pruned size = {}'.format(prune_n))
 print('dataset id = {}'.format(dataset_id))
@@ -143,10 +143,10 @@ def cmd_exists(cmd):
 # only check for dependencies if we aren't in a dry-run.
 if not env.GetOption('no_exec'):
     msg = ""
-    if not cmd_exists(treeprog):
+    if not cmd_exists(asr_prog):
         msg += '''
            Required dependency command,
-           `'''+treeprog+'''` not found on PATH
+           `'''+asr_prog+'''` not found on PATH
            Consider using,
                 $ module use ~matsengrp/modules
                 $ module load phylip
@@ -302,15 +302,6 @@ def base_seqmeta(outdir, c):
     return c['process_partis_'][2]
 
 
-# Forget why we do this; Chris W. seems to think it may not have been as necessary as original thought.
-# Regardless of what the deal was with this, I think we can take it out once we add an alignment for inseqs
-#@w.add_target()
-#def padded_seqs(outdir, c):
-    #return env.Command(
-        #path.join(outdir, "padded_seqs.fa"),
-        #c['inseqs'],
-        #"python bin/padseq.py $SOURCE > $TARGET")
-
 
 
 # Sequence Alignment
@@ -327,10 +318,10 @@ def base_seqmeta(outdir, c):
 @w.add_target()
 def translated_inseqs_(outdir, c):
     return env.Command(
-        #path.join(outdir, "translated_inseqs.fasta"),
+        #path.join(outdir, "translated_inseqs.fa"),
         #c['inseqs'],
         #'seqmagick convert --translate dna2protein $SOURCE $TARGET')
-        [path.join(outdir, "translated_inseqs.fasta"), path.join(outdir, 'inseqs_trimmed.fasta')],
+        [path.join(outdir, "translated_inseqs.fa"), path.join(outdir, 'inseqs_trimmed.fa')],
         [c['base_metadata'], c['inseqs']],
         'translate_seqs.py $SOURCES $TARGET -t ${TARGETS[1]}')
 
@@ -345,12 +336,14 @@ def trimmed_inseqs(outdir, c):
 @w.add_target()
 def aligned_translated_inseqs(outdir, c):
     return env.SRun(
-        path.join(outdir, "aligned_translated_inseqs.fasta"),
+        path.join(outdir, "aligned_translated_inseqs.fa"),
         c['translated_inseqs'],
         # Replace stop codons with X, or muscle inserts gaps, which messed up seqmagick backtrans-align below
         # Note that things will break down at backtrans-align if any seq ids have * in them...
         'sed \'s/\*/X/g\' $SOURCE | muscle -in /dev/stdin -out $TARGET')
 
+# Not sure why we're not using this any more; I think we want to be, but it must have been causing some
+# issue... need to look at this XXX
 # This script will replace the X characters in our alignment with stop codons where they were taken out in the
 # sed step prior to alignment above. We should try to use these when possible in alignments we display.
 # However, this may be less useful here than it is further down where we translate our ancestral state
@@ -359,7 +352,7 @@ def aligned_translated_inseqs(outdir, c):
 #@w.add_target()
 #def fixed_aligned_translated_inseqs(outdir, c):
     #return env.Command(
-        #path.join(outdir, 'fixed_aligned_translated_inseqs.fasta'),
+        #path.join(outdir, 'fixed_aligned_translated_inseqs.fa'),
         #[c['aligned_translated_inseqs'], c['translated_inseqs']],
         #'fix_stop_deletions.py $SOURCES $TARGET')
 
@@ -368,14 +361,14 @@ def aligned_translated_inseqs(outdir, c):
 @w.add_target()
 def sorted_inseqs(outdir, c):
     return env.Command(
-        path.join(outdir, "sorted_inseqs.fasta"),
+        path.join(outdir, "sorted_inseqs.fa"),
         c['trimmed_inseqs'],
         'seqmagick convert --sort name-asc $SOURCE $TARGET')
 
 @w.add_target()
 def sorted_aligned_translated_inseqs(outdir, c):
     return env.Command(
-        path.join(outdir, "sorted_aligned_translated_inseqs.fasta"),
+        path.join(outdir, "sorted_aligned_translated_inseqs.fa"),
         #c['fixed_aligned_translated_inseqs'],
         c['aligned_translated_inseqs'],
         'seqmagick convert --sort name-asc $SOURCE $TARGET')
@@ -385,7 +378,7 @@ def sorted_aligned_translated_inseqs(outdir, c):
 @w.add_target()
 def aligned_inseqs(outdir, c):
     return env.Command(
-        path.join(outdir, 'aligned_inseqs.fasta'),
+        path.join(outdir, 'aligned_inseqs.fa'),
         [c['sorted_aligned_translated_inseqs'], c['sorted_inseqs']],
         'seqmagick backtrans-align -a warn $SOURCES -o $TARGET')
 
@@ -455,43 +448,56 @@ def phy(outdir, c):
 
 # Create a config file for dnapars/dnaml (a persnickety old program with interactive menues...)
 @w.add_target()
-def treeprog_config(outdir, c):
+def asr_config(outdir, c):
     return env.Command(
-        path.join(outdir, treeprog+".cfg"),
+        path.join(outdir, asr_prog + ".cfg"),
         c['phy'],
-        'python bin/mkconfig.py $SOURCE ' + treeprog + ' > $TARGET')
+        'python bin/mkconfig.py $SOURCE ' + asr_prog + ' > $TARGET')
 
 # Run dnapars/dnaml by passing in the "config file" as stdin hoping the menues all stay sane
-# (Aside: There is a program for programatically responding to interactive menus if this gets any hairier)
+# (Aside: If gets any messier can look at Expect; https://en.wikipedia.org/wiki/Expect)
 @w.add_target()
-def treeprog_run(outdir, c):
+def asr(outdir, c):
     "run dnapars/dnaml (from phylip package) to create tree with inferred sequences at internal nodes"
     tgt = env.SRun(
-        map(lambda x: path.join(outdir, x), ["outtree", "outfile", treeprog+".log"]),
-        c['treeprog_config'],
-        'cd ' + outdir + ' && ' + treeprog + ' < ${SOURCE.file} > ${TARGETS[2].file}')
+        path.join(outdir, "outfile"),
+        c['asr_config'],
+        'cd ' + outdir + ' && rm outtree && ' + asr_prog + ' < $SOURCE.file > ' + asr_prog + '.log')
     # Manually depend on phy so that we rerun dnapars/dnaml if the input sequences change (without this, dnapars/dnaml will
-    # only get rerun if one of the targets are removed or if the iput treeprog_config file is changed).
+    # only get rerun if one of the targets are removed or if the iput asr_config file is changed).
     env.Depends(tgt, c['phy'])
     return tgt
 
 
 @w.add_target()
-def treeprog_tree(outdir, c):
+def processed_asr(outdir, c):
     """parse dnapars/dnaml output into fasta and newick files, and make SVG format tree with ETE package.
     xvfb-run is needed because of issue https://github.com/etetoolkit/ete/issues/101"""
+    basename = 'asr'
     tgt = env.Command(
-            map(lambda x: path.join(outdir, x),
-                ["outfile2tree.svg", "outfile2tree.fa", "outfile2tree.seedLineage.fa", "outfile2tree.newick"]),
-            [c['treeprog_run'][1], c['seqmeta']],
-            # Note: the `-` prefix here tells scons to keep going if this command fails.
-            "- xvfb-run -a bin/outfile2tree.py --seed " + c['seed'] + " --phylip_outfile ${SOURCES[0]} --seqmeta ${SOURCES[1]} --outdir ${TARGETS[0].dir} --basename outfile2tree")
+            [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg', 'fa']],
+            [c['asr'], c['seqmeta']],
+            "xvfb-run -a bin/process_asr.py --seed " + c['seed'] + " --outdir " + outdir + 
+                " --basename " + basename + " $SOURCES")
     # Manually depend on dnaml2tree.py/dnapars.py script, since it doesn't fall in the first position within the command
     # string.
-    env.Depends(tgt, 'bin/outfile2tree.py')
+    env.Depends(tgt, 'bin/process_asr.py')
     # Do aggregate work
     c['svgfiles'].append(tgt[0])
     return tgt
+
+@w.add_target()
+def asr_tree(outdir, c):
+    return c['processed_asr'][0]
+
+@w.add_target()
+def asr_tree_svg(outdir, c):
+    return c['processed_asr'][1]
+
+@w.add_target()
+def asr_seqs(outdir, c):
+    return c['processed_asr'][2]
+
 
 # Might want to switch back to this approach...
 #def extended_metadata(metadata, dnapars_tree_tgt):
@@ -500,8 +506,7 @@ def treeprog_tree(outdir, c):
     #m = copy.copy(metadata)
     #m['svg'] = path.relpath(str(dnapars_tree_tgt[0]), outdir_base)
     #m['fasta'] = path.relpath(str(dnapars_tree_tgt[1]), outdir_base)
-    #m['seedlineage'] = path.relpath(str(dnapars_tree_tgt[2]), outdir_base)
-    #m['newick'] = path.relpath(str(dnapars_tree_tgt[3]), outdir_base)
+    #m['newick'] = path.relpath(str(dnapars_tree_tgt[2]), outdir_base)
     #del m['file']
     #return m
 
@@ -509,43 +514,33 @@ def treeprog_tree(outdir, c):
 def cluster_aa(outdir, c):
     return env.Command(
         path.join(outdir, 'cluster_aa.fa'),
-        c['treeprog_tree'][1],
+        c['asr_seqs'],
         "sed -i 's/\?/N/g' $SOURCE && seqmagick convert --translate dna2protein $SOURCE $TARGET")
-
-# TODO I think we can take this out now that we compute lineages dynamically in cftweb
-@w.add_target()
-def seedlineage_aa(outdir, c):
-    return env.Command(
-        path.join(outdir, 'seedlineage_aa.fa'),
-        c['treeprog_tree'][2],
-        "sed -i 's/\?/N/g' $SOURCE && seqmagick convert --translate dna2protein $SOURCE $TARGET")
-
 
 @w.add_target()
 def cluster_metadata(outdir, c):
     # Note: We have to do all this crazy relpath crap because the assumption of cftweb is that all paths
     # specified in the input metadata.json file are relative to _its_ location, in our context, always base_outdir
-    def relpath(tgt_path):
-        return path.relpath(tgt_path, outdir_base)
-    def treeprog_tgt_relpath(i):
-        return relpath(str(c['treeprog_tree'][i]))
+    def relpath(tgt_key):
+        tgt = c[tgt_key]
+        if type(tgt) == list:
+            tgt = tgt[0]
+        return path.relpath(str(tgt), outdir_base)
     n = re.compile('run-viterbi-best-plus-(?P<step>.*)').match(c['partition']).group('step')
     tgt = env.Command(
             path.join(outdir, 'extended_metadata.json'),
-            [c['base_metadata'], partitions(c)] + c['treeprog_tree'],
+            [c['base_metadata'], partitions(c)] + c['processed_asr'],
             # Don't like the order assumptions on dnaml_tgts here...
             'assoc_logprob.py $SOURCE ${SOURCES[1]} -n ' + n + ' /dev/stdout | ' +
                 'json_assoc.py /dev/stdin $TARGET ' +
                 # Not 100% on this; Pick optimal attr/key name
                 #'best_partition ' + c['partition'] + ' ' +
-                'dataset_id ' + dataset_id + ' ' +
-                'clustering_step ' + n + ' ' +
-                'svg ' + treeprog_tgt_relpath(0) + ' ' +
-                'fasta ' + treeprog_tgt_relpath(1) + ' ' +
-                'seedlineage ' + treeprog_tgt_relpath(2) + ' ' +
-                'cluster_aa ' + relpath(str(c['cluster_aa'][0])) + ' ' +
-                'seedlineage_aa ' + relpath(str(c['seedlineage_aa'][0])) + ' ' +
-                'newick ' + treeprog_tgt_relpath(3) + ' ')
+                ' dataset_id ' + dataset_id +
+                ' clustering_step ' + n +
+                ' svg ' + relpath('asr_tree_svg') +
+                ' fasta ' + relpath('asr_seqs') +
+                ' cluster_aa ' + relpath('cluster_aa') +
+                ' newick ' + relpath('asr_tree'))
     # Note; we used to delete the 'file' attribute as well; not sure why or if that's necessary
     c['metadata'].append(tgt)
     return tgt

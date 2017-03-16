@@ -197,7 +197,6 @@ def cluster_fasta(id=None):
     return Response(fasta, mimetype="application/octet-stream")
 
 
-# TODO We may want to make seedlineage a function
 @app.route("/download/sequences/<id>.seedlineage.fa")
 def seedlineage_fasta(id=None):
     cluster = app.config['CLUSTERS'].get_by_id(id)
