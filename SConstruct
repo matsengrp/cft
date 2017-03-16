@@ -515,7 +515,7 @@ def cluster_aa(outdir, c):
     return env.Command(
         path.join(outdir, 'cluster_aa.fa'),
         c['asr_seqs'],
-        "sed -i 's/\?/N/g' $SOURCE && seqmagick convert --translate dna2protein $SOURCE $TARGET")
+        "sed 's/\?/N/g' $SOURCE | seqmagick convert --translate dna2protein - $TARGET")
 
 @w.add_target()
 def cluster_metadata(outdir, c):
