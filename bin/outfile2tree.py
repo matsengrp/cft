@@ -6,12 +6,14 @@
 from __future__ import print_function
 
 import argparse
+import ete3
 from ete3 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
 import csv
 import re
 import os
 from warnings import warn
 from collections import defaultdict
+import colorbrewer
 
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -233,25 +235,45 @@ def highlight_lineage(tree, pattern='seed.*'):
     for node in iter_lineage(tree, pattern):
         nstyle = NodeStyle()
         nstyle['fgcolor'] = 'red'
-        nstyle['size'] = 10
+        nstyle['size'] = 7
         node.set_style(nstyle)
     return tree
 
+
+def timepoint_colors(annotations):
+    # Should really improve this sort so that we're fully chronological
+    timepoints = sorted(set(x['timepoint'] for x in annotations.values()))
+    colors = ['#%02x%02x%02x' % c for c in colorbrewer.RdYlBu[max(len(timepoints), 3)]]
+    # note:      ^^^ this bit    converts into a hex
+    return dict(zip(timepoints, colors))
+
+def timepoint_legend(ts, tp_colors):
+    for timepoint, color in tp_colors.iteritems():
+        ts.legend.add_face(ete3.faces.CircleFace(12, color, "circle"), 0)
+        ts.legend.add_face(ete3.faces.TextFace(timepoint), 1)
 
 def render_tree(fname, tree, annotations, highlight_node):
     "render tree SVG"
     ts = TreeStyle()
     ts.show_leaf_name = False
+    tp_colors = timepoint_colors(annotations)
 
     def my_layout(node):
         name = node.name
         seqmeta = annotations.get(node.name)
         if seqmeta and not re.compile(".*naive.*").match(node.name):
+            # Add the node name for tips
             name = node.name + " (mf={}) ".format(round(float(seqmeta['mut_freqs']), 3))
             F = TextFace(name)
             add_face_to_node(F, node, column=0, position='branch-right')
+            # Style the node with color corresponding to timepoint
+            nstyle = NodeStyle()
+            nstyle['fgcolor'] = tp_colors[seqmeta['timepoint']]
+            nstyle['size'] = 15
+            node.set_style(nstyle)
 
     ts.layout_fn = my_layout
+    timepoint_legend(ts, tp_colors)
     # whether or not we had rerooted on naive before, we want to do so for the SVG tree
     if 'naive' not in tree.name:
         tree = reroot_tree(tree, '.*naive.*')

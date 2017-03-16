@@ -71,7 +71,7 @@ class Cluster(object):
         # TEMPORARY HACK!
         #
         # We want to know the individual (subject) identifier, the
-        # timepoint (when sampled), the seed sequence name, and the
+        # the seed sequence name, and the
         # gene name.  Ideally this would be explicitly provided in the
         # json data, but instead we must extract it from the
         # paths provided in the json data.
@@ -80,26 +80,24 @@ class Cluster(object):
         # "QA255" 	- individual (subject) identification
         # "016" 	- seed sequence name
         # "Vh" 		- gene name.  Vh and Vk are the V heavy chain (IgG) vs. V kappa (there is also Vl which mean V lambda)
-        # "LN2" 	- timepoint.  LN1 and LN2 are early timepoints and LN3 and LN4 are late timepoints.
         #
         # "Hs-LN2-5RACE-IgG-new" is the name of the sequencing run,
         # 
         # "Hs-LN4-5RACE-IgK-100k/QB850.043-Vk/cluster4/dnaml.seedLineage.fa"
         # Note; using the data seedlineage here since we've made the self.seedlineage absolute in path
         path = data['newick']
-        regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>.*)-5RACE')
+        regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)')
         m = regex.match(path)
         if m:
             self.subject_id = m.group('subject_id')
             self.seedid = m.group('seedid')
             self.gene = m.group('gene')
-            self.timepoint = m.group('timepoint')
 
         
         # Generate a unique identifier.  This id is used to index into a dict of clusters and it will be visible in URLs.
         #
         # Whatever id is used here, it must be unique across all the clusters being managed by the web interface.
-        # Our particular approach here is to use a hash of "<individual> + <timepoint> + <seed>". In theory, this could 
+        # Our particular approach here is to use a hash of "<individual> + <seed>". In theory, this could 
         # clash if (e.g.) researchers reran after some sequencing error, but because we only accept a single
         # json file these days, this scenario seems unlikely. The benefit of doing this versus just creating a
         # random uuid (or some such) is that we get persistent cluster urls across reboots.
@@ -107,7 +105,7 @@ class Cluster(object):
         # These identifiers may have to change if addition information is needed to maintain uniqueness, and
         # when possible care should be taken to retain existing ids. But for now this is only a soft guarantee.
         
-        self.id = "c{}".format(hash((self.dataset_id, self.seed, self.timepoint, self.clustering_step)))
+        self.id = "c{}".format(hash((self.dataset_id, self.seed, self.clustering_step)))
 
 
 
@@ -263,7 +261,7 @@ class Cluster(object):
 
 # This should really be coupled to the mode of id hash creation for clusters
 def default_sort_key(c):
-    return (c.subject_id, c.timepoint, c.seed, c.clustering_step)
+    return (c.subject_id, c.seed, c.clustering_step)
 
 
 class ClusterDB(object):
@@ -298,12 +296,12 @@ class ClusterDB(object):
         self._clusters = dict((c.id, c) for dataset in datasets for c in dataset['clusters'] if c)
         self._build_info = dict((d['dataset_id'], d['build_info']) for d in datasets)
         # Build indices;
-        # Right now We don't really _need_ to index timepoints, patients, and datasets but the tool may need to
+        # Right now We don't really _need_ to index patients, and datasets but the tool may need to
         # eventually support larger numbers of these things, and whereas with a real file based db it's not
         # worth indexing if your number of unique values is on the order of the page block size, since
         # everything is in memory in our implementation here, we still gain some efficiency, at the cost of a
         # little extra memory consumption, so what the hey.
-        for attr in ["seed", "seedid", "subject_id", "timepoints", "dataset_id"]:
+        for attr in ["seed", "seedid", "subject_id", "dataset_id"]:
             self.__build_index__(attr)
 
     def dataset_ids(self):
@@ -366,7 +364,7 @@ class ClusterDB(object):
     def clustering_step_siblings(self, cluster_id):
         cluster = self.get_by_id(cluster_id)
         # Again, as mentioned above, this set of things necessary for identification should be factored out
-        return self.query({'dataset_id': cluster.dataset_id, 'subject_id': cluster.subject_id, 'timepoint': cluster.timepoint, 'seed': cluster.seed})
+        return self.query({'dataset_id': cluster.dataset_id, 'subject_id': cluster.subject_id, 'seed': cluster.seed})
 
 
 

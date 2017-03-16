@@ -106,47 +106,31 @@ def by_subject(**params):
     return render_template('by_subject.html', **base_renderdict(params))
 
 
-# Subject > timepoints
-# --------------------
+# Subject > seeds
+# ---------------------------
 
 def subject_bcrumb():
     params = get_view_args(['dataset_id', 'subject_id'])
     return [{'text': params['subject_id'], 'url': url_for('by_subject', **params)}]
 
-@app.route("/<dataset_id>/timepoints/<subject_id>")
-@register_breadcrumb(app, '.subjects.timepoints', '',
+@app.route("/<dataset_id>/seeds/<subject_id>")
+@register_breadcrumb(app, '.subjects.seeds', '',
                      dynamic_list_constructor=subject_bcrumb)
-def by_timepoint(**params):
-    params['clusters'] = app.config['CLUSTERS'].query(params)
-    renderdict = base_renderdict(params)
-    return render_template('by_timepoint.html', **renderdict)
-
-
-# Subject > timepoint > seeds
-# ---------------------------
-
-def timepoint_bcrumb():
-    params = get_view_args(['dataset_id', 'subject_id', 'timepoint'])
-    return [{'text': params['timepoint'], 'url': url_for('by_timepoint', **params)}]
-
-@app.route("/<dataset_id>/seeds/<subject_id>/<timepoint>")
-@register_breadcrumb(app, '.subjects.timepoints.seeds', '',
-                     dynamic_list_constructor=timepoint_bcrumb)
 def by_seed(**params):
     params['clusters'] = app.config['CLUSTERS'].query(params)
     renderdict = base_renderdict(params)
     return render_template('by_seed.html', **renderdict)
 
 
-# Subject > timepoint > seed > cluster steps
+# Subject > seed > cluster steps
 # ------------------------------------------
 
 def seed_bcrumb():
-    params = get_view_args(['dataset_id', 'subject_id', 'timepoint', 'seedid'])
+    params = get_view_args(['dataset_id', 'subject_id', 'seedid'])
     return [{'text': params['seedid'], 'url': url_for('by_seed', **params)}]
 
-@app.route("/<dataset_id>/clusters/<subject_id>/<timepoint>/<seedid>")
-@register_breadcrumb(app, '.subjects.timepoints.seeds.clusters', '',
+@app.route("/<dataset_id>/clusters/<subject_id>/<seedid>")
+@register_breadcrumb(app, '.subjects.seeds.clusters', '',
                      dynamic_list_constructor=seed_bcrumb)
 def by_cluster(**params):
     return by_cluster_response(params)
@@ -161,7 +145,7 @@ def cluster_bcrumb():
     return [{'text': cluster.clustering_step, 'url': url_for('cluster_page', id=cluster_id)}]
 
 @app.route("/cluster/<id>")
-@register_breadcrumb(app, '.subjects.timepoints.seeds.clusters.cluster', '',
+@register_breadcrumb(app, '.subjects.seeds.clusters.cluster', '',
                      dynamic_list_constructor=cluster_bcrumb)
 def cluster_page(id=None):
     cluster = app.config['CLUSTERS'].get_by_id(id)
