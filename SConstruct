@@ -477,7 +477,10 @@ def processed_asr(outdir, c):
     tgt = env.Command(
             [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg', 'fa']],
             [c['asr'], c['seqmeta']],
-            "xvfb-run -a bin/process_asr.py --seed " + c['seed'] + " --outdir " + outdir + 
+            # Note that `-` at the beggining lets things keep running if there's an error here; This is
+            # protecting us at the moment from clusters with 2 seqs. We should be catching this further
+            # upstream and handling more appropriately, but for now this is an easy stopgap...
+            "- xvfb-run -a bin/process_asr.py --seed " + c['seed'] + " --outdir " + outdir + 
                 " --basename " + basename + " $SOURCES")
     # Manually depend on dnaml2tree.py/dnapars.py script, since it doesn't fall in the first position within the command
     # string.
