@@ -222,10 +222,10 @@ w.add('seed', seeds)
 # Next we nest on parameter sets; I believe these correspond to sequencing runs.
 # They're the things that look like "Hs-LN2-5RACE-IgG", and are nested within each seed's output directory.
 
-merged_timepoints_glob = "Q*-*-Ig*"
+is_merged = re.compile('[A-Z]+\d+-\w-Ig[A-Z]').match
 w.add('parameter_set',
-      lambda c: map(lambda x: path.basename(x),
-                    glob.glob(path.join(datapath, 'seeds', c['seed'], merged_timepoints_glob))))
+      lambda c: filter(is_merged,
+                       os.listdir(path.join(datapath, 'seeds', c['seed']))))
 
 
 # Some helpers at the seed level
