@@ -462,7 +462,7 @@ def asr(outdir, c):
     tgt = env.SRun(
         path.join(outdir, "outfile"),
         c['asr_config'],
-        'cd ' + outdir + ' && rm outtree && ' + asr_prog + ' < $SOURCE.file > ' + asr_prog + '.log')
+        'cd ' + outdir + ' && rm -f outtree && ' + asr_prog + ' < $SOURCE.file > ' + asr_prog + '.log')
     # Manually depend on phy so that we rerun dnapars/dnaml if the input sequences change (without this, dnapars/dnaml will
     # only get rerun if one of the targets are removed or if the iput asr_config file is changed).
     env.Depends(tgt, c['phy'])
