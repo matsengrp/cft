@@ -84,6 +84,8 @@ def parse_outfile(outfile, seqmeta):
         raise RuntimeError("Conflicting shortened names!")
     def full_name(x):
         return name_map.get(x, x)
+    # Ugg... for compilation need to let python know that these will definely both be defined :-/
+    sequences, parents = [], {}
     with open(outfile, 'rU') as fh:
         for sect in sections(fh):
             if sect == 'parents':

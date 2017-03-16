@@ -54,24 +54,19 @@ installing `scons` and `nestly`.
 	$ hash -r
 ```
 
-Finally, you'll have to have partis installed somewhere in order to execute `bin/process_partis.py` (via the `bin/demo.sh` script; see below).
+Finally, you'll have to have partis installed somewhere in order to execute `bin/process_partis.py`.
 This repository has a partis submodule that should be kept in sync so that bugs as a result of mismatching assumptions should be avoided.
-To check out this submodule, execute `git submodule init`.
-If there are updates to the submodules, you can have those reflected in your checkout by executing `git submodule update`.
-If you want to update the partis version/commit pointed to by this submodule, you can `cd partis && git update-partis-repo-as-desired && cd .. && git add partis && git commit -m "Updated partis"`.
+There's also a `datascripts` submodule which contains code that Duncan uses to organize data for execution of partis, some of which is useful to this application (cft).
+To check out these submodules, execute `git submodule init`.
+If there are updates to the submodules, you can have those reflected in your checkouts by executing `git submodule update`.
+If you want to update the version/commit pointed to by a submodule, you can `cd <submodule> && git update-repo-as-desired && cd .. && git add <submodule> && git commit -m "Your commit message here"`.
 
-Before running the pipeline, you'll have to set the `PARTIS` environment variable so `process_partis.py` knows where to find things.
-
-```
-export PARTIS=$PWD/partis
-```
-
-Note that if you have partis installed somewhere on your `PATH` already, this will be used.
+Note that if you'd like to use a different partis installation you can do so using the `PARTIS` env variable.
 
 ### Running partis
 
 At the moment, this part of the pipeline doesn't require running partis at all.
-If it becomes necessary to do this in the future, you will need to make sure you actually have a fully built partis in your `$PARTIS` dir, as well as all of it's prerequisites installed.
+However, it might be worth compiling so you can use (at the very least) partis' `view-annotations` and/or `view-partitions` subcommands for inspecting partis' output files.
 See `$PARTIS/README.md` for instructions on this.
 
 
@@ -86,20 +81,32 @@ Running is a two step process:
 ### Running scons
 
 The build process can be initiated by executing `scons`.
+This:
 
-This does some initial processing of partis results using `process_partis.py`, builds trees out of each of the clusters, and does ancestral state reconstructions using these trees, finally producing a `metadata.json` file consumable by the `cftweb` web application.
+* does some initial processing of partis results using `process_partis.py` to produce (among other things) a sequence file for each cluster/clonal-family
+* builds trees out of the sequences for each of these clusters
+* subsets the sequences to sequences along the seed sequence lineage (this may change in the future)
+* does ancestral state reconstructions using this sequence subset, producing:
+    * a tree file
+    * an svg representation of the tree, with tips colored by timepoints and a highlighted seed lineage
+    * a fasta file with sequences corresponding to internal nodes on the tree (the ancestral state reconstructions)
+* finally, produces a `metadata.json` file consumable by the `cftweb` web application summarizing this information
 
-This build script takes three options parameters:
+This build script takes several parameters.
+For the most complete and up to date reference on these, look at the tail `Local Options` section of `scons -h`.
+Below are the most frequently used options:
 
-* `--datapath`: The output directory of the partis run, defaulting (currently) to `/fh/fast/matsen_e/processed-data/partis/kate-qrs-2016-09-09/new`
-* `--outdir`: The directory in which to output the results of this `SConstruct`, including the `metadata.json` file, defaulting to `output`.
+* `--datapath`: The output directory of the partis run, defaulting (currently) to `/fh/fast/matsen_e/processed-data/partis/kate-qrs-2016-09-09/latest`.
 * `--test`: Run on a small subset of all the seeds, as defined in the `SConstruct`, rather than the whole dataset; Useful for testing new code.
+* `--asr-prog`: Should be set to either `dnaml` or `dnapars`, depending on whether you want to use parsimony or ML ancestral state reconstruction.
 
 Typical example usage:
 
 ```
-scons --datapath=/some/partis/output-dir --outdir=data/outdir
+scons --datapath=/some/partis-run-2017-09-18/build7 --asr-prog=dnaml
 ```
+
+This will create a metadata file and build data at `output/partis-run-build7-dnaml/metadata.json`
 
 ### Running the CFT web server
 
@@ -126,4 +133,7 @@ Eventually we'll have a more clever Docker based server setup, but for now this 
 Also note that for production, you may want to specify either the `--email` or `--slack` flags to the invocation above so that folks can be notified of errors.
 For slack notifications (recommended), you will also need to obtain an API token (see <https://api.slack.com/web#authentication>), and set the `SLACK_TOKEN` environment variable accordingly.
 
+Finally, the data output directories can be cut down to less than a 1/10 of their full size by executing the `./bin/publish_output.py` script.
+Execute that script with the `-h` flag for further details on this.
+This is recommended for moving data around in production/deployment.
 
