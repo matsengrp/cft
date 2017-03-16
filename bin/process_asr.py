@@ -61,7 +61,7 @@ def parse_seqdict(fh, mode='dnaml'):
     seqs = defaultdict(str)
     patterns = {
         'dnaml': re.compile("^\s*(?P<id>[a-zA-Z0-9>_.-]*)\s+(?P<seq>[a-zA-Z \-]+)"),
-        'dnapars': re.compile("^\s*\S+\s+(?P<id>[a-zA-Z0-9>_.-]*)\s+(yes\s+|no\s+)?(?P<seq>[a-zA-Z \-]+)")}
+        'dnapars': re.compile("^\s*\S+\s+(?P<id>[a-zA-Z0-9>_.-]*)\s+(yes\s+|no\s+|maybe\s+)?(?P<seq>[a-zA-Z \-]+)")}
     fh.next()
     for line in fh:
         m = patterns[mode].match(line)
