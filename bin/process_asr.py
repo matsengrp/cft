@@ -167,19 +167,6 @@ def iter_lineage(tree, pattern):
         node = node.up
 
 
-# highlight the lineage (branches) from a node to the root.
-# target node name is identified by a regular expression.
-# The default pattern is chosen to highlight lineage from a seed node to the root.
-def highlight_lineage(tree, pattern='seed.*'):
-    # find all nodes matching pattern 'seed.*'
-    for node in iter_lineage(tree, pattern):
-        nstyle = NodeStyle()
-        nstyle['fgcolor'] = 'red'
-        nstyle['size'] = 7
-        node.set_style(nstyle)
-    return tree
-
-
 def timepoint_colors(annotations):
     # Should really improve this sort so that we're fully chronological
     timepoints = sorted(set(x['timepoint'] for x in annotations.values()))
@@ -192,6 +179,8 @@ def timepoint_legend(ts, tp_colors):
     for timepoint, color in tp_colors.iteritems():
         ts.legend.add_face(ete3.faces.CircleFace(12, color, "circle"), 0)
         ts.legend.add_face(ete3.faces.TextFace(timepoint), 1)
+    ts.legend.add_face(ete3.faces.CircleFace(8, 'brown', "circle"), 0)
+    ts.legend.add_face(ete3.faces.TextFace("seedlineage"), 1)
 
 
 def render_tree(fname, tree, annotations, highlight_node):
@@ -199,6 +188,8 @@ def render_tree(fname, tree, annotations, highlight_node):
     ts = TreeStyle()
     ts.show_leaf_name = False
     tp_colors = timepoint_colors(annotations)
+
+    seed_lineage = [n for n in iter_lineage(tree, highlight_node)]
 
     def my_layout(node):
         name = node.name
@@ -211,16 +202,25 @@ def render_tree(fname, tree, annotations, highlight_node):
             # Style the node with color corresponding to timepoint
             nstyle = NodeStyle()
             nstyle['fgcolor'] = tp_colors[seqmeta['timepoint']]
-            nstyle['size'] = 15
+            nstyle['size'] = 14
             node.set_style(nstyle)
+        else:
+            # Have to set all node sizes to 0 or we end up distorting the x-axis
+            nstyle = NodeStyle()
+            nstyle['size'] = 0
+            node.set_style(nstyle)
+            # Highlight just those nodes in the seedlineage which have nonzero branch lengths, or bad things
+            if node in seed_lineage and node.dist > 0:
+                position = "float"
+                # Note; we use circleface instead of node style to avoid borking the x-axis
+                circle_face = ete3.CircleFace(radius=5, color='brown', style="circle")
+                add_face_to_node(circle_face, node, column=0, position=position)
 
     ts.layout_fn = my_layout
     timepoint_legend(ts, tp_colors)
     # whether or not we had rerooted on naive before, we want to do so for the SVG tree
     if 'naive' not in tree.name:
         tree = reroot_tree(tree, '.*naive.*')
-    # highlight lineage from seed to root.
-    tree = highlight_lineage(tree, highlight_node+'.*')
     tree.render(fname, tree_style=ts)
 
 
