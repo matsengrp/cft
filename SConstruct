@@ -37,6 +37,7 @@ from os import path
 from warnings import warn
 from nestly import Nest
 from nestly.scons import SConsWrap
+from SCons import Node
 from SCons.Script import Environment, AddOption
 
 import json
@@ -527,7 +528,8 @@ def cluster_metadata(outdir, c):
     # specified in the input metadata.json file are relative to _its_ location, in our context, always base_outdir
     def relpath(tgt_key):
         tgt = c[tgt_key]
-        if type(tgt) == list:
+        # Ugg... OOP madness...
+        if type(tgt) == list or type(tgt) == Node.NodeList:
             tgt = tgt[0]
         return path.relpath(str(tgt), outdir_base)
     n = re.compile('run-viterbi-best-plus-(?P<step>.*)').match(c['partition']).group('step')

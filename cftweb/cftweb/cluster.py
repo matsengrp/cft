@@ -60,7 +60,7 @@ class Cluster(object):
         for attr in ['svg', 'fasta', 'newick', 'cluster_aa']:
             val = self.__dict__.get(attr)
             if val:
-                self.__dict__ = os.path.join(dir, val)
+                self.__dict__[attr] = os.path.join(dir, val)
             else:
                 warnings.warn("Attr '{}' is missing for cluster:\n{}".format(attr, self.__dict__))
 
@@ -242,9 +242,9 @@ class Cluster(object):
         "return ETE tree structure arranged to seed node to the right of all other nodes"
         tree = Tree(self.newick, format=1)
         # I'm not sure we actually need this, but there are cases where we might. Better safe than sorry.
-        naive_node = find_node(tree, '.*naive.*')
-        if naive_node:
-            tree.set_outgroup(naive_node)
+        #naive_node = find_node(tree, '.*naive.*')
+        #if naive_node:
+            #tree.set_outgroup(naive_node)
         sort_tree(tree, direction=1, predicate=lambda n: 'seed' in n.name)
         return tree
 
