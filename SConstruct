@@ -420,6 +420,9 @@ def merge_translations(outdir, c):
     "Returns the filename of the translation file for the merge operation, which includes timepoint info"
     with open(partis_log(c), 'r') as fh:
         partis_command = fh.readline()
+    # Hacky temp fix for the dataset rename 2017/04/03
+    partis_command = partis_command.replace('kate-qrs-2016-09-09', 'kate-qrs')
+    partis_command = partis_command.replace('laura-mb-2016-12-22', 'laura-mb')
     infname_base = infname_regex.match(partis_command).group('infname_base')
     return infname_base + '-translations.csv'
 

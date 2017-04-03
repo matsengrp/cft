@@ -132,6 +132,9 @@ def process_log_file(log_file):
     else:
         inferred_gls = call_args[1+call_args.index('--parameter-dir')] + \
                 '/hmm/germline-sets'
+    # Hacky temp fix for the dataset rename 2017/04/03
+    inferred_gls = inferred_gls.replace('kate-qrs-2016-09-09', 'kate-qrs')
+    inferred_gls = inferred_gls.replace('laura-mb-2016-12-22', 'laura-mb')
 
     # if the parameter file is not an absolute path then we don't know where
     # to look since we don't know where partis was run from!
