@@ -240,9 +240,13 @@ class Cluster(object):
 
     def tree(self):
         "return ETE tree structure arranged to seed node to the right of all other nodes"
-        tree = Tree(self.newick, format=1)
-        sort_tree(tree, direction=1, predicate=lambda n: 'seed' in n.name)
-        return tree
+        try:
+            tree = Tree(self.newick, format=1)
+            sort_tree(tree, direction=1, predicate=lambda n: 'seed' in n.name)
+            return tree
+        except:
+            print("Error loading tree for self:", self.__dict__)
+            return Tree()
 
     def svgstr(self):
         # return the svg tree associated with this cluster
@@ -265,7 +269,7 @@ class ClusterDB(object):
     @classmethod
     def fromfiles(cls, filenames):
         def fromfile(filename):
-            dir = os.path.abspath(os.path.dirname(filename))
+            dir = os.path.abspath(os.path.dirname(os.path.dirname(filename)))
             with open(filename, 'rb') as fp:
                 print("fromfiles reading {}".format(filename))
                 dataset = json.load(fp)
@@ -309,7 +313,12 @@ class ClusterDB(object):
     def __get_index_ids__(self, attr, vals):
         if not(type(vals) == list or type(vals) == set):
             vals = [vals]
-        return set.intersection(*(self._indices[attr].get(v) for v in vals if self._indices[attr].get(v)))
+        result_sets = [self._indices[attr].get(v) for v in vals if self._indices[attr].get(v)]
+        if result_sets:
+            return set.intersection(*result_sets)
+        else:
+            warnings.warn("No matches for sub-query:\n{}".format({'attr': attr, 'vals': vals}))
+            return set()
 
     def get_by_id(self, id):
         return self._clusters[id]
