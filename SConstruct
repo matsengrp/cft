@@ -28,6 +28,8 @@ import sys
 import csv
 import time
 import subprocess
+import datetime
+import getpass
 import glob
 import sconsutils
 import itertools
@@ -35,8 +37,14 @@ import functools as fun
 
 from os import path
 from warnings import warn
-from nestly import Nest
-from nestly.scons import SConsWrap
+
+
+#from nestly import Nest
+#from nestly.scons import SConsWrap
+from nestly.nestly import Nest
+from nestly.nestly.scons import SConsWrap
+
+
 from SCons import Node
 from SCons.Script import Environment, AddOption
 
@@ -231,21 +239,25 @@ w.add_aggregate('svgfiles', list)
 # For the sake of testing, we allow for switching between the full set of seeds, as returned by `seeds_fn`, or
 # just a small subsampling thereof via execution with the `--test` cli flag
 
-def wrap_test_run(seeds_fn):
-    def f(c):
-        seeds = seeds_fn(c)
-        seeds = seeds[:2]
-        print(seeds)
-        return seeds
-    return f if test_run else seeds_fn
+def wrap_test_run(take_n=2):
+    def deco(nestables_fn):
+        def f(c):
+            nestables = nestables_fn(c)
+            nestables = nestables[:take_n]
+            print(nestables)
+            return nestables
+        f.__name__ = nestables_fn.__name__
+        return f if test_run else nestables_fn
+    return deco
 
-@wrap_test_run
+# Initialize our first sub dataset nest level
+@w.add_nest('seed')
+# would like to have a lower number here but sometimes we get no good clusters for the first two seeds?
+# (on laura-mb for example).
+@wrap_test_run(take_n = 5)
 def seeds_fn(c):
     # TODO get the full datapath from c
     return os.listdir(path.join(datapath(c), 'seeds'))
-
-# Initialize our first sub dataset nest level
-w.add('seed', seeds_fn)
 
 
 # Initialize parameter set nest
@@ -255,9 +267,12 @@ w.add('seed', seeds_fn)
 # They're the things that look like "Hs-LN2-5RACE-IgG", and are nested within each seed's output directory.
 
 is_merged = re.compile('[A-Z]+\d+-\w-Ig[A-Z]').match
-w.add('parameter_set',
-      lambda c: filter(is_merged,
-                       os.listdir(path.join(datapath(c), 'seeds', c['seed']))))
+
+@w.add_nest()
+@wrap_test_run()
+def parameter_set(c):
+    return filter(is_merged,
+                  os.listdir(path.join(datapath(c), 'seeds', c['seed'])))
 
 
 # Some helpers at the seed level
@@ -277,6 +292,9 @@ def valid_partition(fname):
         return len(unique_ids) >= 2 # Do we want >2 or >=2?
 
 
+# Each c["partition"] value actually points to the annotations for that partition... a little weird but...
+@w.add_nest('partition')
+@wrap_test_run()
 def annotations(c):
     """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
     for actual analysis."""
@@ -293,10 +311,6 @@ def parameter_dir(c):
     "The input parameter directory (as in input to partis); see --parameter-dir flag to various partis cli calls."
     return path.join(datapath(c), c['parameter_set'])
 
-
-
-# Each c["partition"] value actually points to the annotations for that partition... a little weird but...
-w.add('partition', annotations)
 
 
 def annotation(c):
@@ -597,9 +611,7 @@ def cluster_metadata(outdir, c):
 
 # Here we pop out to the "seed" level so we can aggregate our metadata
 
-#w.pop('parameter_set')
 w.pop('seed')
-#w.pop('dataset')
 
 
 # Filtering out bad clusters:
