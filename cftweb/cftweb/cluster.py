@@ -68,30 +68,8 @@ class Cluster(object):
         self.has_seed = self.has_seed == 'True'
         self.clustering_step = int(self.clustering_step)
 
-        # TEMPORARY HACK!
-        #
-        # We want to know the individual (subject) identifier, the
-        # the seed sequence name, and the
-        # gene name.  Ideally this would be explicitly provided in the
-        # json data, but instead we must extract it from the
-        # paths provided in the json data.
-        #
-        # Given a partial path like, "QA255.016-Vh/Hs-LN2-5RACE-IgG-new"
-        # "QA255" 	- individual (subject) identification
-        # "016" 	- seed sequence name
-        # "Vh" 		- gene name.  Vh and Vk are the V heavy chain (IgG) vs. V kappa (there is also Vl which mean V lambda)
-        #
-        # "Hs-LN2-5RACE-IgG-new" is the name of the sequencing run,
-        # 
-        # "Hs-LN4-5RACE-IgK-100k/QB850.043-Vk/cluster4/dnaml.seedLineage.fa"
-        # Note; using the data seedlineage here since we've made the self.seedlineage absolute in path
-        path = data['newick']
-        regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)')
-        m = regex.match(path)
-        if m:
-            self.subject_id = m.group('subject_id')
-            self.seedid = m.group('seedid')
-            self.gene = m.group('gene')
+        # for consistency with some old code
+        self.seedid = self.seed_id
 
         
         # Generate a unique identifier.  This id is used to index into a dict of clusters and it will be visible in URLs.
@@ -105,11 +83,13 @@ class Cluster(object):
         # These identifiers may have to change if addition information is needed to maintain uniqueness, and
         # when possible care should be taken to retain existing ids. But for now this is only a soft guarantee.
         
-        self.id = "c{}".format(hash((self.dataset_id, self.seed, self.clustering_step)))
-
+        self.id = self.id()
 
 
     # Public methods
+
+    def id(self):
+        return "c{}".format(hash((self.dataset_id, self.seed, self.clustering_step)))
 
     def get(self, attr):
         "Genneral purpose getter that takes an attr string and returns the corresponding attribute"
@@ -301,7 +281,7 @@ class ClusterDB(object):
         # worth indexing if your number of unique values is on the order of the page block size, since
         # everything is in memory in our implementation here, we still gain some efficiency, at the cost of a
         # little extra memory consumption, so what the hey.
-        for attr in ["seed", "seedid", "subject_id", "dataset_id"]:
+        for attr in ["seed", "seedid", "seed_id", "subject_id", "dataset_id"]:
             self.__build_index__(attr)
 
     def dataset_ids(self):

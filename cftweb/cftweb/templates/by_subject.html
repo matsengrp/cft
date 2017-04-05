@@ -6,7 +6,9 @@
 <script>
 jQuery(document).ready(function($) {
     $(".clickable-row").click(function() {
-        window.location = $(this).data("href");
+        var newLocation = $(this).data("href");
+        console.log("The new location is: " + newLocation);
+        window.location = newLocation;
     });
   });
 </script>
@@ -26,11 +28,12 @@ jQuery(document).ready(function($) {
       </thead>
       <tbody>
       {% for group in clusters | groupby('subject_id') %}
-      {% set slist = group.list | map(attribute='seedid') | list | unique -%}
+      {% set subject_id = group.grouper %}
+      {% set slist = group.list | map(attribute='seed') | list | unique -%}
       {% set ns = slist | length -%}
       {% set nc = group.list | length -%}
-        <tr class='clickable-row' data-href='{{ url_for('by_seed', dataset_id=dataset_id, subject_id=group.grouper) }}'>
-          <td>{{ group.grouper }}</td>
+        <tr class='clickable-row' data-href='{{ url_for('by_seed', dataset_id=dataset_id, subject_id=subject_id) }}'>
+          <td>{{ subject_id }}</td>
           <td>{{ ns }} seed{{ "s" if ns > 1 else ""}}</td>
           <td>{{ nc }} cluster{{ "s" if nc > 1 else ""}}</td>
         </tr>
