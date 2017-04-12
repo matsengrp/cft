@@ -12,46 +12,42 @@ Additionally, the `cftweb` directory has a web application for serving
 up the results of these analyses in your browser.
 
 
-## Setting up the environment
+## Setting up the build environment
 
-The pipeline is specified as python, but it relies upon some tools
-that are available as modules.  Load these modules before you create
-your virtual environment.
+This section is specific to setting up the data build environment.
+For running the CFTWeb server, see the [CFTWeb README]('/cftweb/README.md').
 
-```
-	$ module use ~matsengrp/modules
-	$ module load phylip seqmagick FastTree
-```
-
-Now create a virtual environment.  These instructions assume you will
-operating in a virtual environment using `conda`.  Use `module load
-matsengrp-anaconda` if the `conda` command is not available in your
-path.  You can also mimic these instructions using `virtualenv` and
-`pip` if you would prefer.
+First, the pipeline will need to have access to various commands for building the data (bioinformatics utilities and such).
+You can use the Hutch's module system for these:
 
 ```
-	$ conda create -n cft
-	$ source activate cft
+module use ~matsengrp/modules
+module load phylip seqmagick FastTree
 ```
 
-Now load the python packages.  Again these are mostly specified using
-`conda` commands; `pip` is used if the package is not yet available
-via conda.
+Next we'll create a virtual environment using conda for all of this projects python dependencies.
+Use `module load matsengrp-anaconda` if the `conda` command is not available in your path. 
+You can also mimic these instructions using `virtualenv` and`pip` if you would prefer.
 
 ```
-	$ conda install pandas biopython flask nestly pyqt slackclient
-	$ pip install ete3 scons flask-breadcrumbs slacker-log-handler cottonmouth colorbrewer
- 
+conda create -n cft
+source activate cft
 ```
 
-Your mileage may vary, but I have found it necessary to 
-reactivate the environment and rehash my path, especially after
-installing `scons` and `nestly`.
+Now load the python packages.
+Again these are mostly specified using `conda` commands; `pip` is used if the package is not yet available via conda.
 
 ```
-	$ source deactivate
-	$ source activate cft
-	$ hash -r
+conda install pandas biopython nestly pyqt
+pip install ete3 scons
+```
+
+Your mileage may vary, but Chris Warth found it necessary to reactivate the environment and rehash my path, especially after installing `scons` and `nestly`.
+
+```
+source deactivate
+source activate cft
+hash -r
 ```
 
 Finally, you'll have to have partis installed somewhere in order to execute `bin/process_partis.py`.
@@ -72,14 +68,6 @@ See `$PARTIS/README.md` for instructions on this.
 
 ## Running
 
-Running is a two step process:
-
-* Run the analyses and produce a summary `metadata.json` file
-* Run the `cftweb` application based on this file
-
-
-### Running scons
-
 The build process can be initiated by executing `scons`.
 This:
 
@@ -96,44 +84,34 @@ This build script takes several parameters.
 For the most complete and up to date reference on these, look at the tail `Local Options` section of `scons -h`.
 Below are the most frequently used options:
 
-* `--datapath`: The output directory of the partis run, defaulting (currently) to `/fh/fast/matsen_e/processed-data/partis/kate-qrs-2016-09-09/latest`.
+* `--datapaths`: A `:` separated list of partis output directories relative to `--base-datapath`
+  Defaults (presently) to `laura-mb/latest:kate-qrs/latest`.
+* `--base-datapath`: The location of `--datapaths`, if not specified as absolute paths.
+  Defaults to `/fh/fast/matsen_e/processed-data/partis/`.
+* `--asr-progs`: Should be set to either `dnaml` or `dnapars` or `dnaml:dnapars`, depending on whether you want to use parsimony or ML ancestral state reconstruction.
 * `--test`: Run on a small subset of all the seeds, as defined in the `SConstruct`, rather than the whole dataset; Useful for testing new code.
-* `--asr-prog`: Should be set to either `dnaml` or `dnapars`, depending on whether you want to use parsimony or ML ancestral state reconstruction.
 
-Typical example usage:
+A separate "dataset" directory and corresponding `metadata.json` file will be created for each combination of `datapaths` and `asr-progs`, and placed within the `output` directory.
+Later, additional dataset level parameters may be added that will further expand this space.
 
-```
-scons --datapath=/some/partis-run-2017-09-18/build7 --asr-prog=dnaml
-```
+After the data has been built, stripped down extracts of the data are placed in `output/bulids/`.
+These are 1/10 the size of the full data directories, and are recommended for passing off data to CFTWeb (see below).
 
-This will create a metadata file and build data at `output/partis-run-build7-dnaml/metadata.json`
-
-### Running the CFT web server
-
-To actually consume the fruits of our labor, we need to fire up the CFT web server, which will provide us with a web interface for exploring the data.
-
-Before exiting, the build will prompt you with the directions for how to execute the cftweb server given the output `metadata.json` file.
-This should look something like:
+### Typical example usage
 
 ```
-cd cftweb && python -m cftweb /path/to/output/metadata.json
+scons --datapaths=kate-qrs/v10 --asr-progs=dnaml -j 50
 ```
 
-You may specify multiple json files in this fashion as long as each has a unique `dataset_id` attribute.
+This will create a metadata file and build data at `output/kate-qrs-v10-dnaml/metadata.json`
 
-The default port is `5000`.
-If someone else is running the web server on the same machine (or something else using that port), you can set a different one using the `-P` flag.
+Note that the `-j` flag can set the parallelism of the build.
+Additionally, the `-n` flag can be used to execute a "dry run" where commands are printed but not executed.
 
-### Running CFT web in production
 
-The default dev server shipped with Flask is rather stupid and can't handle multiple web requests at the same time, and also gets thrown for a loop if a socket connection closes before all the data has been sent, periodically crashing the app.
-If you install `gevent` via pip or conda, the `gevent.wsgi` module is used instead, which should resolve these issues.
-Eventually we'll have a more clever Docker based server setup, but for now this will keep us limping along.
+### Executing CFTWeb
 
-Also note that for production, you may want to specify either the `--email` or `--slack` flags to the invocation above so that folks can be notified of errors.
-For slack notifications (recommended), you will also need to obtain an API token (see <https://api.slack.com/web#authentication>), and set the `SLACK_TOKEN` environment variable accordingly.
+Once the data is built, you can consume the fruits of this labor by passing the data off the cftweb application.
+For instructions `cd cftweb && cat README.md`.
 
-Finally, the data output directories can be cut down to less than a 1/10 of their full size by executing the `./bin/publish_output.py` script.
-Execute that script with the `-h` flag for further details on this.
-This is recommended for moving data around in production/deployment.
 
