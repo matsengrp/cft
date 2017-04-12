@@ -1,25 +1,17 @@
 
-Bootstrap two-column template downloaded from https://startbootstrap.com/template-overviews/2-col-portfolio/
+CFT Web application
+
+## Installation
+
+Just run `pip install -r requirements.txt` (add `--user` if you get permissions errors).
 
 ## Usage
 
 ```
-    $ cd cft/cftweb
-    $ python -m cftweb -c "sampledata"
+cd cft/cftweb
+python -m cftweb /path/to/data/files/*/metadata.json
+# Typically this will be the following:
+#python -m cftweb ../output/*/metadata.json
 ```
 
-The "database" of clusters is read from *any* JSON file imediately under the directory supplied to the `-c` parameter.
-The format of the cluster database is a array of dictionaries, one per cluster, e.g.
-
-```
-[
-    { 
-	"fasta": "sample1.fa",
-	"tree": "sample1.tree",
-	"svg": "sample1.svg"
-    }
-]
-```
-
-See `sampledata/sample.json` for an example. All filenames in the index file are relative to the directory in which the database index is found.
 
