@@ -690,7 +690,7 @@ def published_build(_, c):
     return env.Command(
         path.join(publish_outdir, 'metadata.json'),
         c['metadata'],
-        'publish_output.py $SOURCE ' + publish_outdir)
+        'publish_output.py $SOURCE ' + publish_path())
 
 
 # Go back to the base nest level and print help for cftweb

@@ -48,12 +48,13 @@ def main():
     with open(args.metadata, 'r') as meta_handle:
         metadata = json.load(meta_handle)
     copy_data(inbase, args.outdir, metadata)
+    new_metadata_dir = path.join(args.outdir, path.basename(path.dirname(args.metadata)))
     if args.dataset_id:
         metadata = with_dataset_id(metadata, args.dataset_id)
-        with open(path.join(args.outdir, 'metadata.json'), 'w') as fh:
+        with open(path.join(new_metadata_dir, 'metadata.json'), 'w') as fh:
             json.dump(metadata, fh)
     else:
-        shutil.copy(args.metadata, args.outdir)
+        shutil.copy(args.metadata, new_metadata_dir)
 
 
 if __name__ == '__main__':
