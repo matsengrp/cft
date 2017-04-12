@@ -196,11 +196,13 @@ w = SConsWrap(nest, outdir_base, alias_environment=env)
 # =================
 
 
+# A collection of datasets, where the `datapath` key is the full realpath to a leaf node input directory
 datasets = [{'datapath': datapath, 'asr_prog': asr_prog}
              for datapath, asr_prog
              in itertools.product(datapaths, asr_progs)]
 
 def _dataset_outdir(dataset_params):
+    "Outputs the basename of the path to which this dataset's output lives; e.g. 'kate-qrs-v10-dnaml'"
     base = dataset_tag + '-' if dataset_tag else ''
     base += path.relpath(dataset_params['datapath'], base_datapath).replace('/', '-') + '-'
     return base + dataset_params['asr_prog']
@@ -208,18 +210,23 @@ def _dataset_outdir(dataset_params):
 
 w.add('dataset', datasets, label_func=_dataset_outdir)
 
-# Helpers for accessing things
+# Helpers for accessing info about the dataset
 
 def dataset_outdir(c):
+    "Returns _dataset_outdir of `c['dataset']`, for easier access via `c` below."
     return _dataset_outdir(c['dataset'])
 
 def asr_prog(c):
+    "Retrieve the asr_prog from the dataset map"
     return c['dataset']['asr_prog']
 
 def dataset_id(c):
+    """The return dataset_id corresponding to the control dictionary; This is the key under which datasets are
+    organized in CFTWeb."""
     return dataset_outdir(c) + '-' + time.strftime('%Y.%m.%d')
 
 def datapath(c):
+    "Returns the input realpath datapath value of the dataset"
     return c['dataset']['datapath']
 
 
@@ -666,20 +673,45 @@ def metadata(outdir, c):
     env.AlwaysBuild(tgt)
     return tgt
 
+
+# Published version of the data to something like output/build/{date-dataset-tag-datapaths-asr-progs}
+
+def publish_path():
+    return path.join(outdir_base, 
+                     "builds",
+                     time.strftime('%Y.%m.%d')
+                     + ("-" + dataset_tag if dataset_tag else "")
+                     + "-" + env.GetOption('datapaths').replace(':', '-').replace("/", "-")
+                     + "-" + '-'.join(asr_progs))
+
+@w.add_target()
+def published_build(_, c):
+    publish_outdir = path.join(publish_path(), dataset_outdir(c))
+    return env.Command(
+        path.join(publish_outdir, 'metadata.json'),
+        c['metadata'],
+        'publish_output.py $SOURCE ' + publish_outdir)
+
+
+# Go back to the base nest level and print help for cftweb
+
+w.pop('dataset')
+
 import textwrap
 
 def print_hints(target, source, env):
     msg = """\
         hint: to run the cft web interface,
-            $ cd cftweb && python -m cftweb {}
-    """.format(os.path.abspath(str(source[0])))
+            $ cd cftweb && python -m cftweb ../{}/*
+    """.format(publish_path())
     print(textwrap.dedent(msg))
 
+# This is broken and needs to be fixed so that it only executes after the published_build has been created
 @w.add_target()
 def hints(outdir, c):
     hints = env.Command(
         None,
-        c['metadata'],
+        [],
         print_hints)
     env.AlwaysBuild(hints)
     return hints

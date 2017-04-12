@@ -44,7 +44,7 @@ def get_args():
 
 def main():
     args = get_args()
-    inbase = path.dirname(args.metadata)
+    inbase = path.dirname(path.dirname(args.metadata))
     with open(args.metadata, 'r') as meta_handle:
         metadata = json.load(meta_handle)
     copy_data(inbase, args.outdir, metadata)
