@@ -194,6 +194,7 @@ def render_tree(fname, tree, annotations, highlight_node):
     def my_layout(node):
         name = node.name
         seqmeta = annotations.get(node.name)
+        # handle leaves
         if seqmeta and not re.compile(".*naive.*").match(node.name):
             # Add the node name for tips
             name = node.name + " (mf={}) ".format(round(float(seqmeta['mut_freqs']), 3))
@@ -201,9 +202,13 @@ def render_tree(fname, tree, annotations, highlight_node):
             add_face_to_node(F, node, column=0, position='branch-right')
             # Style the node with color corresponding to timepoint
             nstyle = NodeStyle()
-            nstyle['fgcolor'] = tp_colors[seqmeta['timepoint']]
+            if node.name == highlight_node:
+                nstyle['fgcolor'] = 'brown'
+            else:
+                nstyle['fgcolor'] = tp_colors[seqmeta['timepoint']]
             nstyle['size'] = 14
             node.set_style(nstyle)
+        # Deal with naive and true internal nodes
         else:
             # Have to set all node sizes to 0 or we end up distorting the x-axis
             nstyle = NodeStyle()
