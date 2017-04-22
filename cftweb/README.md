@@ -3,7 +3,9 @@ CFT Web application
 
 ## Installation
 
-Just run `pip install -r requirements.txt` (add `--user` if you get permissions errors).
+Run `pip install -r requirements.txt` (add `--user` if you get permissions errors).
+
+Then install miniconda and ete using ete's flavor of instructions [here](http://etetoolkit.org/download/).
 
 ## Usage
 
