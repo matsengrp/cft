@@ -25,8 +25,8 @@ jQuery(document).ready(function($) {
       </thead>
       <tbody>
 	
-	{% for group in clusters|groupby('seedid') %}
-	<tr class='clickable-row' data-href='{{ url_for('by_cluster', dataset_id=dataset_id, subject_id=subject_id, seedid=group.grouper) }}'>
+	{% for group in clusters|groupby('seed') %}
+	<tr class='clickable-row' data-href='{{ url_for('by_cluster', dataset_id=dataset_id, subject_id=subject_id, seed=group.grouper) }}'>
 	  <td>{{ subject_id }}</td>
 	  <td>{{ group.grouper }}</td>
 	  <td>{{ group.list| length}} clusters</td>

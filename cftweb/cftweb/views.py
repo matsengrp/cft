@@ -111,6 +111,7 @@ def by_subject(**params):
 
 def subject_bcrumb():
     params = get_view_args(['dataset_id', 'subject_id'])
+    print("by_seed params are:", params)
     return [{'text': params['subject_id'], 'url': url_for('by_subject', **params)}]
 
 @app.route("/<dataset_id>/seeds/<subject_id>")
@@ -118,6 +119,7 @@ def subject_bcrumb():
                      dynamic_list_constructor=subject_bcrumb)
 def by_seed(**params):
     params['clusters'] = app.config['CLUSTERS'].query(params)
+    print("by_seed params are:", params)
     renderdict = base_renderdict(params)
     return render_template('by_seed.html', **renderdict)
 
@@ -126,10 +128,10 @@ def by_seed(**params):
 # ------------------------------------------
 
 def seed_bcrumb():
-    params = get_view_args(['dataset_id', 'subject_id', 'seedid'])
-    return [{'text': params['seedid'], 'url': url_for('by_seed', **params)}]
+    params = get_view_args(['dataset_id', 'subject_id', 'seed'])
+    return [{'text': params['seed'], 'url': url_for('by_seed', **params)}]
 
-@app.route("/<dataset_id>/clusters/<subject_id>/<seedid>")
+@app.route("/<dataset_id>/clusters/<subject_id>/<seed>")
 @register_breadcrumb(app, '.subjects.seeds.clusters', '',
                      dynamic_list_constructor=seed_bcrumb)
 def by_cluster(**params):

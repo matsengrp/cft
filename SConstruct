@@ -28,15 +28,23 @@ import sys
 import csv
 import time
 import subprocess
-import glob
-import sconsutils
 import datetime
 import getpass
+import glob
+import sconsutils
+import itertools
+import functools as fun
 
 from os import path
 from warnings import warn
-from nestly import Nest
-from nestly.scons import SConsWrap
+
+
+#from nestly import Nest
+#from nestly.scons import SConsWrap
+from nestly.nestly import Nest
+from nestly.nestly.scons import SConsWrap
+
+
 from SCons import Node
 from SCons.Script import Environment, AddOption
 
@@ -66,31 +74,31 @@ env.PrependENVPath('PATH', 'tree')
 
 # Setting up command line arguments/options
 
-AddOption('--datapath',
-              dest='datapath',
-              type='string',
-              nargs=1,
-              action='store',
-              metavar='DIR',
-              default="/fh/fast/matsen_e/processed-data/partis/kate-qrs-2016-09-09/latest",
-              help='partis output directory')
+AddOption('--datapaths',
+          dest='datapaths',
+          metavar='DIRS',
+          default="laura-mb/latest:kate-qrs/latest",
+          help="""Specify ':' separated list of partis output directories to process on; if full path not specified,
+          assumed to be in --base-datapath. Dataset names will be assined in relation to this --base-datapath
+          if present. Note: symlinks may not work properly here unless they point to things in base-datapath also.""")
 
-AddOption('--outdir',
-        dest='outdir',
-        type='string',
-        nargs=1,
-        action='store',
-        metavar='DIR',
-        help="directory in which to output results; defaults to `output/<dataset-tag>-<datapath-basename>-<asr-prog>")
+AddOption('--base-datapath',
+          dest='base_datapath',
+          metavar='DIR',
+          default="/fh/fast/matsen_e/processed-data/partis/",
+          help="""Location in which to find the --datapaths directories. Defauilts to %default%""")
 
-AddOption('--asr-prog',
-        dest='asr_prog',
-        type='string',
+AddOption('--asr-progs',
+        dest='asr_progs',
+        metavar='ASR_PROGS',
+        default='dnaml:dnapars',
+        help="""Specify ':' separated list of ancestral state reconstruction programs to run. Options are `dnaml` and
+        `dnapars`. Defaults to running both (`dnaml:dnapars`)""")
+
+AddOption('--prune-strategies',
+        dest='prune_strategies',
         nargs=1,
-        action='store',
-        metavar='dnapars/dnaml',
-        default='dnapars',
-        help="dnapars (default) or dnaml tree program")
+        action='store')
 
 AddOption('--test',
         dest='test_run',
@@ -98,41 +106,32 @@ AddOption('--test',
         default=False,
         help="Setting this flag does a test run for just a couple of seeds")
 
-AddOption('--dataset-id',
-        dest='dataset_id',
-        metavar='IDENTIFIER',
-        help="""Assign a dataset identitifier for distinguishing between multiple datasets loaded into cftweb;
-                Defaults to [<dataset-tag>-]<datapath-basename>-<asr-prog>-<date>""")
-
 AddOption('--dataset-tag',
         dest='dataset_tag',
         metavar='TAG',
-        help="Adds a tag to the beginning of the automatically generated dataset id")
+        help="Adds a tag to the beginning of the automatically generated dataset ids")
+
+AddOption('--outdir`',
+        dest='outdir',
+        metavar='DIR',
+        default='output',
+        help="Directory in which to output results; defaults to `output`")
 
 
 # prefer realpath so that running latest vs explicit vN doesn't require rerun; also need for defaults below
-datapath = path.realpath(env.GetOption('datapath'))
-asr_prog = env.GetOption('asr_prog')
+base_datapath = env.GetOption('base_datapath')
+datapaths = map(path.realpath,
+                [path.join(base_datapath, x) for x in env.GetOption('datapaths').split(':')])
+asr_progs = env.GetOption('asr_progs').split(':')
 test_run = env.GetOption("test_run")
-dataset_tag = env.GetOption('dataset_tag') or path.basename(path.dirname(datapath))[:-11] + '-' + path.basename(datapath)
-dataset_base = dataset_tag + '-' + asr_prog
-# we call this outdir_base in order to not conflict with nestly fns outdir arg
-outdir_base = env.GetOption('outdir') or path.join('output', dataset_base)
-dataset_id = env.GetOption('dataset_id') or dataset_base + '-' + time.strftime('%Y.%m.%d')
+dataset_tag = env.GetOption('dataset_tag') or ('test' if test_run else None)
+outdir_base = env.GetOption('outdir')
 
 
-# pruning is dependent on which program we use, dnapars seems to handle bigger trees more quickly
-if asr_prog == 'dnapars':
-    prune_n = 300
-elif asr_prog == 'dnaml':
-    prune_n = 100
 
-print("datapath = {}".format(datapath))
+
 print("outdir = {}".format(outdir_base))
-print("asr_prog = {}".format(asr_prog))
 print("test_run = {}".format(test_run))
-print('pruned size = {}'.format(prune_n))
-print('dataset id = {}'.format(dataset_id))
 
 
 # Some environment sanity checks to make sure we have all prerequisits
@@ -144,14 +143,15 @@ def cmd_exists(cmd):
 # only check for dependencies if we aren't in a dry-run.
 if not env.GetOption('no_exec'):
     msg = ""
-    if not cmd_exists(asr_prog):
-        msg += '''
-           Required dependency command,
-           `'''+asr_prog+'''` not found on PATH
-           Consider using,
-                $ module use ~matsengrp/modules
-                $ module load phylip
-            '''
+    for asr_prog in asr_progs:
+        if not cmd_exists(asr_prog):
+            msg += '''
+               Required dependency command,
+               `'''+asr_prog+'''` not found on PATH
+               Consider using,
+                    $ module use ~matsengrp/modules
+                    $ module load phylip
+                '''
 
     if not cmd_exists('seqmagick'):
         msg += '''
@@ -190,6 +190,47 @@ nest = Nest()
 w = SConsWrap(nest, outdir_base, alias_environment=env)
 
 
+
+
+# Dataset nest level
+# =================
+
+
+# A collection of datasets, where the `datapath` key is the full realpath to a leaf node input directory
+datasets = [{'datapath': datapath, 'asr_prog': asr_prog}
+             for datapath, asr_prog
+             in itertools.product(datapaths, asr_progs)]
+
+def _dataset_outdir(dataset_params):
+    "Outputs the basename of the path to which this dataset's output lives; e.g. 'kate-qrs-v10-dnaml'"
+    base = dataset_tag + '-' if dataset_tag else ''
+    base += path.relpath(dataset_params['datapath'], base_datapath).replace('/', '-') + '-'
+    return base + dataset_params['asr_prog']
+
+
+w.add('dataset', datasets, label_func=_dataset_outdir)
+
+# Helpers for accessing info about the dataset
+
+def dataset_outdir(c):
+    "Returns _dataset_outdir of `c['dataset']`, for easier access via `c` below."
+    return _dataset_outdir(c['dataset'])
+
+def asr_prog(c):
+    "Retrieve the asr_prog from the dataset map"
+    return c['dataset']['asr_prog']
+
+def dataset_id(c):
+    """The return dataset_id corresponding to the control dictionary; This is the key under which datasets are
+    organized in CFTWeb."""
+    return dataset_outdir(c) + '-' + time.strftime('%Y.%m.%d')
+
+def datapath(c):
+    "Returns the input realpath datapath value of the dataset"
+    return c['dataset']['datapath']
+
+
+
 # Here we add some aggregate targets which we'll be build upon in order to spit out our final metadata.json file.
 
 w.add_aggregate('metadata', list)
@@ -202,19 +243,28 @@ w.add_aggregate('svgfiles', list)
 
 # The very first nesting is on the seed id.
 
-# For the sake of testing, we allow for switching between the full set of seeds, as returned by `seeds_fn`, and a small test set (`test_seeds`).
-# This is controllable via the `--test` cli flag
+# For the sake of testing, we allow for switching between the full set of seeds, as returned by `seeds_fn`, or
+# just a small subsampling thereof via execution with the `--test` cli flag
 
-#test_seeds = ["QB850.049-Vh", "QB850.043-Vh"]
-test_seeds = ["QB850.405-Vh", "QB850.430-Vh", "QB850.091-Vh"]
+def wrap_test_run(take_n=2):
+    def deco(nestables_fn):
+        def f(c):
+            nestables = nestables_fn(c)
+            nestables = nestables[:take_n]
+            print(nestables)
+            return nestables
+        f.__name__ = nestables_fn.__name__
+        return f if test_run else nestables_fn
+    return deco
 
-def seeds_fn(datapath):
-    return os.listdir(path.join(datapath, 'seeds'))
-
-seeds = test_seeds if test_run else seeds_fn(datapath)
-
-# Initialize our first nest level
-w.add('seed', seeds)
+# Initialize our first sub dataset nest level
+@w.add_nest('seed')
+# would like to have a lower number here but sometimes we get no good clusters for the first two seeds?
+# (on laura-mb for example).
+@wrap_test_run(take_n = 5)
+def seeds_fn(c):
+    # TODO get the full datapath from c
+    return os.listdir(path.join(datapath(c), 'seeds'))
 
 
 # Initialize parameter set nest
@@ -224,9 +274,12 @@ w.add('seed', seeds)
 # They're the things that look like "Hs-LN2-5RACE-IgG", and are nested within each seed's output directory.
 
 is_merged = re.compile('[A-Z]+\d+-\w-Ig[A-Z]').match
-w.add('parameter_set',
-      lambda c: filter(is_merged,
-                       os.listdir(path.join(datapath, 'seeds', c['seed']))))
+
+@w.add_nest()
+@wrap_test_run()
+def parameter_set(c):
+    return filter(is_merged,
+                  os.listdir(path.join(datapath(c), 'seeds', c['seed'])))
 
 
 # Some helpers at the seed level
@@ -234,7 +287,7 @@ w.add('parameter_set',
 def input_dir(c):
     "Return the `seed > parameter_set` directory given the closed over datapath and a nestly control dictionary"
     # This 'seeds' thing here is potentially not a very general assumption; not sure how variable that might be upstream
-    return path.join(datapath, 'seeds', c['seed'], c['parameter_set'])
+    return path.join(datapath(c), 'seeds', c['seed'], c['parameter_set'])
 
 def path_base_root(full_path):
     return path.splitext(path.basename(full_path))[0]
@@ -246,6 +299,9 @@ def valid_partition(fname):
         return len(unique_ids) >= 2 # Do we want >2 or >=2?
 
 
+# Each c["partition"] value actually points to the annotations for that partition... a little weird but...
+@w.add_nest('partition')
+@wrap_test_run()
 def annotations(c):
     """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
     for actual analysis."""
@@ -260,12 +316,8 @@ def partitions(c):
 
 def parameter_dir(c):
     "The input parameter directory (as in input to partis); see --parameter-dir flag to various partis cli calls."
-    return path.join(datapath, c['parameter_set'])
+    return path.join(datapath(c), c['parameter_set'])
 
-
-
-# Each c["partition"] value actually points to the annotations for that partition... a little weird but...
-w.add('partition', annotations)
 
 
 def annotation(c):
@@ -288,7 +340,7 @@ def process_partis_(outdir, c):
                 '--cluster_base cluster ' +
                 '--melted_base base_seqmeta ' +
                 '--output_dir ' + outdir + ' ' +
-                '--paths-relative-to ' + outdir_base)
+                '--paths-relative-to ' + dataset_outdir(c))
 
 @w.add_target()
 def base_metadata(outdir, c):
@@ -396,13 +448,18 @@ def fasttree(outdir, c):
         c['aligned_inseqs'],
         "FastTree -nt -quiet $SOURCE > $TARGET")
 
+# pruning is dependent on which program we use, dnapars seems to handle bigger trees more quickly
+def prune_n(c):
+    prune_n_ = {'dnapars': 300, 'dnaml': 100}
+    return prune_n_[asr_prog(c)]
+
 # calculate list of sequences to be pruned
 @w.add_target()
 def pruned_ids(outdir, c):
     return env.Command(
         path.join(outdir, "pruned_ids.txt"),
         c['fasttree'],
-        "python bin/prune.py --n " + str(prune_n) + " --seed " + c['seed'] + " $SOURCE > $TARGET")
+        "python bin/prune.py --n " + str(prune_n(c)) + " --seed " + c['seed'] + " $SOURCE > $TARGET")
 
 # prune out sequences to reduce taxa, making sure to cut out columns in the alignment that are now entirely
 # gaps from insertions in sequences that have been pruned out.
@@ -454,9 +511,9 @@ def phy(outdir, c):
 @w.add_target()
 def asr_config(outdir, c):
     return env.Command(
-        path.join(outdir, asr_prog + ".cfg"),
+        path.join(outdir, asr_prog(c) + ".cfg"),
         c['phy'],
-        'python bin/mkconfig.py $SOURCE ' + asr_prog + ' > $TARGET')
+        'python bin/mkconfig.py $SOURCE ' + asr_prog(c) + ' > $TARGET')
 
 # Run dnapars/dnaml by passing in the "config file" as stdin hoping the menues all stay sane
 # (Aside: If gets any messier can look at Expect; https://en.wikipedia.org/wiki/Expect)
@@ -466,7 +523,7 @@ def asr(outdir, c):
     tgt = env.SRun(
         path.join(outdir, "outfile"),
         c['asr_config'],
-        'cd ' + outdir + ' && rm -f outtree && ' + asr_prog + ' < $SOURCE.file > ' + asr_prog + '.log',
+        'cd ' + outdir + ' && rm -f outtree && ' + asr_prog(c) + ' < $SOURCE.file > ' + asr_prog(c) + '.log',
         ignore_errors=True)
     # Manually depend on phy so that we rerun dnapars/dnaml if the input sequences change (without this, dnapars/dnaml will
     # only get rerun if one of the targets are removed or if the iput asr_config file is changed).
@@ -490,8 +547,6 @@ def processed_asr(outdir, c):
     # Manually depend on dnaml2tree.py/dnapars.py script, since it doesn't fall in the first position within the command
     # string.
     env.Depends(tgt, 'bin/process_asr.py')
-    # Do aggregate work
-    c['svgfiles'].append(tgt[0])
     return tgt
 
 @w.add_target()
@@ -500,7 +555,10 @@ def asr_tree(outdir, c):
 
 @w.add_target()
 def asr_tree_svg(outdir, c):
-    return c['processed_asr'][1]
+    svg = c['processed_asr'][1]
+    # Do aggregate work
+    c['svgfiles'].append(svg)
+    return svg
 
 @w.add_target()
 def asr_seqs(outdir, c):
@@ -544,7 +602,7 @@ def cluster_metadata(outdir, c):
                 'json_assoc.py /dev/stdin $TARGET ' +
                 # Not 100% on this; Pick optimal attr/key name
                 #'best_partition ' + c['partition'] + ' ' +
-                ' dataset_id ' + dataset_id +
+                ' dataset_id ' + dataset_id(c) +
                 ' clustering_step ' + n +
                 ' svg ' + relpath('asr_tree_svg') +
                 ' fasta ' + relpath('asr_seqs') +
@@ -590,15 +648,15 @@ def node_metadata(node):
 def git(*args):
     return subprocess.check_output(['git'] + list(args))
 
-def write_metadata(target, source, env):
+def write_metadata(c, target, source, env):
     # Here's where we filter out the seeds with clusters that didn't compute through dnaml2tree.py/dnapars.py
     good_clusters = map(lambda x: node_metadata(x[1]), filter(lambda x: tgt_exists(x[0]), in_pairs(source)))
     metadata = {'clusters': good_clusters,
-                'dataset_id': dataset_id,
+                'dataset_id': dataset_id(c),
                 'build_info': {'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                                'command': " ".join(sys.argv),
                                'workdir': os.getcwd(),
-                               'datapath': datapath,
+                               'datapath': datapath(c),
                                'user': getpass.getuser(),
                                'commit': git('rev-parse', 'HEAD'),
                                'status': git('status', '--porcelain')}}
@@ -611,24 +669,51 @@ def metadata(outdir, c):
     tgt = env.Command(
         path.join(outdir, "metadata.json"),
         zip(c['svgfiles'], c['metadata']),
-        write_metadata)
+        fun.partial(write_metadata, c))
     env.AlwaysBuild(tgt)
     return tgt
+
+
+# Published version of the data to something like output/build/{date-dataset-tag-datapaths-asr-progs}
+
+def publish_path():
+    return path.join(outdir_base, 
+                     "builds",
+                     time.strftime('%Y.%m.%d')
+                     + ("-" + dataset_tag if dataset_tag else "")
+                     + "-" + env.GetOption('datapaths').replace(':', '-').replace("/", "-")
+                     + "-" + '-'.join(asr_progs))
+
+@w.add_target()
+def published_build(_, c):
+    publish_outdir = path.join(publish_path(), dataset_outdir(c))
+    return env.Command(
+        path.join(publish_outdir, 'metadata.json'),
+        c['metadata'],
+        'publish_output.py $SOURCE ' + publish_path())
+
+
+# Go back to the base nest level and print help for cftweb
+
+w.pop('dataset')
 
 import textwrap
 
 def print_hints(target, source, env):
     msg = """\
-		hint: to run the cft web interface,
-			$ cd cftweb && python -m cftweb {}
-	""".format(os.path.abspath(str(source[0])))
+        hint: to run the cft web interface,
+            $ cd cftweb && python -m cftweb ../{}/*
+    """.format(publish_path())
     print(textwrap.dedent(msg))
 
+# This is broken and needs to be fixed so that it only executes after the published_build has been created
 @w.add_target()
 def hints(outdir, c):
     hints = env.Command(
         None,
-        c['metadata'],
+        [],
         print_hints)
     env.AlwaysBuild(hints)
     return hints
+
+
