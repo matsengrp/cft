@@ -76,7 +76,7 @@ env.PrependENVPath('PATH', 'tree')
 
 AddOption('--datapaths',
           dest='datapaths',
-          metavar='DIRS',
+          metavar='DIR_LIST',
           default="laura-mb/latest:kate-qrs/latest",
           help="""Specify ':' separated list of partis output directories to process on; if full path not specified,
           assumed to be in --base-datapath. Dataset names will be assined in relation to this --base-datapath
@@ -90,15 +90,17 @@ AddOption('--base-datapath',
 
 AddOption('--asr-progs',
         dest='asr_progs',
-        metavar='ASR_PROGS',
+        metavar='LIST',
         default='dnaml:dnapars',
         help="""Specify ':' separated list of ancestral state reconstruction programs to run. Options are `dnaml` and
         `dnapars`. Defaults to running both (`dnaml:dnapars`)""")
 
 AddOption('--prune-strategies',
         dest='prune_strategies',
-        nargs=1,
-        action='store')
+        metavar='LIST',
+        default='min_adcl:seed_lineage',
+        help="""Specify ':' separated list of pruning strategies. Options are 'min_adcl' and 'seed_lineage'.
+        Defaults to both.""")
 
 AddOption('--test',
         dest='test_run',
@@ -123,6 +125,7 @@ base_datapath = env.GetOption('base_datapath')
 datapaths = map(path.realpath,
                 [path.join(base_datapath, x) for x in env.GetOption('datapaths').split(':')])
 asr_progs = env.GetOption('asr_progs').split(':')
+prune_strategies = env.GetOption('prune_strategies').split(':')
 test_run = env.GetOption("test_run")
 dataset_tag = env.GetOption('dataset_tag') or ('test' if test_run else None)
 outdir_base = env.GetOption('outdir')
@@ -197,15 +200,17 @@ w = SConsWrap(nest, outdir_base, alias_environment=env)
 
 
 # A collection of datasets, where the `datapath` key is the full realpath to a leaf node input directory
-datasets = [{'datapath': datapath, 'asr_prog': asr_prog}
-             for datapath, asr_prog
-             in itertools.product(datapaths, asr_progs)]
+datasets = [{'datapath': datapath, 'asr_prog': asr_prog, 'prune_strategy': prune_strategy}
+             for datapath, asr_prog, prune_strategy
+             in itertools.product(datapaths, asr_progs, prune_strategies)]
 
 def _dataset_outdir(dataset_params):
     "Outputs the basename of the path to which this dataset's output lives; e.g. 'kate-qrs-v10-dnaml'"
     base = dataset_tag + '-' if dataset_tag else ''
-    base += path.relpath(dataset_params['datapath'], base_datapath).replace('/', '-') + '-'
-    return base + dataset_params['asr_prog']
+    base += path.relpath(dataset_params['datapath'], base_datapath).replace('/', '-')
+    if dataset_params['prune_strategy'] == 'min_adcl':
+        base += '-' + dataset_params['prune_strategy'] + 'minadcl'
+    return base + '-' + dataset_params['asr_prog']
 
 
 w.add('dataset', datasets, label_func=_dataset_outdir)
@@ -219,6 +224,10 @@ def dataset_outdir(c):
 def asr_prog(c):
     "Retrieve the asr_prog from the dataset map"
     return c['dataset']['asr_prog']
+
+def prune_strategy(c):
+    "Retrieve the asr_prog from the dataset map"
+    return c['dataset']['prune_strategy']
 
 def dataset_id(c):
     """The return dataset_id corresponding to the control dictionary; This is the key under which datasets are
@@ -251,7 +260,6 @@ def wrap_test_run(take_n=2):
         def f(c):
             nestables = nestables_fn(c)
             nestables = nestables[:take_n]
-            print(nestables)
             return nestables
         f.__name__ = nestables_fn.__name__
         return f if test_run else nestables_fn
@@ -393,7 +401,7 @@ def aligned_translated_inseqs(outdir, c):
         c['translated_inseqs'],
         # Replace stop codons with X, or muscle inserts gaps, which messed up seqmagick backtrans-align below
         # Note that things will break down at backtrans-align if any seq ids have * in them...
-        'sed \'s/\*/X/g\' $SOURCE | muscle -in /dev/stdin -out $TARGET')
+        'sed \'s/\*/X/g\' $SOURCE | muscle -in /dev/stdin -out $TARGET 2> $TARGET-.log')
 
 # Not sure why we're not using this any more; I think we want to be, but it must have been causing some
 # issue... need to look at this XXX
@@ -446,7 +454,7 @@ def fasttree(outdir, c):
     return env.SRun(
         path.join(outdir, "fasttree.nwk"),
         c['aligned_inseqs'],
-        "FastTree -nt -quiet $SOURCE > $TARGET")
+        "FastTree -nt -quiet $SOURCE > $TARGET 2> $TARGET-.log")
 
 # pruning is dependent on which program we use, dnapars seems to handle bigger trees more quickly
 def prune_n(c):
@@ -456,10 +464,18 @@ def prune_n(c):
 # calculate list of sequences to be pruned
 @w.add_target()
 def pruned_ids(outdir, c):
+    strategy = prune_strategy(c)
+    if strategy == 'seed_lineage':
+        command_str = "python bin/prune.py --n " + str(prune_n(c)) + " --seed " + c['seed'] + " $SOURCE > $TARGET"
+    elif strategy == 'min_adcl':
+        command_str = "rppr min_adcl --leaves " + str(prune_n(c)) + " $SOURCE -o $TARGET"
+    else:
+        raise Exception, 'Invalid prune_strategy: {}'.format(strategy)
     return env.Command(
         path.join(outdir, "pruned_ids.txt"),
         c['fasttree'],
-        "python bin/prune.py --n " + str(prune_n(c)) + " --seed " + c['seed'] + " $SOURCE > $TARGET")
+        command_str)
+
 
 # prune out sequences to reduce taxa, making sure to cut out columns in the alignment that are now entirely
 # gaps from insertions in sequences that have been pruned out.
