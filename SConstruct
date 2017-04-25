@@ -466,15 +466,24 @@ def prune_n(c):
 def pruned_ids(outdir, c):
     strategy = prune_strategy(c)
     if strategy == 'seed_lineage':
-        command_str = "python bin/prune.py --n " + str(prune_n(c)) + " --seed " + c['seed'] + " $SOURCE > $TARGET"
+        return env.Command(
+            path.join(outdir, "pruned_ids.txt"),
+            c['fasttree'],
+            "python bin/prune.py --n " + str(prune_n(c)) + " --seed " + c['seed'] + " $SOURCE > $TARGET")
     elif strategy == 'min_adcl':
+        # Subtract 1 from prune count because naive is internal;
         command_str = "rppr min_adcl --leaves " + str(prune_n(c)) + " $SOURCE -o $TARGET"
+        remove_ids = env.Command(
+            path.join(outdir, "pruned_ids.txt"),
+            c['fasttree'],
+            command_str)
+        # TODO add naive back in
+        return env.Command(
+            path.join(outdir, "pruned_ids.txt"),
+            c['fasttree'],
+            command_str)
     else:
         raise Exception, 'Invalid prune_strategy: {}'.format(strategy)
-    return env.Command(
-        path.join(outdir, "pruned_ids.txt"),
-        c['fasttree'],
-        command_str)
 
 
 # prune out sequences to reduce taxa, making sure to cut out columns in the alignment that are now entirely
