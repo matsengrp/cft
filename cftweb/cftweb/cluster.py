@@ -13,6 +13,7 @@ import re
 import os
 import json
 import pprint
+import warnings
 import copy
 from ete3 import Tree
 from jinja2 import Environment, FileSystemLoader
@@ -56,42 +57,19 @@ class Cluster(object):
         # the json file.
         #
         # Should really trigger a warning if any of these things happens...
-
-        self.svg = os.path.join(dir, self.svg) if hasattr(self, 'svg') else "'svg' json attribute missing"
-        self.fasta = os.path.join(dir, self.fasta) if hasattr(self, 'fasta') else "'fasta' json attribute missing"
-        self.newick = os.path.join(dir, self.newick) if hasattr(self, 'newick') else "'newick' json attribute missing"
-        #self.seedlineage = os.path.join(dir, self.seedlineage) if hasattr(self, 'seedlineage') else "'seedlineage' json attribute missing"
-        self.cluster_aa = os.path.join(dir, self.cluster_aa) if hasattr(self, 'cluster_aa') else "'cluster_aa' json attribute missing"
-        #self.seedlineage_aa = os.path.join(dir, self.seedlineage_aa) if hasattr(self, 'seedlineage_aa') else "'seedlineage_aa' json attribute missing"
+        for attr in ['svg', 'fasta', 'newick', 'cluster_aa']:
+            val = self.__dict__.get(attr)
+            if val:
+                self.__dict__[attr] = os.path.join(dir, val)
+            else:
+                warnings.warn("Attr '{}' is missing for cluster:\n{}".format(attr, self.__dict__))
 
         # Make sure that has_seed is a boolean attribute
         self.has_seed = self.has_seed == 'True'
         self.clustering_step = int(self.clustering_step)
 
-        # TEMPORARY HACK!
-        #
-        # We want to know the individual (patient) identifier, the
-        # the seed sequence name, and the
-        # gene name.  Ideally this would be explicitly provided in the
-        # json data, but instead we must extract it from the
-        # paths provided in the json data.
-        #
-        # Given a partial path like, "QA255.016-Vh/Hs-LN2-5RACE-IgG-new"
-        # "QA255" 	- individual (patient) identification
-        # "016" 	- seed sequence name
-        # "Vh" 		- gene name.  Vh and Vk are the V heavy chain (IgG) vs. V kappa (there is also Vl which mean V lambda)
-        #
-        # "Hs-LN2-5RACE-IgG-new" is the name of the sequencing run,
-        # 
-        # "Hs-LN4-5RACE-IgK-100k/QB850.043-Vk/cluster4/dnaml.seedLineage.fa"
-        # Note; using the data seedlineage here since we've made the self.seedlineage absolute in path
-        path = data['newick']
-        regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seedid>[0-9]*)-(?P<gene>[^/]*)')
-        m = regex.match(path)
-        if m:
-            self.subject_id = m.group('subject_id')
-            self.seedid = m.group('seedid')
-            self.gene = m.group('gene')
+        # for consistency with some old code
+        self.seedid = self.seed_id
 
         
         # Generate a unique identifier.  This id is used to index into a dict of clusters and it will be visible in URLs.
@@ -105,11 +83,13 @@ class Cluster(object):
         # These identifiers may have to change if addition information is needed to maintain uniqueness, and
         # when possible care should be taken to retain existing ids. But for now this is only a soft guarantee.
         
-        self.id = "c{}".format(hash((self.dataset_id, self.seed, self.clustering_step)))
-
+        self.id = self.id()
 
 
     # Public methods
+
+    def id(self):
+        return "c{}".format(hash((self.dataset_id, self.seed, self.clustering_step)))
 
     def get(self, attr):
         "Genneral purpose getter that takes an attr string and returns the corresponding attribute"
@@ -240,13 +220,13 @@ class Cluster(object):
 
     def tree(self):
         "return ETE tree structure arranged to seed node to the right of all other nodes"
-        tree = Tree(self.newick, format=1)
-        # I'm not sure we actually need this, but there are cases where we might. Better safe than sorry.
-        naive_node = find_node(tree, '.*naive.*')
-        if naive_node:
-            tree.set_outgroup(naive_node)
-        sort_tree(tree, direction=1, predicate=lambda n: 'seed' in n.name)
-        return tree
+        try:
+            tree = Tree(self.newick, format=1)
+            sort_tree(tree, direction=1, predicate=lambda n: 'seed' in n.name)
+            return tree
+        except:
+            print("Error loading tree for self:", self.__dict__)
+            return Tree()
 
     def svgstr(self):
         # return the svg tree associated with this cluster
@@ -269,7 +249,7 @@ class ClusterDB(object):
     @classmethod
     def fromfiles(cls, filenames):
         def fromfile(filename):
-            dir = os.path.abspath(os.path.dirname(filename))
+            dir = os.path.abspath(os.path.dirname(os.path.dirname(filename)))
             with open(filename, 'rb') as fp:
                 print("fromfiles reading {}".format(filename))
                 dataset = json.load(fp)
@@ -301,8 +281,11 @@ class ClusterDB(object):
         # worth indexing if your number of unique values is on the order of the page block size, since
         # everything is in memory in our implementation here, we still gain some efficiency, at the cost of a
         # little extra memory consumption, so what the hey.
-        for attr in ["seed", "seedid", "subject_id", "dataset_id"]:
+        for attr in ["seed", "seedid", "seed_id", "subject_id", "dataset_id"]:
             self.__build_index__(attr)
+
+    def dataset_ids(self):
+        return sorted(self._build_info.keys())
 
     def build_info(self, dataset_id):
         return copy.copy(self._build_info.get(dataset_id, {}))
@@ -310,7 +293,12 @@ class ClusterDB(object):
     def __get_index_ids__(self, attr, vals):
         if not(type(vals) == list or type(vals) == set):
             vals = [vals]
-        return set.intersection(*(self._indices[attr].get(v) for v in vals if self._indices[attr].get(v)))
+        result_sets = [self._indices[attr].get(v) for v in vals if self._indices[attr].get(v)]
+        if result_sets:
+            return set.intersection(*result_sets)
+        else:
+            warnings.warn("No matches for sub-query:\n{}".format({'attr': attr, 'vals': vals}))
+            return set()
 
     def get_by_id(self, id):
         return self._clusters[id]

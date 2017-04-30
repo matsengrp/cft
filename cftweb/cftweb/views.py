@@ -37,7 +37,7 @@ def get_view_args(attrs):
 # datasets, feels weird)
 def base_renderdict(params):
     renderdict = app.config['CLUSTERS'].build_info(params['dataset_id'])
-    renderdict['datasets'] = app.config['CLUSTERS']._build_info.keys()
+    renderdict['datasets'] = app.config['CLUSTERS'].dataset_ids()
     print("datasets:", renderdict['datasets'])
     renderdict.update(app.config['CFTWEB_BUILD_INFO'])
     renderdict['commit_url'] = "https://github.com/matsengrp/cft/tree/" + renderdict["commit"]
@@ -87,7 +87,7 @@ def index(dataset_id=None):
 def home():
     # For now, just pick some random build; Would be nice to troll through the build info and pick something
     # more sensible based on date and dnaml/dnapars preference.
-    dataset_id = app.config['CLUSTERS']._build_info.keys()[0]
+    dataset_id = app.config['CLUSTERS'].dataset_ids()[0]
     return flask.redirect(url_for('index', dataset_id=dataset_id))
 
 
@@ -111,6 +111,7 @@ def by_subject(**params):
 
 def subject_bcrumb():
     params = get_view_args(['dataset_id', 'subject_id'])
+    print("by_seed params are:", params)
     return [{'text': params['subject_id'], 'url': url_for('by_subject', **params)}]
 
 @app.route("/<dataset_id>/seeds/<subject_id>")
@@ -118,6 +119,7 @@ def subject_bcrumb():
                      dynamic_list_constructor=subject_bcrumb)
 def by_seed(**params):
     params['clusters'] = app.config['CLUSTERS'].query(params)
+    print("by_seed params are:", params)
     renderdict = base_renderdict(params)
     return render_template('by_seed.html', **renderdict)
 
@@ -126,10 +128,10 @@ def by_seed(**params):
 # ------------------------------------------
 
 def seed_bcrumb():
-    params = get_view_args(['dataset_id', 'subject_id', 'seedid'])
-    return [{'text': params['seedid'], 'url': url_for('by_seed', **params)}]
+    params = get_view_args(['dataset_id', 'subject_id', 'seed'])
+    return [{'text': params['seed'], 'url': url_for('by_seed', **params)}]
 
-@app.route("/<dataset_id>/clusters/<subject_id>/<seedid>")
+@app.route("/<dataset_id>/clusters/<subject_id>/<seed>")
 @register_breadcrumb(app, '.subjects.seeds.clusters', '',
                      dynamic_list_constructor=seed_bcrumb)
 def by_cluster(**params):
@@ -197,7 +199,6 @@ def cluster_fasta(id=None):
     return Response(fasta, mimetype="application/octet-stream")
 
 
-# TODO We may want to make seedlineage a function
 @app.route("/download/sequences/<id>.seedlineage.fa")
 def seedlineage_fasta(id=None):
     cluster = app.config['CLUSTERS'].get_by_id(id)

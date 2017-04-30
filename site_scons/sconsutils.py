@@ -70,7 +70,8 @@ def SRun(env, target, source, action, **kwargs):
     if 'chdir' in kwargs:
         waitfor = [os.path.basename(w) for w in waitfor]
     if srun_exists:
-        action = ["srun sh -c ' "+action + " '", Wait(waitfor)]
+        srun_base = "- srun sh -c ' " if kwargs.get('ignore_errors') else "srun sh -c ' "
+        action = [srun_base + action + " '", Wait(waitfor)]
     result = env.Command(target=target, source=source, action=action, **kwargs)
     return result
 
