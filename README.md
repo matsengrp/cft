@@ -89,6 +89,8 @@ Below are the most frequently used options:
 * `--base-datapath`: The location of `--datapaths`, if not specified as absolute paths.
   Defaults to `/fh/fast/matsen_e/processed-data/partis/`.
 * `--asr-progs`: Should be set to either `dnaml` or `dnapars` or `dnaml:dnapars`, depending on whether you want to use parsimony or ML ancestral state reconstruction.
+* `--prune-strategies`: The prune strategies to evaluate under; options are `seed_lineage`, and `min_adcl`, or
+  both (`min_adcl:seed_lineage`; presently the default).
 * `--test`: Run on a small subset of all the seeds, as defined in the `SConstruct`, rather than the whole dataset; Useful for testing new code.
 
 A separate "dataset" directory and corresponding `metadata.json` file will be created for each combination of `datapaths` and `asr-progs`, and placed within the `output` directory.
