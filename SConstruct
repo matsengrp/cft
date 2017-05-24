@@ -102,6 +102,11 @@ AddOption('--prune-strategies',
         help="""Specify ':' separated list of pruning strategies. Options are 'min_adcl' and 'seed_lineage'.
         Defaults to both.""")
 
+AddOption('--separate-timepoints',
+        dest='separate_timepoints',
+        action='store_true',
+        help='Include separate timepoints (vs just running on unmerged)?')
+
 AddOption('--test',
         dest='test_run',
         action='store_true',
@@ -127,54 +132,14 @@ datapaths = map(path.realpath,
 asr_progs = env.GetOption('asr_progs').split(':')
 prune_strategies = env.GetOption('prune_strategies').split(':')
 test_run = env.GetOption("test_run")
+separate_timepoints = env.GetOption("separate_timepoints")
 dataset_tag = env.GetOption('dataset_tag') or ('test' if test_run else None)
 outdir_base = env.GetOption('outdir')
-
-
 
 
 print("outdir = {}".format(outdir_base))
 print("test_run = {}".format(test_run))
 
-
-# Some environment sanity checks to make sure we have all prerequisits
-
-def cmd_exists(cmd):
-    return subprocess.call("type " + cmd, shell=True,
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
-
-# only check for dependencies if we aren't in a dry-run.
-if not env.GetOption('no_exec'):
-    msg = ""
-    for asr_prog in asr_progs:
-        if not cmd_exists(asr_prog):
-            msg += '''
-               Required dependency command,
-               `'''+asr_prog+'''` not found on PATH
-               Consider using,
-                    $ module use ~matsengrp/modules
-                    $ module load phylip
-                '''
-
-    if not cmd_exists('seqmagick'):
-        msg += '''
-           Required dependency command,
-           `seqmagick` not found on PATH
-           Consider using,
-                $ module load seqmagick
-            '''
-
-    if not cmd_exists('FastTree'):
-        msg += '''
-           Required dependency command,
-           `FastTree` not found on PATH
-           Consider using,
-                $ module load FastTree
-            '''
-    # if we are missing any prerequisites, print a message and exit
-    if len(msg):
-        warn(msg)
-        sys.exit(1)
 
 
 
@@ -200,7 +165,7 @@ w = SConsWrap(nest, outdir_base, alias_environment=env)
 
 
 # A collection of datasets, where the `datapath` key is the full realpath to a leaf node input directory
-datasets = [{'datapath': datapath, 'asr_prog': asr_prog, 'prune_strategy': prune_strategy}
+datasets = [{'datapath': datapath, 'asr_prog': asr_prog, 'prune_strategy': prune_strategy, 'separate_timepoints': separate_timepoints}
              for datapath, asr_prog, prune_strategy
              in itertools.product(datapaths, asr_progs, prune_strategies)]
 
@@ -210,6 +175,8 @@ def _dataset_outdir(dataset_params):
     base += path.relpath(dataset_params['datapath'], base_datapath).replace('/', '-')
     if dataset_params['prune_strategy'] == 'min_adcl':
         base += '-' + 'minadcl'
+    if dataset_params['separate_timepoints']:
+        base += '-' + 'septmpts'
     return base + '-' + dataset_params['asr_prog']
 
 
@@ -280,13 +247,19 @@ def seeds_fn(c):
 
 # Next we nest on parameter sets; I believe these correspond to sequencing runs.
 # They're the things that look like "Hs-LN2-5RACE-IgG", and are nested within each seed's output directory.
+#
+# What this should eventually look like is that we have already specified the relationships between the data
+# and the directories (timepoints etc) upstream, so we don't have to muck around with this.
 
 is_merged = re.compile('[A-Z]+\d+-\w-Ig[A-Z]').match
+is_unmerged = re.compile('Hs-LN.*').match
 
 @w.add_nest()
 @wrap_test_run()
 def parameter_set(c):
-    return filter(is_merged,
+    def filter_fn(fn):
+        return is_merged(fn) or (c['dataset']['separate_timepoints'] and is_unmerged(fn))
+    return filter(filter_fn,
                   os.listdir(path.join(datapath(c), 'seeds', c['seed'])))
 
 
