@@ -616,15 +616,15 @@ def processed_asr(outdir, c):
     env.Depends(tgt, 'bin/process_asr.py')
     return tgt
 
-@w.add_target()
+@w.add_target(ingest=True)
 def asr_tree(outdir, c):
     return c['processed_asr'][0]
 
-@w.add_target()
+@w.add_target(ingest=True)
 def asr_tree_svg(outdir, c):
     return c['processed_asr'][1]
 
-@w.add_target()
+@w.add_target(ingest=True)
 def asr_seqs(outdir, c):
     return c['processed_asr'][2]
 
