@@ -7,7 +7,7 @@ import json
 
 def get_frame(metadata_handle):
     metadata = json.load(metadata_handle)
-    cdr3_start = int(metadata[0]["cdr3_start"])
+    cdr3_start = int(metadata[0]["cft.cluster:cdr3_start"])
     return cdr3_start % 3
 
 def trim_end(seqrecord, frame):

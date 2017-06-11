@@ -13,10 +13,10 @@ import os.path
 import warnings
 import json
 import time
-import re
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+from tripl import tripl
 
 import sys
 import textwrap
@@ -58,18 +58,18 @@ def parse_args():
         help='input cluster partition csv',
         type=existing_file, required=True)
     parser.add_argument(
-        '--cluster_base',
+        '--cluster-base',
         help='basename for clusters',
         default='cluster')
     parser.add_argument(
-        '--output_dir',
+        '--output-dir',
         default='.',
         help='directory for output files')
     parser.add_argument(
         '--paths-relative-to',
         help='files pointed to from metadata.json file will be speicfied relative to this path; defaults to --output-dir')
     parser.add_argument(
-        '--melted_base',
+        '--melted-base',
         help='basename for melted data output',
         default='melted')
     parser.add_argument(
@@ -78,11 +78,11 @@ def parse_args():
         action="store_true")
     log_or_param_dir = parser.add_mutually_exclusive_group(required=True)
     log_or_param_dir.add_argument(
-        '--partis_log',
+        '--partis-log',
         help='log file containing relevant information about partis run (required if --param_dir not specified)',
         type=existing_file)
     log_or_param_dir.add_argument(
-        '--param_dir',
+        '--param-dir',
         help='parameter directory passed to partis call',
         type=str)
     #parser.add_argument('--select_clustering', dest='select_clustering',
@@ -139,6 +139,8 @@ def process_log_file(log_file):
     # if the parameter file is not an absolute path then we don't know where
     # to look since we don't know where partis was run from!
     # so for now we'll spit an error
+    # This may not make as much sense now that we've moved into datascripts, and is partof why this shouold be
+    # here
     if not os.path.isabs(inferred_gls):
         raise ValueError('Parameter directory must be an absolute path: ' \
                 + str(inferred_gls))
@@ -218,29 +220,6 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition, meta, 
     Write metatdata to json file from dataframe
     """
 
-    # We want to know the individual (patient) identifier, the
-    # timepoint (when sampled), the seed sequence name, and the
-    # gene name.  Ideally this would be explicitly provided in the
-    # json data, but instead we must extract it from the
-    # paths provided in the json data.
-    #
-    # Given a partial path like, "QA255.016-Vh/Hs-LN2-5RACE-IgG-new"
-    # "QA255"       - individual (patient) identification
-    # "016"         - seed sequence name
-    # "Vh"          - gene name.  Vh and Vk are the V heavy chain (IgG) vs. V kappa (there is also Vl which mean V lambda)
-    # "LN2"         - timepoint.  LN1 and LN2 are early timepoints and LN3 and LN4 are late timepoints.
-    #
-    # "Hs-LN2-5RACE-IgG-new" is the name of the sequencing run,
-    #
-    # This currently will only work if the output files are spat into a directory
-    # of the form "/path/to/output/QA255.016-Vh/Hs-LN2-5RACE-IgG-new/*.fa"
-    # Otherwise no new fields will be added.
-    #
-    # Update: Now that we're merging timepoints this is actually shifting somewhat.
-    # Things looks generally more like the following, without any timepoint information:
-    #
-    #     QB850.430-Vh/QB850-h-IgG
-
     def merge_two_dicts(dict1, dict2):
         """
         Merge two dictionaries into a copy
@@ -252,32 +231,33 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition, meta, 
 
     def jsonify(df, cluster_id, mod_date, cluster_base, meta):
         data = df.iloc[0]
-        return merge_two_dicts({
-            'file': os.path.relpath(os.path.join(outdir, cluster_base+cluster_id+'.fa'), paths_relative_to),
-            'cluster_id': cluster_id,
-            'n_seqs': len(df), # Note... this count naive; good idea?
-            'v_gene': data['v_gene'],
-            'v_start': data['v_start'],
-            'v_end': data['v_end'],
-            'd_gene': data['d_gene'],
-            'd_start': data['d_start'],
-            'd_end': data['d_end'],
-            'j_gene': data['j_gene'],
-            'j_start': data['j_start'],
-            'j_end': data['j_end'],
-            'cdr3_length': data['cdr3_length'],
-            'cdr3_start': data['cdr3_start'],
-            'seed': data['seed_ids'],
-            'has_seed': str(data['has_seed']),
-            'last_modified': time.ctime(mod_date),
-            'annotation_file': annotations,
-            'partition_file': partition
-        }, meta)
+        return tripl.namespaced('cft.cluster',
+            seqs_file = os.path.relpath(os.path.join(outdir, cluster_base+cluster_id+'.fa'), paths_relative_to),
+            id = cluster_id,
+            n_seqs = len(df), # Note... this count naive; good idea?
+            v_gene = data['v_gene'],
+            v_start = data['v_start'],
+            v_end = data['v_end'],
+            d_gene = data['d_gene'],
+            d_start = data['d_start'],
+            d_end = data['d_end'],
+            j_gene = data['j_gene'],
+            j_start = data['j_start'],
+            j_end = data['j_end'],
+            cdr3_length = data['cdr3_length'],
+            cdr3_start = data['cdr3_start'],
+            #seed = {'cft.seed:id': data['seed_ids']},
+            has_seed = str(data['has_seed']),
+            last_modified = time.ctime(mod_date),
+            annotation_file = annotations,
+            partition_file = partition,
+            **meta)
 
     arr = [jsonify(g, k, mod_date, cluster_base, meta) \
             for k,g in df.groupby(['cluster'])]
     with open(fname, 'wb') as outfile:
-        json.dump(arr,
+        # Should fix so we can have multiple clusters more easily
+        json.dump(arr[0],
                   outfile,
                   sort_keys=True,
                   indent=4,
@@ -344,26 +324,19 @@ def main():
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    # get metadata
-    #regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seed_id>[0-9]*)-(?P<gene>[^/]*)/[^-]*-(?P<timepoint>[^-]*)')
-    regex = re.compile(r'^(?P<subject_id>[^.]*).(?P<seed_id>[0-9]*)-(?P<gene>[^/]*)/.*')
-    path = '/'.join(args.output_dir.split('/')[-3:])
-    m = regex.match(path)
-    meta = {}
-    if m:
-        meta = m.groupdict()
-    else:
-        raise Exception('--output_dir needs to be of the form "/path/to/output/QA255.016-Vh/Hs-LN2-5RACE-IgG"')
+    #meta = base_metadata(args.output_dir)
 
     if args.partis_log is not None:
         print("Inferring chain and gls from partis log")
         locus, inferred_gls = process_log_file(args.partis_log)
     else:
-        print("Inferring chain and gls from path and param dir cl arg")
-        chain = meta['gene'][1].lower()
-        # I'm not 100% positive about this; But the values here are the directories in partis/data/germlines/human
-        locus = dict(h='igh', k='igk', l='igl', a='tra', b='trb', d='trd', g='trg')[chain]
-        inferred_gls = args.param_dir + '/hmm/germline-sets'
+        print("Must now specify partis log file")
+        #print("Inferring chain and gls from path and param dir cl arg")
+        #print("This may be brokerz")
+        #chain = meta['gene'][1].lower()
+        ## I'm not 100% positive about this; But the values here are the directories in partis/data/germlines/human
+        #locus = dict(h='igh', k='igk', l='igl', a='tra', b='trb', d='trd', g='trg')[chain]
+        #inferred_gls = args.param_dir + '/hmm/germline-sets'
 
     melted_annotations = process_data(args.annotations,
                                       args.partition,
@@ -379,8 +352,10 @@ def main():
                          args.output_dir,
                          args.cluster_base)
 
+    meta = {}
+
     write_json(melted_annotations,
-               os.path.join(args.output_dir, 'metadata.json'),
+               os.path.join(args.output_dir, 'base_metadata.json'),
                os.path.getmtime(args.annotations),
                args.cluster_base,
                args.annotations,
@@ -392,3 +367,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

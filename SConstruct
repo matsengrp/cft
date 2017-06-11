@@ -33,22 +33,24 @@ import getpass
 import glob
 import sconsutils
 import itertools
-import functools as fun
+import copy
+#import functools as fun
 
 from os import path
-from warnings import warn
+#from warnings import warn
 
 
 #from nestly import Nest
 #from nestly.scons import SConsWrap
 from nestly.nestly import Nest
 from nestly.nestly.scons import SConsWrap
+from datascripts import heads
 
 
-from SCons import Node
+#from SCons import Node
 from SCons.Script import Environment, AddOption
 
-import json
+#import json
 
 # Need this in order to read csv files with sequences in the fields
 csv.field_size_limit(sys.maxsize)
@@ -142,6 +144,14 @@ print("test_run = {}".format(test_run))
 
 
 
+# Utility functions
+# -----------------
+
+def merge_dicts(d1, d2):
+    d = d1.deepcopy(d1)
+    d.update(d2)
+    return d
+
 
 # Initialize nestly!
 # ==================
@@ -150,24 +160,44 @@ print("test_run = {}".format(test_run))
 # It also lets us "pop" out of nesting levels in order to aggregate on nested results.
 
 # Our nesting is going to more or less model the nesting of things in our datapath directory.
-# seed > parameter_set > partition
+# seed > sample > partition
 
 # Here we initialize nestly, and create an scons wrapper for it
 
+build_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+def git(*args):
+    return subprocess.check_output(['git'] + list(args))
+
+import tripl.tripl.nestly as nestly_tripl
+
 nest = Nest()
 w = SConsWrap(nest, outdir_base, alias_environment=env)
+w = nestly_tripl.NestWrap(w,
+        name='build',
+        # Need to base hashing off of this for optimal incrementalization
+        metadata={'id': 'cft-build-' + build_time.replace(' ', '-'),
+                  'time': build_time,
+                  'command': " ".join(sys.argv),
+                  'workdir': os.getcwd(),
+                  'base_datapath': base_datapath,
+                  'user': getpass.getuser(),
+                  'commit': git('rev-parse', 'HEAD'),
+                  # This will be really cool :-)
+                  'diff': git('diff'),
+                  'status': git('status', '--porcelain')},
+        base_namespace='cft',
+        id_attrs=['cft.dataset:id', 'cft.build:id'])
 
+
+# Could do the metadata as a separate target?
+#@w.add_target()
+#def build_data(outdir, c):
 
 
 
 # Dataset nest level
 # =================
-
-
-# A collection of datasets, where the `datapath` key is the full realpath to a leaf node input directory
-datasets = [{'datapath': datapath, 'asr_prog': asr_prog, 'prune_strategy': prune_strategy, 'separate_timepoints': separate_timepoints}
-             for datapath, asr_prog, prune_strategy
-             in itertools.product(datapaths, asr_progs, prune_strategies)]
 
 def _dataset_outdir(dataset_params):
     "Outputs the basename of the path to which this dataset's output lives; e.g. 'kate-qrs-v10-dnaml'"
@@ -180,13 +210,51 @@ def _dataset_outdir(dataset_params):
     return base + '-' + dataset_params['asr_prog']
 
 
-w.add('dataset', datasets, label_func=_dataset_outdir)
+def _dataset_id(outdir):
+    """The return dataset_id corresponding to the control dictionary; This is the key under which datasets are
+    organized in CFTWeb."""
+    return outdir + '-' + time.strftime('%Y.%m.%d')
+
+
+def with_data_id_and_outdir(dataset_params):
+    outdir = _dataset_outdir(dataset_params)
+    d = {'outdir': outdir,
+         'id': _dataset_id(outdir)}
+    d.update(dataset_params)
+    return d
+
+
+# A collection of datasets, where the `datapath` key is the full realpath to a leaf node input directory
+datasets = [with_data_id_and_outdir({
+                 'datapath': datapath,
+                 'study': datapath.split('/')[-2],
+                 'version': datapath.split('/')[-1],
+                 'asr_prog': asr_prog,
+                 'prune_strategy': prune_strategy,
+                 'separate_timepoints': separate_timepoints,
+                 })
+             for datapath, asr_prog, prune_strategy
+             in itertools.product(datapaths, asr_progs, prune_strategies)]
+
+# This is a little idiosynchratic the way we're doing things here, because of how we wanted to think about
+# uniqueness before; This will probably get scrapped and we'll have everything build off of attributes of the
+# cluster, and let tripl take care of identity and uniquness. We may not be able to preserve uniquness though,
+# unless we specify a route mapping via a pull expression.
+
+w.add('dataset', datasets,
+        full_dump=True,
+        label_func=lambda d: d['outdir'],
+        metadata=lambda c, d: d,
+        id_attrs=['cft.subject:id', 'cft.sample:id'])
 
 # Helpers for accessing info about the dataset
 
 def dataset_outdir(c):
     "Returns _dataset_outdir of `c['dataset']`, for easier access via `c` below."
-    return _dataset_outdir(c['dataset'])
+    return c['dataset']['outdir']
+
+def dataset_id(c):
+    return c['dataset']['id']
 
 def asr_prog(c):
     "Retrieve the asr_prog from the dataset map"
@@ -196,21 +264,17 @@ def prune_strategy(c):
     "Retrieve the asr_prog from the dataset map"
     return c['dataset']['prune_strategy']
 
-def dataset_id(c):
-    """The return dataset_id corresponding to the control dictionary; This is the key under which datasets are
-    organized in CFTWeb."""
-    return dataset_outdir(c) + '-' + time.strftime('%Y.%m.%d')
-
 def datapath(c):
     "Returns the input realpath datapath value of the dataset"
     return c['dataset']['datapath']
 
 
 
-# Here we add some aggregate targets which we'll be build upon in order to spit out our final metadata.json file.
+# Here we add some aggregate targets which we'll build upon in order to spit out our final metadata.json file.
 
-w.add_aggregate('metadata', list)
-w.add_aggregate('svgfiles', list)
+# This shouldn't be necessary any more with the tripl stuff
+#w.add_aggregate('metadata', list)
+#w.add_aggregate('svgfiles', list)
 
 
 
@@ -232,8 +296,13 @@ def wrap_test_run(take_n=2):
         return f if test_run else nestables_fn
     return deco
 
+def seed_metadata(c, seed_id):
+    # Same as below, due to namespacing shortcuts:
+    #return {'cft.seed:id': seed_id}
+    return {'id': seed_id,}
+
 # Initialize our first sub dataset nest level
-@w.add_nest('seed')
+@w.add_nest('seed', metadata=seed_metadata)
 # would like to have a lower number here but sometimes we get no good clusters for the first two seeds?
 # (on laura-mb for example).
 @wrap_test_run(take_n = 5)
@@ -252,23 +321,32 @@ def seeds_fn(c):
 # and the directories (timepoints etc) upstream, so we don't have to muck around with this.
 
 is_merged = re.compile('[A-Z]+\d+-\w-Ig[A-Z]').match
-is_unmerged = re.compile('Hs-LN.*').match
+is_unmerged = re.compile('Hs-(LN-?\w+)-.*').match
 
-@w.add_nest()
+def sample_metadata(c, filename): # control dict as well?
+    study = c['dataset']['study']
+    d = copy.deepcopy(heads.read_metadata(study)[filename])
+    d.update(
+        {'id': filename,
+         'timepoints': [{'cft.timepoint:id':  d['timepoint']}]})
+    return d
+
+#dataset,shorthand,species,timepoint,subject,locus
+@w.add_nest(metadata=sample_metadata)
 @wrap_test_run()
-def parameter_set(c):
-    def filter_fn(fn):
-        return is_merged(fn) or (c['dataset']['separate_timepoints'] and is_unmerged(fn))
-    return filter(filter_fn,
+def sample(c):
+    def keep(filename):
+        return is_merged(filename) or (c['dataset']['separate_timepoints'] and is_unmerged(filename))
+    return filter(keep,
                   os.listdir(path.join(datapath(c), 'seeds', c['seed'])))
 
 
 # Some helpers at the seed level
 
 def input_dir(c):
-    "Return the `seed > parameter_set` directory given the closed over datapath and a nestly control dictionary"
+    "Return the `seed > sample` directory given the closed over datapath and a nestly control dictionary"
     # This 'seeds' thing here is potentially not a very general assumption; not sure how variable that might be upstream
-    return path.join(datapath(c), 'seeds', c['seed'], c['parameter_set'])
+    return path.join(datapath(c), 'seeds', c['seed'], c['sample'])
 
 def path_base_root(full_path):
     return path.splitext(path.basename(full_path))[0]
@@ -280,8 +358,12 @@ def valid_partition(fname):
         return len(unique_ids) >= 2 # Do we want >2 or >=2?
 
 
+cluster_step = re.compile('.*-plus-(?P<cluster_step>\d+)').match
+def partition_metadata(c, filename):
+    return {'cluster_step': cluster_step(filename).group('cluster_step')}
+
 # Each c["partition"] value actually points to the annotations for that partition... a little weird but...
-@w.add_nest('partition')
+@w.add_nest('partition', metadata=partition_metadata)
 @wrap_test_run()
 def annotations(c):
     """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
@@ -297,9 +379,7 @@ def partitions(c):
 
 def parameter_dir(c):
     "The input parameter directory (as in input to partis); see --parameter-dir flag to various partis cli calls."
-    return path.join(datapath(c), c['parameter_set'])
-
-
+    return path.join(datapath(c), c['sample'])
 
 def annotation(c):
     return path.join(input_dir(c), c['partition'] + '.csv')
@@ -307,33 +387,37 @@ def annotation(c):
 def partis_log(c):
     return path.join(input_dir(c), 'partition.log')
 
-@w.add_target()
-def process_partis_(outdir, c):
+# This is a little silly, but gives us the right semantics for partitions > clusters
+#w.add('cluster', ['cluster0'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
+w.add('cluster', ['cluster0'])
+
+@w.add_metadata()
+def _process_partis(outdir, c):
     # Should get this to explicitly depend on cluster0.fa
     return env.Command(
-            [path.join(outdir, x) for x in ['metadata.json', 'cluster0.fa', 'base_seqmeta.csv']],
+            [path.join(outdir, x) for x in ['base_metadata.json', 'cluster0.fa', 'base_seqmeta.csv']],
             [partitions(c), annotation(c)],
             'process_partis.py -F ' +
                 '--partition ${SOURCES[0]} ' +
                 '--annotations ${SOURCES[1]} ' +
                 #'--param_dir ' + parameter_dir(c) + ' '
-                '--partis_log ' + partis_log(c) + ' ' +
-                '--cluster_base cluster ' +
-                '--melted_base base_seqmeta ' +
-                '--output_dir ' + outdir + ' ' +
+                '--partis-log ' + partis_log(c) + ' ' +
+                '--cluster-base cluster ' +
+                '--melted-base base_seqmeta ' +
+                '--output-dir ' + outdir + ' ' +
                 '--paths-relative-to ' + dataset_outdir(c))
 
-@w.add_target()
+@w.add_target(ingest=True)
 def base_metadata(outdir, c):
-    return c['process_partis_'][0]
+    return c['_process_partis'][0]
 
 @w.add_target()
 def inseqs(outdir, c):
-    return c['process_partis_'][1]
+    return c['_process_partis'][1]
 
 @w.add_target()
 def base_seqmeta(outdir, c):
-    return c['process_partis_'][2]
+    return c['_process_partis'][2]
 
 
 
@@ -538,26 +622,11 @@ def asr_tree(outdir, c):
 
 @w.add_target()
 def asr_tree_svg(outdir, c):
-    svg = c['processed_asr'][1]
-    # Do aggregate work
-    c['svgfiles'].append(svg)
-    return svg
+    return c['processed_asr'][1]
 
 @w.add_target()
 def asr_seqs(outdir, c):
     return c['processed_asr'][2]
-
-
-# Might want to switch back to this approach...
-#def extended_metadata(metadata, dnapars_tree_tgt):
-    #"Add dnapars_tree target(s) as metadata to the given metadata dict; used prior to metadata write."
-    #with open(
-    #m = copy.copy(metadata)
-    #m['svg'] = path.relpath(str(dnapars_tree_tgt[0]), outdir_base)
-    #m['fasta'] = path.relpath(str(dnapars_tree_tgt[1]), outdir_base)
-    #m['newick'] = path.relpath(str(dnapars_tree_tgt[2]), outdir_base)
-    #del m['file']
-    #return m
 
 @w.add_target()
 def cluster_aa(outdir, c):
@@ -566,137 +635,33 @@ def cluster_aa(outdir, c):
         c['asr_seqs'],
         "sed 's/\?/N/g' $SOURCE | seqmagick convert --translate dna2protein - $TARGET")
 
-@w.add_target()
-def cluster_metadata(outdir, c):
-    # Note: We have to do all this crazy relpath crap because the assumption of cftweb is that all paths
-    # specified in the input metadata.json file are relative to _its_ location, in our context, always base_outdir
-    def relpath(tgt_key):
-        tgt = c[tgt_key]
-        # Ugg... OOP madness...
-        if type(tgt) == list or type(tgt) == Node.NodeList:
-            tgt = tgt[0]
-        return path.relpath(str(tgt), outdir_base)
-    n = re.compile('run-viterbi-best-plus-(?P<step>.*)').match(c['partition']).group('step')
-    tgt = env.Command(
-            path.join(outdir, 'extended_metadata.json'),
-            [c['base_metadata'], partitions(c)] + c['processed_asr'],
-            # Don't like the order assumptions on dnaml_tgts here...
-            'assoc_logprob.py $SOURCE ${SOURCES[1]} -n ' + n + ' /dev/stdout | ' +
-                'json_assoc.py /dev/stdin $TARGET ' +
-                # Not 100% on this; Pick optimal attr/key name
-                #'best_partition ' + c['partition'] + ' ' +
-                ' dataset_id ' + dataset_id(c) +
-                ' clustering_step ' + n +
-                ' svg ' + relpath('asr_tree_svg') +
-                ' fasta ' + relpath('asr_seqs') +
-                ' cluster_aa ' + relpath('cluster_aa') +
-                ' newick ' + relpath('asr_tree'))
-    # Note; we used to delete the 'file' attribute as well; not sure why or if that's necessary
-    c['metadata'].append(tgt)
-    return tgt
-
 
 # Popping out
 # -----------
 
 # Here we pop out to the "seed" level so we can aggregate our metadata
 
+# I don't know if we have to do this anymore
 w.pop('seed')
-
-
-# Filtering out bad clusters:
-
-# As mentioned above, dnaml2tree.py/dnapars.py fails for some clusters, so we'd like to filter these clusters out of the final metadata results.
-# We do this based on whether the svg targets of the dnaml2tree.py/dnapars.py command point to actual files or not.
-# Eventually it would be nice to let them pass through with information indicating there was a failure, and handle appropriately in cftweb.
-# We may also want to handle clusters that are too small similarly, but for now we're filtering them out at the very beginning of the pipeline.
-
-# For now, to the stated end, we have this filter predicate
-def tgt_exists(tgt):
-    p = str(tgt)
-    exists = path.exists(p)
-    if not exists:
-        print("Path doesn't exist:", p)
-    return exists
-
-def in_pairs(xs):
-    it = iter(xs)
-    for x in it:
-        yield x, next(it)
-
-def node_metadata(node):
-    with open(str(node), 'r') as handle:
-        return json.load(handle)
-
-def git(*args):
-    return subprocess.check_output(['git'] + list(args))
-
-def write_metadata(c, target, source, env):
-    # Here's where we filter out the seeds with clusters that didn't compute through dnaml2tree.py/dnapars.py
-    good_clusters = map(lambda x: node_metadata(x[1]), filter(lambda x: tgt_exists(x[0]), in_pairs(source)))
-    metadata = {'clusters': good_clusters,
-                'dataset_id': dataset_id(c),
-                'build_info': {'date': datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                               'command': " ".join(sys.argv),
-                               'workdir': os.getcwd(),
-                               'datapath': datapath(c),
-                               'user': getpass.getuser(),
-                               'commit': git('rev-parse', 'HEAD'),
-                               'status': git('status', '--porcelain')}}
-    with open(str(target[0]), "w") as fh:
-        json.dump(metadata, fh, sort_keys=True,
-                       indent=4, separators=(',', ': '))
-
-@w.add_target()
-def metadata(outdir, c):
-    tgt = env.Command(
-        path.join(outdir, "metadata.json"),
-        zip(c['svgfiles'], c['metadata']),
-        fun.partial(write_metadata, c))
-    env.AlwaysBuild(tgt)
-    return tgt
 
 
 # Published version of the data to something like output/build/{date-dataset-tag-datapaths-asr-progs}
 
-def publish_path():
-    return path.join(outdir_base, 
-                     "builds",
-                     time.strftime('%Y.%m.%d')
-                     + ("-" + dataset_tag if dataset_tag else "")
-                     + "-" + env.GetOption('datapaths').replace(':', '-').replace("/", "-")
-                     + "-" + '-'.join(asr_progs))
-
-@w.add_target()
-def published_build(_, c):
-    publish_outdir = path.join(publish_path(), dataset_outdir(c))
-    return env.Command(
-        path.join(publish_outdir, 'metadata.json'),
-        c['metadata'],
-        'publish_output.py $SOURCE ' + publish_path())
+# This is sort of getting handled now by ingest? So maybe don't need?
+# For now leavin out because failing with new keywords
+#@w.add_target()
+#def published_build(_, c):
+    #publish_outdir = path.join(publish_path(), dataset_outdir(c))
+    #return env.Command(
+        #path.join(publish_outdir, 'metadata.json'),
+        #c['metadata'],
+        #'publish_output.py $SOURCE ' + publish_path())
 
 
-# Go back to the base nest level and print help for cftweb
+# Go back to the base nest level, forcing a metadata write, and print help for cftweb
 
 w.pop('dataset')
 
-import textwrap
 
-def print_hints(target, source, env):
-    msg = """\
-        hint: to run the cft web interface,
-            $ cd cftweb && python -m cftweb ../{}/*
-    """.format(publish_path())
-    print(textwrap.dedent(msg))
-
-# This is broken and needs to be fixed so that it only executes after the published_build has been created
-@w.add_target()
-def hints(outdir, c):
-    hints = env.Command(
-        None,
-        [],
-        print_hints)
-    env.AlwaysBuild(hints)
-    return hints
 
 
