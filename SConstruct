@@ -36,6 +36,7 @@ import itertools
 import copy
 #import functools as fun
 
+
 from os import path
 #from warnings import warn
 
@@ -270,22 +271,6 @@ def datapath(c):
 
 
 
-# Here we add some aggregate targets which we'll build upon in order to spit out our final metadata.json file.
-
-# This shouldn't be necessary any more with the tripl stuff
-#w.add_aggregate('metadata', list)
-#w.add_aggregate('svgfiles', list)
-
-
-
-# Initialize seed nest
-# --------------------
-
-# The very first nesting is on the seed id.
-
-# For the sake of testing, we allow for switching between the full set of seeds, as returned by `seeds_fn`, or
-# just a small subsampling thereof via execution with the `--test` cli flag
-
 def wrap_test_run(take_n=2):
     def deco(nestables_fn):
         def f(c):
@@ -296,19 +281,32 @@ def wrap_test_run(take_n=2):
         return f if test_run else nestables_fn
     return deco
 
-def seed_metadata(c, seed_id):
-    # Same as below, due to namespacing shortcuts:
-    #return {'cft.seed:id': seed_id}
-    return {'id': seed_id,}
+
+@w.add_nest()
+@wrap_test_run(take_n = 2)
+def subject(c):
+    study = c['dataset']['study']
+    return list(set(d['subject'] for d in heads.read_metadata(study).values()))
+
+
+# Initialize seed nest
+# --------------------
+
+# The very first nesting is on the seed id.
+
+# For the sake of testing, we allow for switching between the full set of seeds, as returned by `seeds_fn`, or
+# just a small subsampling thereof via execution with the `--test` cli flag
 
 # Initialize our first sub dataset nest level
-@w.add_nest('seed', metadata=seed_metadata)
+@w.add_nest('seed')
 # would like to have a lower number here but sometimes we get no good clusters for the first two seeds?
 # (on laura-mb for example).
-@wrap_test_run(take_n = 5)
+@wrap_test_run(take_n = 2)
 def seeds_fn(c):
-    # TODO get the full datapath from c
-    return os.listdir(path.join(datapath(c), 'seeds'))
+    study = c['dataset']['study']
+    subject = c['subject']
+    seeds = heads.get_seeds(study, subject)
+    return seeds
 
 
 # Initialize parameter set nest
@@ -357,21 +355,7 @@ def valid_partition(fname):
         unique_ids = partition['unique_ids'].split(':')
         return len(unique_ids) >= 2 # Do we want >2 or >=2?
 
-
-cluster_step = re.compile('.*-plus-(?P<cluster_step>\d+)').match
-def partition_metadata(c, filename):
-    return {'cluster_step': cluster_step(filename).group('cluster_step')}
-
-# Each c["partition"] value actually points to the annotations for that partition... a little weird but...
-@w.add_nest('partition', metadata=partition_metadata)
-@wrap_test_run()
-def annotations(c):
-    """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
-    for actual analysis."""
-    return map(path_base_root,
-               # We might eventually want to handle small partitions more manually, so there's data on the other end, but for now, filter is easiest
-               filter(valid_partition,
-                      glob.glob(path.join(input_dir(c), "*-plus-*.csv"))))
+# Setting up the partition nest level
 
 def partitions(c):
     "Returns the `partition.csv` file path with all the partition information for every partition output by partis."
@@ -387,6 +371,36 @@ def annotation(c):
 def partis_log(c):
     return path.join(input_dir(c), 'partition.log')
 
+def partition_file_metadata(partition_handle, cluster_step):
+    parts = list(csv.DictReader(partition_handle))
+    for i, x in enumerate(parts):
+        x['index'] = i
+        x['n_clusters'] = int(x['n_clusters'])
+        x['logprob'] = float(x['logprob'])
+    best_part = max(parts, key=lambda x: x['logprob'])
+    best_i = best_part['index']
+    cluster_i = best_i + cluster_step
+    return parts[cluster_i]
+
+cluster_step = re.compile('.*-plus-(?P<cluster_step>\d+)').match
+def partition_metadata(c, filename):
+    step = int(cluster_step(filename).group('cluster_step'))
+    metadata = partition_file_metadata(file(partitions(c)), step)
+    return {'cluster_step': step,
+            'logprob': metadata['logprob'],
+            'n_clusters': metadata['n_clusters']}
+
+# Each c["partition"] value actually points to the annotations for that partition... a little weird but...
+@w.add_nest(metadata=partition_metadata)
+@wrap_test_run()
+def partition(c):
+    """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
+    for actual analysis."""
+    return map(path_base_root,
+               # We might eventually want to handle small partitions more manually, so there's data on the other end, but for now, filter is easiest
+               filter(valid_partition,
+                      glob.glob(path.join(input_dir(c), "*-plus-*.csv"))))
+
 # This is a little silly, but gives us the right semantics for partitions > clusters
 #w.add('cluster', ['cluster0'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
 w.add('cluster', ['cluster0'])
@@ -395,7 +409,7 @@ w.add('cluster', ['cluster0'])
 def _process_partis(outdir, c):
     # Should get this to explicitly depend on cluster0.fa
     return env.Command(
-            [path.join(outdir, x) for x in ['base_metadata.json', 'cluster0.fa', 'base_seqmeta.csv']],
+            [path.join(outdir, x) for x in ['partis_metadata.json', 'cluster0.fa', 'base_seqmeta.csv']],
             [partitions(c), annotation(c)],
             'process_partis.py -F ' +
                 '--partition ${SOURCES[0]} ' +
@@ -408,7 +422,7 @@ def _process_partis(outdir, c):
                 '--paths-relative-to ' + dataset_outdir(c))
 
 @w.add_target(ingest=True)
-def base_metadata(outdir, c):
+def partis_metadata(outdir, c):
     return c['_process_partis'][0]
 
 @w.add_target()
@@ -440,7 +454,7 @@ def translated_inseqs_(outdir, c):
         #c['inseqs'],
         #'seqmagick convert --translate dna2protein $SOURCE $TARGET')
         [path.join(outdir, "translated_inseqs.fa"), path.join(outdir, 'inseqs_trimmed.fa')],
-        [c['base_metadata'], c['inseqs']],
+        [c['partis_metadata'], c['inseqs']],
         'translate_seqs.py $SOURCES $TARGET -t ${TARGETS[1]}')
 
 @w.add_target()
@@ -634,6 +648,7 @@ def cluster_aa(outdir, c):
         path.join(outdir, 'cluster_aa.fa'),
         c['asr_seqs'],
         "sed 's/\?/N/g' $SOURCE | seqmagick convert --translate dna2protein - $TARGET")
+
 
 
 # Popping out
