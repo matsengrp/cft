@@ -76,15 +76,11 @@ def parse_args():
         '-F', '--remove-frameshifts',
         help='if set, tries to remove seqs with frameshift indels from the output',
         action="store_true")
-    log_or_param_dir = parser.add_mutually_exclusive_group(required=True)
-    log_or_param_dir.add_argument(
+    parser.add_argument(
         '--partis-log',
         help='log file containing relevant information about partis run (required if --param_dir not specified)',
+        required=True,
         type=existing_file)
-    log_or_param_dir.add_argument(
-        '--param-dir',
-        help='parameter directory passed to partis call',
-        type=str)
     #parser.add_argument('--select_clustering', dest='select_clustering',
     #        help='choose a row from partition file for a different cluster',
     #        default=0, type=int)
@@ -175,7 +171,8 @@ def process_data(annot_file, part_file, locus, glpath):
     """
 
     seed_ids = []
-    part_df = pd.read_csv(part_file, converters={'seed_unique_id':str})
+    part_df = pd.read_csv(part_file, converters={'seed_unique_id': str})
+    # I _think_ this is the only place we use the the part_df, at least here
     if 'seed_unique_id' in part_df.columns:
         seed_ids = part_df.loc[0]['seed_unique_id'].split(':')
 
@@ -202,10 +199,11 @@ def process_data(annot_file, part_file, locus, glpath):
         current_df['mut_freqs'] = line['mut_freqs'] + [0.0] # mocking last entry
         for col in to_keep:
             current_df[col] = line[col]
-        current_df['cluster'] = str(idx)
+        current_df['cluster'] = idx
         current_df['has_seed'] = any(seed_id in line['unique_ids'] for seed_id in \
                 seed_ids)
         current_df['seed_ids'] = ':'.join(seed_ids)
+        #current_df['seed_ids'] = map(seed_ids)
         current_df['cdr3_start'] = line['codon_positions']['v']
         for gene in 'vdj':
             for pos in ['start', 'end']:
@@ -215,7 +213,7 @@ def process_data(annot_file, part_file, locus, glpath):
     return output_df
 
 
-def write_json(df, fname, mod_date, cluster_base, annotations, partition, meta, outdir, paths_relative_to):
+def write_json(df, fname, mod_date, cluster_base, annotations, partition, outdir, paths_relative_to):
     """
     Write metatdata to json file from dataframe
     """
@@ -229,39 +227,29 @@ def write_json(df, fname, mod_date, cluster_base, annotations, partition, meta, 
         return merged_dict
 
 
-    def jsonify(df, cluster_id, mod_date, cluster_base, meta):
+    def jsonify(df, cluster_id, mod_date, cluster_base):
         data = df.iloc[0]
+        def attrs(base):
+            return [base + '_' + k for k in ['gene', 'start', 'end']]
+        data_ = {k: data[k] for k in attrs('v') + attrs('d') + attrs('j') + ['cdr3_length', 'cdr3_start']}
+        data_['has_seed'] = bool(data['has_seed'])
         return tripl.namespaced('cft.cluster',
-            seqs_file = os.path.relpath(os.path.join(outdir, cluster_base+cluster_id+'.fa'), paths_relative_to),
             id = cluster_id,
+            seqs_file = os.path.relpath(os.path.join(outdir, cluster_base+str(cluster_id)+'.fa'), paths_relative_to),
             n_seqs = len(df), # Note... this count naive; good idea?
-            v_gene = data['v_gene'],
-            v_start = data['v_start'],
-            v_end = data['v_end'],
-            d_gene = data['d_gene'],
-            d_start = data['d_start'],
-            d_end = data['d_end'],
-            j_gene = data['j_gene'],
-            j_start = data['j_start'],
-            j_end = data['j_end'],
-            cdr3_length = data['cdr3_length'],
-            cdr3_start = data['cdr3_start'],
-            #seed = {'cft.seed:id': data['seed_ids']},
-            has_seed = str(data['has_seed']),
             last_modified = time.ctime(mod_date),
             annotation_file = annotations,
             partition_file = partition,
-            **meta)
+            **data_)
 
-    arr = [jsonify(g, k, mod_date, cluster_base, meta) \
+    arr = [jsonify(g, k, mod_date, cluster_base) \
             for k,g in df.groupby(['cluster'])]
     with open(fname, 'wb') as outfile:
         # Should fix so we can have multiple clusters more easily
         json.dump(arr[0],
                   outfile,
                   sort_keys=True,
-                  indent=4,
-                  separators=(',', ': '))
+                  indent=4)
 
 
 def iter_seqs(df):
@@ -324,19 +312,8 @@ def main():
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    #meta = base_metadata(args.output_dir)
-
-    if args.partis_log is not None:
-        print("Inferring chain and gls from partis log")
-        locus, inferred_gls = process_log_file(args.partis_log)
-    else:
-        print("Must now specify partis log file")
-        #print("Inferring chain and gls from path and param dir cl arg")
-        #print("This may be brokerz")
-        #chain = meta['gene'][1].lower()
-        ## I'm not 100% positive about this; But the values here are the directories in partis/data/germlines/human
-        #locus = dict(h='igh', k='igk', l='igl', a='tra', b='trb', d='trd', g='trg')[chain]
-        #inferred_gls = args.param_dir + '/hmm/germline-sets'
+    print("Inferring chain and gls from partis log")
+    locus, inferred_gls = process_log_file(args.partis_log)
 
     melted_annotations = process_data(args.annotations,
                                       args.partition,
@@ -352,15 +329,12 @@ def main():
                          args.output_dir,
                          args.cluster_base)
 
-    meta = {}
-
     write_json(melted_annotations,
-               os.path.join(args.output_dir, 'base_metadata.json'),
+               os.path.join(args.output_dir, 'partis_metadata.json'),
                os.path.getmtime(args.annotations),
                args.cluster_base,
                args.annotations,
                args.partition,
-               meta,
                args.output_dir,
                args.paths_relative_to)
 
