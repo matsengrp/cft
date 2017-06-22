@@ -578,6 +578,21 @@ def seqmeta(outdir, c):
         [c['base_seqmeta'], c['merge_translations']],
         'merge_timepoints_and_duplicity.py $SOURCES $TARGET')
 
+@w.add_target()
+def full_orig_seqs(outdir, c):
+    if c['dataset']['study'] == 'kate-qrs':
+        return c['infname_base'] + '.fa'
+    elif c['dataset']['study'] == 'laura-mb':
+        return c['infname_base'] + '.fasta'
+
+@w.add_target(ingest=True)
+def orig_seqs(outdir, c):
+    "The original input seqs to partis, including the non-VDJ, trimmed out regions"
+    return env.Command(
+        path.join(outdir, 'orig_seqs.fa'),
+        [c['pruned_ids'], c['full_orig_seqs']],
+        "seqmagick convert --include-from-file $SOURCES $TARGET")
+
 # Convert to phylip format for dnapars/dnaml
 @w.add_target()
 def phy(outdir, c):
