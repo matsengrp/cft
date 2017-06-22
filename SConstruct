@@ -554,7 +554,7 @@ def pruned_seqs(outdir, c):
 
 infname_regex = re.compile('.*--infname\s+(?P<infname_base>\S+)\.fa')
 @w.add_target()
-def merge_translations(outdir, c):
+def infname_base(outdir, c):
     "Returns the filename of the translation file for the merge operation, which includes timepoint info"
     with open(partis_log(c), 'r') as fh:
         partis_command = fh.readline()
@@ -562,23 +562,21 @@ def merge_translations(outdir, c):
     partis_command = partis_command.replace('kate-qrs-2016-09-09', 'kate-qrs')
     partis_command = partis_command.replace('laura-mb-2016-12-22', 'laura-mb')
     infname_base = infname_regex.match(partis_command).group('infname_base')
-    return infname_base + '-translations.csv'
+    return infname_base
 
+infname_regex = re.compile('.*--infname\s+(?P<infname_base>\S+)\.fa')
 @w.add_target()
-def timepoint_mapping(outdir, c):
-    "Subset the merge_translations mapping to just the sequence name and the timepoint for the pruned seqs"
-    return env.Command(
-        path.join(outdir, "timepoint_mapping.csv"),
-        [c['pruned_ids'], c['merge_translations']],
-        "csvgrep -c new -f $SOURCES | sed '1 s/new/sequence/' | csvcut -c sequence,timepoint > $TARGET")
+def merge_translations(outdir, c):
+    "Returns the filename of the translation file for the merge operation, which includes timepoint info"
+    return c['infname_base'] + '-translations.csv'
 
-@w.add_target()
+@w.add_target(ingest=True, attr_map={'bio.seq:id': 'sequence', 'cft.timepoint:id': 'timepoint', 'cft.seq:duplicity': 'duplicity'})
 def seqmeta(outdir, c):
     "Merge the base_seqmeta from process_partis with the timepoint mappings"
     return env.Command(
         path.join(outdir, 'seqmeta.csv'),
-        [c['base_seqmeta'], c['timepoint_mapping']],
-        'csvjoin -c unique_ids,sequence $SOURCES > $TARGET')
+        [c['base_seqmeta'], c['merge_translations']],
+        'merge_timepoints_and_duplicity.py $SOURCES $TARGET')
 
 # Convert to phylip format for dnapars/dnaml
 @w.add_target()
