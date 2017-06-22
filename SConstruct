@@ -652,8 +652,15 @@ def asr_tree_svg(outdir, c):
     return c['processed_asr'][1]
 
 @w.add_target(ingest=True)
-def asr_seqs(outdir, c):
+def _asr_seqs(outdir, c):
     return c['processed_asr'][2]
+
+@w.add_target(ingest=True)
+def asr_seqs(outdir, c):
+    return env.Command(
+        path.join(outdir, 'asr_seqs.fa'),
+        [c['asr_tree'], c['pruned_seqs']],
+        'joker.py $SOURCES $TARGET')
 
 @w.add_target()
 def cluster_aa(outdir, c):
