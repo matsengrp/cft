@@ -96,6 +96,6 @@ ENV/
 _output
 output
 data
-./tripl
-./nestly
-./cftweb
+/tripl
+/nestly
+/cftweb
