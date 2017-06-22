@@ -97,3 +97,5 @@ _output
 output
 data
 ./tripl
+./nestly
+./cftweb
