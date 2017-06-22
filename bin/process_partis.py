@@ -195,6 +195,7 @@ def process_data(annot_file, part_file, locus, glpath):
         utils.add_implicit_info(glfo, line)
         current_df['unique_ids'] = line['unique_ids'] + ['naive{}'.format(idx)]
         current_df['seqs'] = line['input_seqs'] + [line['naive_seq']]
+        current_df['duplicates'] = [':'.join(x) for x in line['duplicates']] + [None]
         current_df['frameshifts'] = infer_frameshifts(line) + [False] # mocking last entry
         current_df['mut_freqs'] = line['mut_freqs'] + [0.0] # mocking last entry
         for col in to_keep:
@@ -295,7 +296,7 @@ def write_melted_partis(df, fname):
         index=False,
         columns=[
             'unique_ids', 'v_gene', 'd_gene', 'j_gene', 'cdr3_length',
-            'cluster', 'has_seed', 'frameshifts', 'mut_freqs'])
+            'cluster', 'has_seed', 'frameshifts', 'duplicates', 'mut_freqs'])
 
 
 def melted_path(output_dir, melted_base):

@@ -12,6 +12,7 @@ from ete3 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
 import csv
 import re
 import os
+import math
 from warnings import warn
 from collections import defaultdict
 import colorbrewer
@@ -176,11 +177,56 @@ def timepoint_colors(annotations):
 
 
 def timepoint_legend(ts, tp_colors):
+    ts.legend.add_face(ete3.faces.TextFace(""), 0)
+    ts.legend.add_face(ete3.faces.TextFace("Timepoints"), 1)
     for timepoint, color in tp_colors.iteritems():
         ts.legend.add_face(ete3.faces.CircleFace(12, color, "circle"), 0)
         ts.legend.add_face(ete3.faces.TextFace(timepoint), 1)
     ts.legend.add_face(ete3.faces.CircleFace(8, 'brown', "circle"), 0)
     ts.legend.add_face(ete3.faces.TextFace("seedlineage"), 1)
+
+
+def scale_node(size):
+    return 6 + (math.log(size) * 2)
+
+
+def duplicity_legend(ts):
+    ts.legend.add_face(ete3.faces.TextFace(""), 0)
+    ts.legend.add_face(ete3.faces.TextFace("Duplicity"), 1)
+    for count in [1, 10, 100]:
+        ts.legend.add_face(ete3.faces.CircleFace(scale_node(count), 'grey', "circle"), 0)
+        ts.legend.add_face(ete3.faces.TextFace(str(count)), 1)
+
+
+def leaf_style(node, seqmeta, tp_colors, highlight_node=None):
+    name = node.name + " (mf={}) ".format(round(float(seqmeta['mut_freqs']), 3))
+    F = TextFace(name)
+    add_face_to_node(F, node, column=1, position='branch-right')
+    ## Style the node with color corresponding to timepoint
+    nstyle = NodeStyle()
+    #if node.name == highlight_node:
+        #nstyle['fgcolor'] = 'brown'
+    #else:
+        #nstyle['fgcolor'] = tp_colors[seqmeta['timepoint']]
+    nstyle['size'] = 0
+    node.set_style(nstyle)
+    # Style the node with color corresponding to timepoint
+    if False:
+        nstyle = NodeStyle()
+        if node.name == highlight_node:
+            nstyle['fgcolor'] = 'brown'
+        else:
+            nstyle['fgcolor'] = tp_colors[seqmeta['timepoint']]
+        nstyle['size'] = 14
+        node.set_style(nstyle)
+    timepoints = filter(lambda x: x, seqmeta['timepoints'].split(':'))
+    duplicities = [int(n) for n in seqmeta['timepoint_duplicities'].split(':') if n]
+    duplicity = int(seqmeta['duplicity'])
+    percents = [d * 100 / duplicity for d in duplicities]
+    colors = [tp_colors[t] for t in timepoints]
+    pie_node = ete3.PieChartFace(percents, width=scale_node(duplicity), height=scale_node(duplicity),
+            colors=colors, line_color='black')
+    add_face_to_node(pie_node, node, column=0)
 
 
 def render_tree(fname, tree, annotations, highlight_node):
@@ -192,22 +238,10 @@ def render_tree(fname, tree, annotations, highlight_node):
     seed_lineage = [n for n in iter_lineage(tree, highlight_node)]
 
     def my_layout(node):
-        name = node.name
         seqmeta = annotations.get(node.name)
         # handle leaves
         if seqmeta and not re.compile(".*naive.*").match(node.name):
-            # Add the node name for tips
-            name = node.name + " (mf={}) ".format(round(float(seqmeta['mut_freqs']), 3))
-            F = TextFace(name)
-            add_face_to_node(F, node, column=0, position='branch-right')
-            # Style the node with color corresponding to timepoint
-            nstyle = NodeStyle()
-            if node.name == highlight_node:
-                nstyle['fgcolor'] = 'brown'
-            else:
-                nstyle['fgcolor'] = tp_colors[seqmeta['timepoint']]
-            nstyle['size'] = 14
-            node.set_style(nstyle)
+            leaf_style(node, seqmeta, tp_colors, highlight_node)
         # Deal with naive and true internal nodes
         else:
             # Have to set all node sizes to 0 or we end up distorting the x-axis
@@ -223,6 +257,7 @@ def render_tree(fname, tree, annotations, highlight_node):
 
     ts.layout_fn = my_layout
     timepoint_legend(ts, tp_colors)
+    duplicity_legend(ts)
     # whether or not we had rerooted on naive before, we want to do so for the SVG tree
     if 'naive' not in tree.name:
         tree = reroot_tree(tree, '.*naive.*')
@@ -233,7 +268,7 @@ def render_tree(fname, tree, annotations, highlight_node):
 def get_args():
     def seqmeta_input(fname):
         with open(fname, 'r') as fhandle:
-            return dict((row['unique_ids'], row) for row in csv.DictReader(fhandle))
+            return dict((row['sequence'], row) for row in csv.DictReader(fhandle))
 
     def existing_file(fname):
         """
