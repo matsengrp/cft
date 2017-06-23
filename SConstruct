@@ -94,7 +94,7 @@ AddOption('--base-datapath',
 AddOption('--asr-progs',
         dest='asr_progs',
         metavar='LIST',
-        default='dnaml:dnapars',
+        default='dnaml:dnapars:raxml',
         help="""Specify ':' separated list of ancestral state reconstruction programs to run. Options are `dnaml` and
         `dnapars`. Defaults to running both (`dnaml:dnapars`)""")
 
@@ -529,7 +529,7 @@ def fasttree(outdir, c):
 
 # pruning is dependent on which program we use, dnapars seems to handle bigger trees more quickly
 def prune_n(c):
-    prune_n_ = {'dnapars': 300, 'dnaml': 100}
+    prune_n_ = {'dnapars': 300, 'dnaml': 100, 'raxml': 100}
     return prune_n_[asr_prog(c)]
 
 # calculate list of sequences to be pruned
@@ -609,51 +609,59 @@ def asr_config(outdir, c):
         c['phy'],
         'python bin/mkconfig.py $SOURCE ' + asr_prog(c) + ' > $TARGET')
 
+
 # Run dnapars/dnaml by passing in the "config file" as stdin hoping the menues all stay sane
 # (Aside: If gets any messier can look at Expect; https://en.wikipedia.org/wiki/Expect)
 @w.add_target()
-def asr(outdir, c):
+def _asr(outdir, c):
     "run dnapars/dnaml (from phylip package) to create tree with inferred sequences at internal nodes"
-    tgt = env.SRun(
-        path.join(outdir, "outfile"),
-        c['asr_config'],
-        'cd ' + outdir + ' && rm -f outtree && ' + asr_prog(c) + ' < $SOURCE.file > ' + asr_prog(c) + '.log',
-        ignore_errors=True)
-    # Manually depend on phy so that we rerun dnapars/dnaml if the input sequences change (without this, dnapars/dnaml will
-    # only get rerun if one of the targets are removed or if the iput asr_config file is changed).
-    env.Depends(tgt, c['phy'])
-    return tgt
+    if asr_prog(c) in {'dnapars', 'dnaml'}:
+        phylip_out = env.SRun(
+            path.join(outdir, "outfile"),
+            c['asr_config'],
+            'cd ' + outdir + ' && rm -f outtree && ' + asr_prog(c) + ' < $SOURCE.file > ' + asr_prog(c) + '.log',
+            ignore_errors=True)
+        # Manually depend on phy so that we rerun dnapars/dnaml if the input sequences change (without this, dnapars/dnaml will
+        # only get rerun if one of the targets are removed or if the iput asr_config file is changed).
+        basename = 'asr'
+        tgt = env.Command(
+                [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg']],
+                [phylip_out, c['seqmeta']],
+                # Note that `-` at the beggining lets things keep running if there's an error here; This is
+                # protecting us at the moment from clusters with 2 seqs. We should be catching this further
+                # upstream and handling more appropriately, but for now this is an easy stopgap...
+                "- xvfb-run -a bin/process_asr.py --seed " + c['seed'] + " --outdir " + outdir + 
+                    " --basename " + basename + " $SOURCES")
+        asr_tree, asr_tree_svg = tgt
+        # manually depnd on this because the script isn't in first position
+        env.Depends(tgt, 'bin/process_asr.py')
+    elif asr_prog(c) == 'raxml':
+        asr_tree = env.SRun(
+            path.join(outdir, 'asr.nwk'),
+            c['pruned_seqs'],
+            # Question should use -T for threads? how many?
+            'raxml.py --rapid-bootstrap 10 -x 3243 $SOURCE $TARGET')
+        asr_tree_svg = env.Command(
+            path.join(outdir, 'asr.svg'),
+            [asr_tree, c['seqmeta']],
+            'xvfb-run -a bin/plot_tree.py $SOURCES $TARGET --seed ' + c['seed'])
+    else:
+        print("something has gone terribly wrong")
 
+    return [asr_tree, asr_tree_svg]
 
-@w.add_target()
-def processed_asr(outdir, c):
-    """parse dnapars/dnaml output into fasta and newick files, and make SVG format tree with ETE package.
-    xvfb-run is needed because of issue https://github.com/etetoolkit/ete/issues/101"""
-    basename = 'asr'
-    tgt = env.Command(
-            [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg', 'fa']],
-            [c['asr'], c['seqmeta']],
-            # Note that `-` at the beggining lets things keep running if there's an error here; This is
-            # protecting us at the moment from clusters with 2 seqs. We should be catching this further
-            # upstream and handling more appropriately, but for now this is an easy stopgap...
-            "- xvfb-run -a bin/process_asr.py --seed " + c['seed'] + " --outdir " + outdir + 
-                " --basename " + basename + " $SOURCES")
-    # Manually depend on dnaml2tree.py/dnapars.py script, since it doesn't fall in the first position within the command
-    # string.
-    env.Depends(tgt, 'bin/process_asr.py')
-    return tgt
 
 @w.add_target(ingest=True)
 def asr_tree(outdir, c):
-    return c['processed_asr'][0]
+    return c['_asr'][0]
 
 @w.add_target(ingest=True)
 def asr_tree_svg(outdir, c):
-    return c['processed_asr'][1]
+    return c['_asr'][1]
 
-@w.add_target(ingest=True)
-def _asr_seqs(outdir, c):
-    return c['processed_asr'][2]
+#@w.add_target(ingest=True)
+#def _asr_seqs(outdir, c):
+    #return c['_asr'][2]
 
 @w.add_target(ingest=True)
 def asr_seqs(outdir, c):

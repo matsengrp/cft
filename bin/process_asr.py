@@ -8,18 +8,17 @@ from __future__ import print_function
 
 import argparse
 import ete3
-from ete3 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
 import csv
 import re
 import os
-import math
 from warnings import warn
 from collections import defaultdict
-import colorbrewer
 
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+
+import plot_tree
 
 
 # iterate over recognized sections in the phylip output file.
@@ -109,7 +108,7 @@ def build_tree(sequences, parents):
     # build an ete tree
     # first a dictionary of disconnected nodes
     def mknode(r):
-        n = Tree(
+        n = ete3.Tree(
             name=r.id,
             dist=parents[r.id][1] if r.id in parents else 0,
             format=1)
@@ -131,7 +130,6 @@ def build_tree(sequences, parents):
     if orphan_nodes != 1:
         raise RuntimeError("The tree is not properly rooted; expected a single root but there are {}.".format(orphan_nodes))
     return tree
-
 
 def find_node(tree, pattern):
     regex = re.compile(pattern).search
@@ -157,111 +155,6 @@ def reroot_tree(tree, pattern='.*naive.*'):
         node.dist = 0
         tree = node
     return tree
-
-
-# iterate up a lineage toward the root.
-# lineage starts at node whose name matches pattern.
-def iter_lineage(tree, pattern):
-    node = find_node(tree, pattern)
-    while node:
-        yield node
-        node = node.up
-
-
-def timepoint_colors(annotations):
-    # Should really improve this sort so that we're fully chronological
-    timepoints = sorted(set(x['timepoint'] for x in annotations.values()))
-    colors = ['#%02x%02x%02x' % c for c in colorbrewer.RdYlBu[max(len(timepoints), 3)]]
-    # note:      ^^^ this bit    converts into a hex
-    return dict(zip(timepoints, colors))
-
-
-def timepoint_legend(ts, tp_colors):
-    ts.legend.add_face(ete3.faces.TextFace(""), 0)
-    ts.legend.add_face(ete3.faces.TextFace("Timepoints"), 1)
-    for timepoint, color in tp_colors.iteritems():
-        ts.legend.add_face(ete3.faces.CircleFace(12, color, "circle"), 0)
-        ts.legend.add_face(ete3.faces.TextFace(timepoint), 1)
-    ts.legend.add_face(ete3.faces.CircleFace(8, 'brown', "circle"), 0)
-    ts.legend.add_face(ete3.faces.TextFace("seedlineage"), 1)
-
-
-def scale_node(size):
-    return 6 + (math.log(size) * 2)
-
-
-def duplicity_legend(ts):
-    ts.legend.add_face(ete3.faces.TextFace(""), 0)
-    ts.legend.add_face(ete3.faces.TextFace("Duplicity"), 1)
-    for count in [1, 10, 100]:
-        ts.legend.add_face(ete3.faces.CircleFace(scale_node(count), 'grey', "circle"), 0)
-        ts.legend.add_face(ete3.faces.TextFace(str(count)), 1)
-
-
-def leaf_style(node, seqmeta, tp_colors, highlight_node=None):
-    name = node.name + " (mf={}) ".format(round(float(seqmeta['mut_freqs']), 3))
-    F = TextFace(name)
-    add_face_to_node(F, node, column=1, position='branch-right')
-    ## Style the node with color corresponding to timepoint
-    nstyle = NodeStyle()
-    #if node.name == highlight_node:
-        #nstyle['fgcolor'] = 'brown'
-    #else:
-        #nstyle['fgcolor'] = tp_colors[seqmeta['timepoint']]
-    nstyle['size'] = 0
-    node.set_style(nstyle)
-    # Style the node with color corresponding to timepoint
-    if False:
-        nstyle = NodeStyle()
-        if node.name == highlight_node:
-            nstyle['fgcolor'] = 'brown'
-        else:
-            nstyle['fgcolor'] = tp_colors[seqmeta['timepoint']]
-        nstyle['size'] = 14
-        node.set_style(nstyle)
-    timepoints = filter(lambda x: x, seqmeta['timepoints'].split(':'))
-    duplicities = [int(n) for n in seqmeta['timepoint_duplicities'].split(':') if n]
-    duplicity = int(seqmeta['duplicity'])
-    percents = [d * 100 / duplicity for d in duplicities]
-    colors = [tp_colors[t] for t in timepoints]
-    pie_node = ete3.PieChartFace(percents, width=scale_node(duplicity), height=scale_node(duplicity),
-            colors=colors, line_color='black')
-    add_face_to_node(pie_node, node, column=0)
-
-
-def render_tree(fname, tree, annotations, highlight_node):
-    "render tree SVG"
-    ts = TreeStyle()
-    ts.show_leaf_name = False
-    tp_colors = timepoint_colors(annotations)
-
-    seed_lineage = [n for n in iter_lineage(tree, highlight_node)]
-
-    def my_layout(node):
-        seqmeta = annotations.get(node.name)
-        # handle leaves
-        if seqmeta and not re.compile(".*naive.*").match(node.name):
-            leaf_style(node, seqmeta, tp_colors, highlight_node)
-        # Deal with naive and true internal nodes
-        else:
-            # Have to set all node sizes to 0 or we end up distorting the x-axis
-            nstyle = NodeStyle()
-            nstyle['size'] = 0
-            node.set_style(nstyle)
-            # Highlight just those nodes in the seedlineage which have nonzero branch lengths, or bad things
-            if node in seed_lineage and node.dist > 0:
-                position = "float"
-                # Note; we use circleface instead of node style to avoid borking the x-axis
-                circle_face = ete3.CircleFace(radius=5, color='brown', style="circle")
-                add_face_to_node(circle_face, node, column=0, position=position)
-
-    ts.layout_fn = my_layout
-    timepoint_legend(ts, tp_colors)
-    duplicity_legend(ts)
-    # whether or not we had rerooted on naive before, we want to do so for the SVG tree
-    if 'naive' not in tree.name:
-        tree = reroot_tree(tree, '.*naive.*')
-    tree.render(fname, tree_style=ts)
 
 
 
@@ -319,7 +212,7 @@ def main():
     fname = outbase + '.nwk'
     tree.write(format=1, format_root_node=True, outfile=fname)
 
-    render_tree(outbase+'.svg', tree, args.seqmeta, args.seed)
+    plot_tree.render_tree(outbase+'.svg', tree, args.seqmeta, args.seed)
 
 
 if __name__ == "__main__":
