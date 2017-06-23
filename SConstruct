@@ -695,23 +695,8 @@ def cluster_aa(outdir, c):
 w.pop('seed')
 
 
-# Published version of the data to something like output/build/{date-dataset-tag-datapaths-asr-progs}
-
-# This is sort of getting handled now by ingest? So maybe don't need?
-# For now leavin out because failing with new keywords
-#@w.add_target()
-#def published_build(_, c):
-    #publish_outdir = path.join(publish_path(), dataset_outdir(c))
-    #return env.Command(
-        #path.join(publish_outdir, 'metadata.json'),
-        #c['metadata'],
-        #'publish_output.py $SOURCE ' + publish_path())
-
-
 # Go back to the base nest level, forcing a metadata write, and print help for cftweb
 
 w.pop('dataset')
-
-
 
 
