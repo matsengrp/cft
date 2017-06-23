@@ -601,14 +601,6 @@ def phy(outdir, c):
         c['pruned_seqs'],
         "seqmagick convert $SOURCE $TARGET")
 
-# Create a config file for dnapars/dnaml (a persnickety old program with interactive menues...)
-@w.add_target()
-def asr_config(outdir, c):
-    return env.Command(
-        path.join(outdir, asr_prog(c) + ".cfg"),
-        c['phy'],
-        'python bin/mkconfig.py $SOURCE ' + asr_prog(c) + ' > $TARGET')
-
 
 # Run dnapars/dnaml by passing in the "config file" as stdin hoping the menues all stay sane
 # (Aside: If gets any messier can look at Expect; https://en.wikipedia.org/wiki/Expect)
@@ -616,9 +608,13 @@ def asr_config(outdir, c):
 def _asr(outdir, c):
     "run dnapars/dnaml (from phylip package) to create tree with inferred sequences at internal nodes"
     if asr_prog(c) in {'dnapars', 'dnaml'}:
+        config = env.Command(
+            path.join(outdir, asr_prog(c) + ".cfg"),
+            c['phy'],
+            'python bin/mkconfig.py $SOURCE ' + asr_prog(c) + ' > $TARGET')
         phylip_out = env.SRun(
             path.join(outdir, "outfile"),
-            c['asr_config'],
+            config,
             'cd ' + outdir + ' && rm -f outtree && ' + asr_prog(c) + ' < $SOURCE.file > ' + asr_prog(c) + '.log',
             ignore_errors=True)
         # Manually depend on phy so that we rerun dnapars/dnaml if the input sequences change (without this, dnapars/dnaml will
@@ -635,20 +631,25 @@ def _asr(outdir, c):
         asr_tree, asr_tree_svg = tgt
         # manually depnd on this because the script isn't in first position
         env.Depends(tgt, 'bin/process_asr.py')
+        return [asr_tree, asr_tree_svg]
     elif asr_prog(c) == 'raxml':
-        asr_tree = env.SRun(
-            path.join(outdir, 'asr.nwk'),
+        asr_supports_tree = env.SRun(
+            path.join(outdir, 'asr.sup.nwk'),
             c['pruned_seqs'],
             # Question should use -T for threads? how many?
-            'raxml.py --rapid-bootstrap 10 -x 3243 $SOURCE $TARGET')
+            'raxml.py --rapid-bootstrap 30 -x 3243 $SOURCE $TARGET')
         asr_tree_svg = env.Command(
             path.join(outdir, 'asr.svg'),
-            [asr_tree, c['seqmeta']],
-            'xvfb-run -a bin/plot_tree.py $SOURCES $TARGET --seed ' + c['seed'])
+            [asr_supports_tree, c['seqmeta']],
+            'xvfb-run -a bin/plot_tree.py $SOURCES $TARGET --supports --seed ' + c['seed'])
+        asr_tree = env.Command(
+            path.join(outdir, 'asr.nwk'),
+            asr_supports_tree,
+            'name_internal_nodes.py $SOURCE $TARGET')
+        return [asr_tree, asr_tree_svg, asr_supports_tree]
     else:
         print("something has gone terribly wrong")
 
-    return [asr_tree, asr_tree_svg]
 
 
 @w.add_target(ingest=True)
@@ -658,6 +659,12 @@ def asr_tree(outdir, c):
 @w.add_target(ingest=True)
 def asr_tree_svg(outdir, c):
     return c['_asr'][1]
+
+@w.add_target()
+def asr_supports_tree(outdir, c):
+    vals = c['_asr']
+    if len(vals) > 2:
+        return c['_asr'][2]
 
 #@w.add_target(ingest=True)
 #def _asr_seqs(outdir, c):

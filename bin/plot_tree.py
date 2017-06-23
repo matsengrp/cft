@@ -108,7 +108,7 @@ def leaf_style(node, seqmeta, tp_colors, highlight_node=None):
     ete3.add_face_to_node(pie_node, node, column=0)
 
 
-def render_tree(fname, tree, annotations, highlight_node):
+def render_tree(fname, tree, annotations, highlight_node, supports=False):
     "render tree SVG"
     ts = ete3.TreeStyle()
     ts.show_leaf_name = False
@@ -135,7 +135,8 @@ def render_tree(fname, tree, annotations, highlight_node):
                 ete3.add_face_to_node(circle_face, node, column=0, position=position)
 
     ts.layout_fn = my_layout
-    ts.show_branch_support = True
+    if supports:
+        ts.show_branch_support = True
     timepoint_legend(ts, tp_colors)
     duplicity_legend(ts)
     # whether or not we had rerooted on naive before, we want to do so for the SVG tree
@@ -163,6 +164,9 @@ def get_args():
         'tree', type=existing_file,
         help='tree file, in newick format')
     parser.add_argument(
+        '--supports', action='store_true',
+        help='tree file, in newick format')
+    parser.add_argument(
         'seqmeta', type=seqmeta_input,
         help="Sequence metadata file for annotating mut_freqs")
     parser.add_argument('svg_out', help="output file")
@@ -177,12 +181,12 @@ def main():
 
     # get the tree
     with open(args.tree) as fh:
-        tree = ete3.Tree(fh.read(), format=1)
+        tree = ete3.Tree(fh.read(), format=(0 if args.supports else 1))
 
     tree = reroot_tree(tree, 'naive.*')
 
     # write newick file
-    render_tree(args.svg_out, tree, args.seqmeta, args.seed)
+    render_tree(args.svg_out, tree, args.seqmeta, args.seed, supports=args.supports)
 
 
 if __name__ == '__main__':
