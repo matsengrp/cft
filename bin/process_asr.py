@@ -65,7 +65,7 @@ def parse_seqdict(fh, mode='dnaml'):
     fh.next()
     for line in fh:
         m = patterns[mode].match(line)
-        if m:
+        if m and m.group("id") is not '':
             seqs[m.group("id")] += m.group("seq").replace(" ", "")
         elif line.rstrip() == '':
             continue
@@ -84,51 +84,42 @@ def parse_outfile(outfile, seqmeta):
         raise RuntimeError("Conflicting shortened names!")
     def full_name(x):
         return name_map.get(x, x)
+    trees = []
     # Ugg... for compilation need to let python know that these will definely both be defined :-/
-    sequences, parents = [], {}
+    sequences, parents = {}, {}
     with open(outfile, 'rU') as fh:
         for sect in sections(fh):
             if sect == 'parents':
-                parents = { full_name(parent): (full_name(child), dist) for parent, child, dist in iter_edges(fh) }
+                parents = { full_name(child):(full_name(parent), distance) for child, parent, distance in iter_edges(fh) }
             elif sect[0] == 'sequences':
-                d = parse_seqdict(fh, sect[1])
-                sequences = [ SeqRecord(Seq(seq), id=full_name(seq_id), description="")
-                                for seq_id, seq in d.items() ]
+                sequences = parse_seqdict(fh, sect[1])
+                # sanity check;  a valid tree should have exactly one node that is parentless
+                if not len(parents) == len(sequences) - 1:
+                    raise RuntimeError('invalid results attempting to parse {}: there are {} parentless sequences'.format(outfile, len(sequences) - len(parents)))
+                trees.append(build_tree(sequences, parents))
             else:
-                raise RuntimeError("unrecognized phylip setion = {}".format(sect))
-    # sanity check;  a valid tree should have exactly one node that is parentless
-    if not len(parents) == len(sequences) - 1:
-        raise RuntimeError('invalid results attempting to parse {}: there are {} parentless sequences'.format(outfile, len(sequences) - len(parents)))
-
-    return sequences, parents
-
+                raise RuntimeError("unrecognized phylip section = {}".format(sect))
+    return trees
 
 # build a tree from a set of sequences and an adjacency dict.
-def build_tree(sequences, parents):
+def build_tree(sequences, parents, naive='.*naive.*'):
     # build an ete tree
     # first a dictionary of disconnected nodes
-    def mknode(r):
-        n = Tree(
-            name=r.id,
-            dist=parents[r.id][1] if r.id in parents else 0,
-            format=1)
-        n.add_features(seq=r)
-        return n
-
-    nodes = { r.id: mknode(r) for r in sequences }
-
-    # connect the nodes using the parent data
-    orphan_nodes = 0
-    for r in sequences:
-        if r.id in parents:
-            nodes[parents[r.id][0]].add_child(nodes[r.id])
+    nodes = {}
+    for name in sequences:
+        node = Tree()
+        node.name = name
+        node.add_feature('sequence', sequences[node.name])
+        node.dist = parents[name][1] if name in parents else 0
+        nodes[name] = node
+    for name in sequences:
+        if name in parents:
+            nodes[parents[name][0]].add_child(nodes[name])
         else:
-            # node without parent becomes root
-            tree = nodes[r.id]
-            orphan_nodes += 1
-    # there can only be one root
-    if orphan_nodes != 1:
-        raise RuntimeError("The tree is not properly rooted; expected a single root but there are {}.".format(orphan_nodes))
+            tree = nodes[name]
+    # reroot on naive
+    tree = reroot_tree(tree, pattern=naive):
+
     return tree
 
 
@@ -149,6 +140,10 @@ def find_node(tree, pattern):
 def reroot_tree(tree, pattern='.*naive.*'):
     # find all nodes matching pattern
     node = find_node(tree, pattern)
+    if len(node.children) != 0:
+        raise ValueError('specified naive node is not a leaf')
+    if node not in tree.children:
+        raise ValueError('specified naive node is not an outgroup')
     if tree != node:
         tree.remove_child(node)
         node.add_child(tree)
@@ -267,18 +262,17 @@ def main():
     basename = args.basename if args.basename else os.path.basename(args.phylip_outfile)
     outbase = os.path.join(args.outdir, os.path.splitext(basename)[0])
 
-    sequences, parents = parse_outfile(args.phylip_outfile, args.seqmeta)
+    trees = parse_outfile(args.phylip_outfile, args.seqmeta)
 
-    if not sequences or not parents:
-        raise RuntimeError("No sequences were available; are you sure this is a dnaml output file?")
+    # take the first one, arbitrarily
+    tree = trees[0]
+
+    sequences =[SeqRecord(Seq(node.sequence), id=full_name(node.name), description="") for node in tree.traverse()]
 
     # write alignment to fasta
     fname = outbase + '.fa'
     with open(fname, "w") as fh:
         SeqIO.write(sequences, fh, "fasta")
-
-    tree = build_tree(sequences, parents)
-    tree = reroot_tree(tree, 'naive.*')
 
     # write newick file
     fname = outbase + '.nwk'
@@ -286,7 +280,11 @@ def main():
 
     render_tree(outbase+'.svg', tree, args.seqmeta, args.seed)
 
+    # all the trees
+    # write newick file
+    fname = outbase + '.alltrees.nwk'
+    for tree in trees:
+        tree.write(format=1, format_root_node=True, outfile=fname)
 
 if __name__ == "__main__":
     main()
-
