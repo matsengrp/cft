@@ -118,7 +118,7 @@ def build_tree(sequences, parents, naive='.*naive.*'):
         else:
             tree = nodes[name]
     # reroot on naive
-    tree = reroot_tree(tree, pattern=naive):
+    tree = reroot_tree(tree, pattern=naive)
 
     return tree
 
@@ -263,6 +263,13 @@ def main():
     outbase = os.path.join(args.outdir, os.path.splitext(basename)[0])
 
     trees = parse_outfile(args.phylip_outfile, args.seqmeta)
+
+    # for i, tree in enumerate(trees, 1):
+    #     sequences =[SeqRecord(Seq(node.sequence), id=node.name, description="") for node in iter_lineage(tree, args.seed)]
+    #     # write alignment to fasta
+    #     fname = outbase + '.{}.seed_lineage.fa'.format(i)
+    #     with open(fname, "w") as fh:
+    #         SeqIO.write(sequences, fh, "fasta")
 
     # take the first one, arbitrarily
     tree = trees[0]
