@@ -50,7 +50,7 @@ def joiner(base_path):
 
 def raxml(sequences, output_tree, stats_path=None, log_path=None, quiet=False,
         executable='raxmlHPC-SSE3', model='GTRGAMMA', threads=None,
-        rapid_bootstrap=None, bootstrap_seed=None, tmp_prefix=None):
+        rapid_bootstrap=None, bootstrap_seed=None, tmp_prefix=None, outgroup=None):
     name = os.path.basename(os.path.splitext(output_tree)[0])
 
     def f(n):
@@ -70,6 +70,9 @@ def raxml(sequences, output_tree, stats_path=None, log_path=None, quiet=False,
             if rapid_bootstrap:
                 cmd.extend(('-f', 'a', '-x', bootstrap_seed,
                     '-N', rapid_bootstrap))
+
+            if outgroup:
+                cmd.extend(('-o', outgroup))
 
             stdout = stderr = None
             if quiet:
@@ -124,6 +127,8 @@ def main():
             otherwise]""")
     rax_group.add_argument('-m', '--model', default='GTRGAMMA', help="""RAxML
             model to use [default: %(default)s]""")
+    parser.add_argument('-o', '--outgroup',
+            help="""Fix output for tree""")
 
     args = parser.parse_args()
     if not args.executable:
@@ -137,6 +142,7 @@ def main():
               threads=args.threads, model=args.model, log_path=args.log,
               rapid_bootstrap=args.rapid_bootstrap,
               bootstrap_seed=args.bootstrap_seed,
+              outgroup=args.outgroup,
               tmp_prefix=stripext(fp.name, True))
 
 if __name__ == '__main__':
