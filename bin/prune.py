@@ -12,6 +12,7 @@ import subprocess
 import copy
 import tempfile
 import argparse
+import random
 
 
 def lineage_selection(args):
@@ -24,21 +25,24 @@ def lineage_selection(args):
     seed_node = find_node(tree, args.seed)
     if args.seed is 'seed' and seed_node is None:
         seed_node = tree.get_farthest_leaf()[0]
-    seed_root_lineage = set(seed_node.get_ancestors()+[seed_node])
-    # iterate over taxa and find n closest to seed lineage
-    leaf_distances = []
-    for leaf in tree.iter_leaves():
-        distance = 0
-        node = leaf
-        while node not in seed_root_lineage:
-            distance += node.dist
-            node = node.up
-        leaf_distances.append((leaf.name, distance))
+    # iterate over seed lineage and find closest taxon from each branch
+    # repeat until we have args.n_keep sequences
+    leaves_to_keep = set()
+    n_leaves_to_keep = 0
+    seed_lineage = seed_node.get_ancestors()
+    while n_leaves_to_keep < args.n_keep:
+        for lineage_node in random.shuffle(seed_node.get_ancestors()):
+            leaves = [leaf for leaf in lineage_node.iter_leaves() if leaf not in leaves_to_keep]
+            if leaves:
+                leaves_to_keep.add(min(leaves, key=lambda leaf:lineage_node.get_distance(leaf)))
+                n_leaves_to_keep += 1
+                if n_leaves_to_keep == args.n_keep:
+                    break
 
     # gotta print this, since it's not a leaf in the rerooted tree
     yield naive_node.name
-    for leaf, distance in sorted(leaf_distances, key=lambda x: x[1])[:(args.n_keep + 1)]:
-        yield leaf
+    for leaf in leaves_to_keep:
+        yield leaf.name
 
 
 def with_temporary_handle(lines):
@@ -98,8 +102,7 @@ def main(args):
     for name in selection_fn(args):
         # Writes to stdout
         print name
-    
+
 
 if __name__ == "__main__":
     main(get_args())
-
