@@ -27,7 +27,13 @@ def lineage_selection(args):
         seed_node = tree.get_farthest_leaf()[0]
 
     # update args.n_keep if tree is smaller
-    args.n_keep = min(args.n_keep, len(tree))
+    args.n_keep = min(args.n_keep, len(tree) - 1)
+
+    distance_hash = {}
+    def distances(lineage_node, leaf):
+        if leaf not in distance_hash:
+            distance_hash[leaf] = lineage_node.get_distance(leaf)
+        return distance_hash[leaf]
 
     # iterate over seed lineage and find closest taxon from each branch
     # repeat until we have args.n_keep sequences
@@ -37,9 +43,9 @@ def lineage_selection(args):
     while n_leaves_to_keep < args.n_keep:
         random.shuffle(seed_lineage)
         for lineage_node in seed_lineage:
-            leaves = [leaf for leaf in lineage_node.iter_leaves() if leaf not in leaves_to_keep]
+            leaves = [leaf for leaf in lineage_node.iter_leaves() if leaf not in leaves_to_keep and leaf != seed_node]
             if leaves:
-                leaves_to_keep.add(min(leaves, key=lambda leaf:lineage_node.get_distance(leaf)))
+                leaves_to_keep.add(min(leaves, key=lambda leaf:distances(lineage_node, leaf)))
                 n_leaves_to_keep += 1
                 if n_leaves_to_keep == args.n_keep:
                     break
@@ -48,6 +54,7 @@ def lineage_selection(args):
     yield naive_node.name
     for leaf in leaves_to_keep:
         yield leaf.name
+    yield seed_node.name
 
 
 def with_temporary_handle(lines):
