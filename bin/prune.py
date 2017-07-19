@@ -6,7 +6,7 @@ print taxa from pruned tree
 """
 
 from ete3 import Tree
-from outfile2tree import find_node, reroot_tree
+from process_asr import find_node, reroot_tree
 
 import subprocess
 import copy
@@ -25,13 +25,18 @@ def lineage_selection(args):
     seed_node = find_node(tree, args.seed)
     if args.seed is 'seed' and seed_node is None:
         seed_node = tree.get_farthest_leaf()[0]
+
+    # update args.n_keep if tree is smaller
+    args.n_keep = min(args.n_keep, len(tree))
+
     # iterate over seed lineage and find closest taxon from each branch
     # repeat until we have args.n_keep sequences
     leaves_to_keep = set()
     n_leaves_to_keep = 0
     seed_lineage = seed_node.get_ancestors()
     while n_leaves_to_keep < args.n_keep:
-        for lineage_node in random.shuffle(seed_node.get_ancestors()):
+        random.shuffle(seed_lineage)
+        for lineage_node in seed_lineage:
             leaves = [leaf for leaf in lineage_node.iter_leaves() if leaf not in leaves_to_keep]
             if leaves:
                 leaves_to_keep.add(min(leaves, key=lambda leaf:lineage_node.get_distance(leaf)))
