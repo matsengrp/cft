@@ -38,12 +38,18 @@ def lineage_selection(args):
     # iterate over seed lineage and find closest taxon from each branch
     # repeat until we have args.n_keep sequences
     leaves_to_keep = set()
+    # this variable trackes the size of the above one, so we don't have to keep
+    # iterating through it with len function
     n_leaves_to_keep = 0
-    seed_lineage = seed_node.get_ancestors()
+    # sequence of nodes on lineage from root to seed
+    seed_lineage = seed_node.get_ancestors()[::-1]
+    # the subtrees off the seed lineage
+    subtrees = [subtree for i, lineage_node in enumerate(seed_lineage[:-1]) for subtree in lineage_node.children if subtree != seed_lineage[i+1]]
+    # keep passing through the subtrees, grabbing the one closest leaf (to the
+    # seed lineage) from each, until we get how many we need
     while n_leaves_to_keep < args.n_keep:
-        random.shuffle(seed_lineage)
-        for lineage_node in seed_lineage:
-            leaves = [leaf for leaf in lineage_node.iter_leaves() if leaf not in leaves_to_keep and leaf != seed_node]
+        for subtree in subtrees:
+            leaves = [leaf for leaf in subtree.iter_leaves() if leaf not in leaves_to_keep]
             if leaves:
                 leaves_to_keep.add(min(leaves, key=lambda leaf:distances(lineage_node, leaf)))
                 n_leaves_to_keep += 1
