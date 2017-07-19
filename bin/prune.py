@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
+TODO this is out of date-- it does more than this.
 prune a newick tree based on distnace from root-->seed lineage
 print taxa from pruned tree
 """
@@ -21,20 +22,22 @@ def lineage_selection(args):
     tree.set_outgroup(naive_node)
     tree = reroot_tree(tree, args.naive)
 
-    # ids of nodes on the seed lineage
+    # Collect ids of nodes on the seed lineage.
     seed_node = find_node(tree, args.seed)
     if args.seed is 'seed' and seed_node is None:
         seed_node = tree.get_farthest_leaf()[0]
 
-    # update args.n_keep if tree is smaller
+    # Set args.n_keep to the number of leaves minus 1 (the naive counts as a
+    # leaf) if args.n_keep is smaller than this quantity.
     args.n_keep = min(args.n_keep, len(tree) - 1)
 
-    distance_hash = {}
+    distance_dict = {}
     def distances(lineage_node, leaf):
-        if leaf not in distance_hash:
-            distance_hash[leaf] = lineage_node.get_distance(leaf)
+        if leaf not in distance_dict:
+            distance_dict[leaf] = lineage_node.get_distance(leaf)
         return distance_hash[leaf]
 
+    # TODO: expand.
     # iterate over seed lineage and find closest taxon from each branch
     # repeat until we have args.n_keep sequences
     leaves_to_keep = set()
