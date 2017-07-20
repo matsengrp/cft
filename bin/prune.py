@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-TODO this is out of date-- it does more than this.
-prune a newick tree based on distnace from root-->seed lineage
-print taxa from pruned tree
+Return a reduced set of taxa based on either seed lineage selection ("pruning")
+or min ADCL selection ("trimming").
 """
 
 from ete3 import Tree
@@ -16,7 +15,33 @@ import argparse
 import random
 
 
-def lineage_selection(args):
+def seed_lineage_selection(args):
+    """
+    Take the closest taxa on subtrees branching off the root (naive) to seed lineage.
+    E.g. given (((seed:1,(l3:1,l4:2)s2:1,(l5:3,l6:4)s3:1)b:1,(l1:1,l2:2)s1:1),naive0:1);
+
+	     /-seed
+	    |
+	    |   /-l3
+	  /-|--|
+	 |  |   \-l4
+	 |  |
+	 |  |   /-l5
+       /-|   \-|
+      |  |      \-l6
+      |  |
+    --|  |   /-l1
+      |   \-|
+      |      \-l2
+      |
+       \-naive0
+
+    return (naive0, l3, l1, l5, seed)
+
+    We cycle through these subtrees from root to seed, always taking the
+    closest taxon to the root to seed lineage, until we have gotten the required
+    number of taxa.
+    """
     tree = copy.deepcopy(args.tree)
     naive_node = find_node(tree, args.naive)
     tree.set_outgroup(naive_node)
@@ -37,43 +62,50 @@ def lineage_selection(args):
             distance_dict[leaf] = lineage_node.get_distance(leaf)
         return distance_dict[leaf]
 
-    # iterate over seed lineage and find closest taxon from each branch
-    # repeat until we have args.n_keep leaf sequences
+    # Iterate over seed lineage and find closest taxon from each branch, and
+    # repeat until we have args.n_keep leaf sequences.
     leaves_to_keep = set()
-    # sequence of nodes on lineage from root to seed
-    # NOTE: ete doc suggests get_ancestors() would include the seed node, but it doesn't
+    # Extract the sequence of nodes on lineage from root to seed.
+    # Note: ete doc suggests get_ancestors() would include the seed node, but it doesn't.
     #       "Returns the list of all ancestor nodes from current node to the current tree root"
-    seed_lineage = seed_node.get_ancestors()[::-1] + [seed_node] 
-    # we'll build a list of the subtrees off the seed lineage
+    seed_lineage = seed_node.get_ancestors()[::-1] + [seed_node]
+    # We'll build a list of the subtrees off the seed lineage.
     subtrees = []
     for i, lineage_node in enumerate(seed_lineage[:-1]):
         for subtree in lineage_node.children:
-            # the subtree that continues down the seed lineage doesn't count
+            # The subtree that continues down the seed lineage doesn't count.
             if subtree != seed_lineage[i+1]:
                 subtrees.append(subtree)
-    # keep passing through the subtrees, grabbing the one closest leaf (to the
-    # seed lineage) from each, until we get how many we need
+    # Repeatedly pass through this list of subtrees, grabbing the one
+    # closest leaf (to the seed lineage) from each, until we get how many we
+    # need.
     while len(leaves_to_keep) < args.n_keep:
         for subtree in subtrees:
-            # here are all the leaves in this subtree
+            # Obtain all the leaves in this subtree that aren't already in leaves_to_keep.
             leaves = [leaf for leaf in subtree.iter_leaves() if leaf not in leaves_to_keep]
             if leaves:
-                # add the leaf that's the closest to the seed lineage
-                leaves_to_keep.add(min(leaves, key=lambda leaf:distances(subtree.up, leaf)))
+                # Add the leaf that's the closest to the seed lineages.
+                # Use subtree.up so that we are getting the distance from the
+                # node on the lineage from root to seed (rather than the root
+                # of the subtree).
+                leaves_to_keep.add(min(leaves, key=lambda leaf: distances(subtree.up, leaf)))
                 if len(leaves_to_keep) == args.n_keep:
                     break
 
-    # gotta print this, since it's not a leaf in the rerooted tree
+    # Explicitly yield the naive node, becaue it's not a leaf in the rerooted tree.
     yield naive_node.name
     for leaf in leaves_to_keep:
         yield leaf.name
+    # Same for the seed node.
     yield seed_node.name
 
 
 def with_temporary_handle(lines):
-    """Given some lines of text to be placed in a temporary file, returns a decorator function that immediately
+    """
+    Given some lines of text to be placed in a temporary file, returns a decorator function that immediately
     calls the decorated function with as sole argument a temporary file containing the given lines of text.
-    Closes the named temporary file when done."""
+    Closes the named temporary file when done.
+    """
     def deco(f):
         handle = tempfile.NamedTemporaryFile("w+")
         handle.writelines([line + "\n" for line in lines])
@@ -85,6 +117,9 @@ def with_temporary_handle(lines):
 
 
 def min_adcl_selection(args):
+    """
+    Minimize ADCL for a tree.
+    """
     tipnames = [t.name for t in args.tree.iter_leaves()]
     if len(tipnames) <= args.n_keep:
         return tipnames
@@ -102,6 +137,7 @@ def min_adcl_selection(args):
 
 def tree_arg(tree_arg_value):
     return Tree(tree_arg_value, format=1)
+
 
 def get_args():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -121,9 +157,9 @@ def get_args():
     args.tree = tree_arg(args.tree_file)
     return args
 
+
 def main(args):
-    # read newick file into ete tree, set naive as outgroup, and reroot
-    selection_fn = lineage_selection if args.strategy == "seed_lineage" else min_adcl_selection
+    selection_fn = seed lineage_selection if args.strategy == "seed_lineage" else min_adcl_selection
     for name in selection_fn(args):
         # Writes to stdout
         print name
