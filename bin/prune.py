@@ -41,7 +41,9 @@ def lineage_selection(args):
     # repeat until we have args.n_keep leaf sequences
     leaves_to_keep = set()
     # sequence of nodes on lineage from root to seed
-    seed_lineage = seed_node.get_ancestors()[::-1]
+    # NOTE: ete doc suggests get_ancestors() would include the seed node, but it doesn't
+    #       "Returns the list of all ancestor nodes from current node to the current tree root"
+    seed_lineage = seed_node.get_ancestors()[::-1] + [seed_node] 
     # we'll build a list of the subtrees off the seed lineage
     subtrees = []
     for i, lineage_node in enumerate(seed_lineage[:-1]):
