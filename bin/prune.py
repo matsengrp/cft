@@ -159,7 +159,7 @@ def get_args():
 
 
 def main(args):
-    selection_fn = seed lineage_selection if args.strategy == "seed_lineage" else min_adcl_selection
+    selection_fn = seed_lineage_selection if args.strategy == "seed_lineage" else min_adcl_selection
     for name in selection_fn(args):
         # Writes to stdout
         print name
