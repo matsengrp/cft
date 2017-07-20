@@ -67,6 +67,7 @@ def seed_lineage_selection(args):
     # Extract the sequence of nodes on lineage from root to seed.
     # Note: ete doc suggests get_ancestors() would include the seed node, but it doesn't.
     #       "Returns the list of all ancestor nodes from current node to the current tree root"
+    # Note this slicing (::-1) reverses the order, so we do indeed go from root to seed.
     seed_lineage = seed_node.get_ancestors()[::-1] + [seed_node]
     # We'll build a list of the subtrees off the seed lineage.
     subtrees = []
