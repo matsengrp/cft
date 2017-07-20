@@ -35,28 +35,30 @@ def lineage_selection(args):
     def distances(lineage_node, leaf):
         if leaf not in distance_dict:
             distance_dict[leaf] = lineage_node.get_distance(leaf)
-        return distance_hash[leaf]
+        return distance_dict[leaf]
 
-    # TODO: expand.
     # iterate over seed lineage and find closest taxon from each branch
-    # repeat until we have args.n_keep sequences
+    # repeat until we have args.n_keep leaf sequences
     leaves_to_keep = set()
-    # this variable trackes the size of the above one, so we don't have to keep
-    # iterating through it with len function
-    n_leaves_to_keep = 0
     # sequence of nodes on lineage from root to seed
     seed_lineage = seed_node.get_ancestors()[::-1]
-    # the subtrees off the seed lineage
-    subtrees = [subtree for i, lineage_node in enumerate(seed_lineage[:-1]) for subtree in lineage_node.children if subtree != seed_lineage[i+1]]
+    # we'll build a list of the subtrees off the seed lineage
+    subtrees = []
+    for i, lineage_node in enumerate(seed_lineage[:-1]):
+        for subtree in lineage_node.children:
+            # the subtree that continues down the seed lineage doesn't count
+            if subtree != seed_lineage[i+1]:
+                subtrees.append(subtree)
     # keep passing through the subtrees, grabbing the one closest leaf (to the
     # seed lineage) from each, until we get how many we need
-    while n_leaves_to_keep < args.n_keep:
+    while len(leaves_to_keep) < args.n_keep:
         for subtree in subtrees:
+            # here are all the leaves in this subtree
             leaves = [leaf for leaf in subtree.iter_leaves() if leaf not in leaves_to_keep]
             if leaves:
-                leaves_to_keep.add(min(leaves, key=lambda leaf:distances(lineage_node, leaf)))
-                n_leaves_to_keep += 1
-                if n_leaves_to_keep == args.n_keep:
+                # add the leaf that's the closest to the seed lineage
+                leaves_to_keep.add(min(leaves, key=lambda leaf:distances(subtree.up, leaf)))
+                if len(leaves_to_keep) == args.n_keep:
                     break
 
     # gotta print this, since it's not a leaf in the rerooted tree
