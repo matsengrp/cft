@@ -12,7 +12,6 @@ import subprocess
 import copy
 import tempfile
 import argparse
-import random
 
 
 def seed_lineage_selection(args):
