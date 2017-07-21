@@ -11,6 +11,7 @@ from process_asr import find_node, reroot_tree
 import subprocess
 import tempfile
 import argparse
+import copy
 
 
 def seed_lineage_selection(args):
@@ -62,7 +63,7 @@ def seed_lineage_selection(args):
 
     # Iterate over seed lineage and find closest taxon from each branch, and
     # repeat until we have args.n_keep leaf sequences.
-    leaves_to_keep = set()
+    leaves_to_keep = set(find_node(tree, n) for n in args.always_include if tree.get_leaves_by_name(n))
     # Extract the sequence of nodes on lineage from root to seed.
     # Note: ete doc suggests get_ancestors() would include the seed node, but it doesn't.
     #       "Returns the list of all ancestor nodes from current node to the current tree root"
@@ -78,7 +79,7 @@ def seed_lineage_selection(args):
     # Repeatedly pass through this list of subtrees, grabbing the one
     # closest leaf (to the seed lineage) from each, until we get how many we
     # need.
-    while len(leaves_to_keep) < args.n_keep:
+    while len(leaves_to_keep) < (args.n_keep - 1): # -1 because we naive gets rerooted out, and have to manually yield as below
         for subtree in subtrees:
             # Obtain all the leaves in this subtree that aren't already in leaves_to_keep.
             leaves = [leaf for leaf in subtree.iter_leaves() if leaf not in leaves_to_keep]
@@ -88,15 +89,13 @@ def seed_lineage_selection(args):
                 # node on the lineage from root to seed (rather than the root
                 # of the subtree).
                 leaves_to_keep.add(min(leaves, key=lambda leaf: distances(subtree.up, leaf)))
-                if len(leaves_to_keep) == args.n_keep:
+                if len(leaves_to_keep) == args.n_keep - 1:
                     break
 
-    # Explicitly yield the naive node, becaue it's not a leaf in the rerooted tree.
-    yield naive_node.name
+    # Yield all the selected leaves (including naive and seed)
+    yield args.naive
     for leaf in leaves_to_keep:
         yield leaf.name
-    # Same for the seed node.
-    yield seed_node.name
 
 
 def with_temporary_handle(lines):
@@ -124,7 +123,7 @@ def min_adcl_selection(args):
         return tipnames
     else:
         results = []
-        @with_temporary_handle([args.seed, args.naive])
+        @with_temporary_handle(args.always_include)
         def always_include(ai_handle):
             command = "rppr min_adcl_tree --algorithm pam --leaves".split(" ") \
                 + [args.n_keep, "--always-include", ai_handle.name, args.tree_file]
@@ -144,16 +143,21 @@ def get_args():
         'tree_file',
         help='input newick tree file')
     parser.add_argument(
-        '--strategy', type=str, choices=["min_adcl", "seed_lineage"], default="seed_lineage")
+        '--strategy', choices=["min_adcl", "seed_lineage"], default="seed_lineage")
     parser.add_argument(
-        '--naive', type=str, help='id of root [default \'naive0\']', default='naive0')
+        '--naive', help='id of root [default \'naive0\']', default='naive0')
     parser.add_argument(
-        '--seed', type=str, help='id of leaf [default \'seed\']', default='seed')
+        '--seed', help='id of leaf [default \'seed\']', default='seed')
+    parser.add_argument(
+        '--always-include', type=lambda x: set(x.split(',')), help='comma separated list of ids to keep',
+        default=set())
     parser.add_argument(
         '-n', '--n-keep', type=int,
         help='number of sequences to keep [default: 100]', default=100)
     args = parser.parse_args()
     args.tree = tree_arg(args.tree_file)
+    args.always_include = set([args.seed, args.naive] \
+            + [leaf_name for leaf_name in args.always_include if leaf_name in args.tree.get_leaf_names()])
     return args
 
 

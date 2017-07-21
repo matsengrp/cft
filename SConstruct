@@ -332,16 +332,20 @@ def subject(c):
 # For the sake of testing, we allow for switching between the full set of seeds, as returned by `seeds_fn`, or
 # just a small subsampling thereof via execution with the `--test` cli flag
 
+@w.add_target()
+def _seeds(outdir, c):
+    study = c['dataset']['study']
+    subject = c['subject']
+    seeds = heads.get_seeds(study, subject)
+    return seeds
+
 # Initialize our first sub dataset nest level
 @w.add_nest('seed')
 # would like to have a lower number here but sometimes we get no good clusters for the first two seeds?
 # (on laura-mb for example).
 @wrap_test_run(take_n=4)
 def seeds_fn(c):
-    study = c['dataset']['study']
-    subject = c['subject']
-    seeds = heads.get_seeds(study, subject)
-    return seeds
+    return c['_seeds']
 
 
 # Initialize parameter set nest
@@ -578,9 +582,7 @@ def pruned_ids(outdir, c):
     return env.Command(
         path.join(outdir, "pruned_ids.txt"),
         c['fasttree'],
-        "prune.py -n " + str(prune_n(c)) + " --strategy " + strategy + " --seed " + c['seed'] + " $SOURCE > $TARGET")
-        # Should really be explicit and switch to the below sometime soon when we rerun
-        #"prune.py -n " + str(prune_n(c)) + " --strategy " + strategy + " --naive naive0 --seed " + c['seed'] + " $SOURCE > $TARGET")
+        "prune.py -n " + str(prune_n(c)) + " --always-include " + ','.join(c['_seeds']) + " --strategy " + strategy + " --naive naive0 --seed " + c['seed'] + " $SOURCE > $TARGET")
 
 
 @w.add_target()
