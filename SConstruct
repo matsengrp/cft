@@ -191,6 +191,27 @@ w = nestly_tripl.NestWrap(w,
         id_attrs=['cft.dataset:id', 'cft.build:id'])
 
 
+software = {
+    'dnaml': None,
+    'muscle': 'muscle -version',
+    'seqmagick': 'seqmagick --version',
+    'FastTree': None,
+    'prank': 'prank -v'
+    }
+
+
+def software_info(prog):
+    version_command = software[prog]
+    return {'cft.software:name': prog,
+            'cft.software:version': subprocess.check_output(version_command.split()) if version_command else None,
+            'cft.software:which': subprocess.check_output(['which', prog])}
+
+
+@w.add_target('cft.build:software')
+def software(outdir, c):
+    return [software_info(prog) for prog in software]
+
+
 # Could do the metadata as a separate target?
 #@w.add_target()
 #def build_data(outdir, c):
