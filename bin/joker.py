@@ -5,6 +5,8 @@
 
 import argparse
 import subprocess
+#import warnings
+from Bio import SeqIO
 import ete3
 import uuid
 
@@ -13,23 +15,46 @@ def random_tmpfilename():
     return '/tmp/joker.py-' + str(uuid.uuid1())
 
 def get_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('tree')
+    parser = argparse.ArgumentParser(description="ancestral state reconstruction using prank")
+    parser.add_argument('-t', '--input-tree', help="option guide tree (will generate if not specified)")
     parser.add_argument('seqs')
-    #parser.add_argument('--outgroup')
-    parser.add_argument('--rerooted-tree')
-    parser.add_argument('--bifurcated-tree')
-    parser.add_argument('asr_seqs')
+    # Final outputs
+    parser.add_argument('asr_tree', help="authoritative output tree, with node names and/or splits matching those of asr_seqs")
+    parser.add_argument('asr_seqs', help="ancestral sequence reconstruction")
+    # These might be useful options later...
+    parser.add_argument('-s', '--splits', action='store_true', help='name internal nodes using splits')
+    parser.add_argument('--internal_node_prefix', default='in-')
+    parser.add_argument('-S', '--splits-separator', default=',',
+            help="Seprator to use in splits output; default , in seqs and _ in tree file")
+    parser.add_argument('--no-reroot', action='store_true',
+            help="Don't reroot the tree prior to bifurcation; warning this may fail")
+    parser.add_argument('--preserve-internal-nodenames', action='store_true', 
+            help="Try to preserve the internal node names in rerooting and bifurcation whenever possible")
+    parser.add_argument('--keep-gaps', action='store_true', help="trigger -keep gaps option of PRANK")
+    parser.add_argument('-v', '--verbose', action='store_true')
+    # These are more or less for tinkering with the internals and won't generally be called
+    parser.add_argument('--rerooted-tree', help="optionally, output the rerooted input tree to this file, when applicable")
+    parser.add_argument('--bifurcated-tree', help="optionally, output the bifurcated input tree to this file, when applicable")
+    parser.add_argument('--final-input-tree', help="optionally, output the final input tree to this file, when applicable")
+    parser.add_argument('--prank-output-tree', help="optionally, pranks actual output tree")
     args = parser.parse_args()
+    args.outbase = '.'.join(args.asr_seqs.split('.')[:-1]) if '.' in args.asr_seqs else args.asr_seqs # dragons
     args.rerooted_tree = args.rerooted_tree or random_tmpfilename()
     args.bifurcated_tree = args.bifurcated_tree or random_tmpfilename()
+    args.final_input_tree = args.final_input_tree or random_tmpfilename()
+    args.prank_output_tree = args.prank_output_tree or random_tmpfilename()
     return args
+
+
+
+def cp_file(f1, f2):
+    return subprocess.check_call(['cp', f1, f2])
 
 
 # Define functions for running prank, preprocessing, etc
 
 def reroot_tree(args):
-    command = ['nw_reroot', args.tree]
+    command = ['nw_reroot', args.input_tree]
     tree_str = subprocess.check_output(command)
     with open(args.rerooted_tree, 'w') as fh:
         fh.write(tree_str)
@@ -40,131 +65,80 @@ def bifurcate_tree(args):
         tree.resolve_polytomy()
         tree.write(outfile=args.bifurcated_tree, format=1)
 
-prank_options = '-once -quiet -showanc -showevents -DNA -f=fasta'.split(' ')
+# TODO I think we may want -keep as well; erm... maybe not? need to look back...
+prank_options = '-quiet -showtree -showanc -showevents -DNA -f=fasta'.split(' ')
 
 def run_prank(args):
-    outfile = args.asr_seqs
     outbase = '.'.join(args.asr_seqs.split('.')[:-1]) # dragons
-    command = ['prank', '-d='+args.seqs, '-t='+args.bifurcated_tree, '-o='+outbase] + prank_options
-    print "\nRunning prank command:"
-    print " ".join(command)
+    command = ['prank', '-d='+args.seqs, '-o='+outbase] + prank_options
+    if args.input_tree:
+        command += ['-t='+args.final_input_tree, '-once']
+    if args.keep_gaps:
+        command.append('-keep')
+    if args.verbose:
+        print "\nRunning prank command:"
+        print " ".join(command)
     prank_out = subprocess.check_output(command)
-    print "\nPrank stdout:"
-    print prank_out
-    prank_out = subprocess.check_output(['seqmagick', 'convert', '--pattern-replace', '#', '', outbase+'.best.anc.fas', outfile])
-    print "Joker has copied the 'best.anc.fas' file to", outfile
-    print "Have a nice day"
+    if args.verbose:
+        print "\nPrank stdout:"
+        print prank_out
     return prank_out
 
 
+def process_prank_results(args):
+    outfile = args.asr_seqs
+    infile = args.outbase+'.best.anc.fas'
+    # TODO; should be final_input_tree?
+    # TODO; should also check that the toplogies match her, as in the test script
+    prank_output_tree = args.outbase + '.best.dnd'
+    if args.prank_output_tree:
+        cp_file(prank_output_tree, args.prank_output_tree)
+    treefile = args.final_input_tree if args.input_tree else prank_output_tree
+    tree = ete3.Tree(treefile, format=1)
+    seqs = list(SeqIO.parse(infile, 'fasta'))
+    for i, seq in enumerate(seqs):
+        # Should validate no # in input data; TODO
+        if i % 2:
+            # handle as internal node
+            leaves = [tree.get_leaves_by_name(seqs[j].id)[0] for j in [i-1, i+1]]
+            mrca = leaves[0].get_common_ancestor(leaves[1])
+            if args.splits:
+                new_name = args.splits_separator.join(n.name for n in mrca.get_leaves())
+            else:
+                if mrca.name and args.preserve_internal_nodenames:
+                    new_name = mrca.name
+                else:
+                    new_name = args.internal_node_prefix + seq.id.replace('#', '')
+            # Make sure that all agree
+            seq.id = new_name
+            seq.name = new_name
+            seq.description = new_name
+            mrca.name = new_name
+            
+        else:
+            # handle as leaf node (don't need to do anything here...)
+            pass
+    with open(args.asr_seqs, 'w') as fh:
+        SeqIO.write(seqs, fh, 'fasta')
+    tree.write(outfile=args.asr_tree, format=1)
+    return outfile
+
 def main():
     args = get_args()
-    reroot_tree(args)
-    bifurcate_tree(args)
+    if args.input_tree:
+        if not args.no_reroot:
+            reroot_tree(args)
+        else:
+            cp_file(args.input_tree, args.rerooted_tree)
+        bifurcate_tree(args)
+        cp_file(args.bifurcated_tree, args.final_input_tree)
     run_prank(args)
+    process_prank_results(args)
+    if args.verbose:
+        print "Have a nice day"
 
 
 if __name__ == '__main__':
     main()
 
 
-
-# Tried and failed still...
-
-# 28027  prank -once -d=pruned.fa -t=asr.rerooted.nwk -o=test.fa -once -quiet -showanc -showevents -DNA -f=fastas
-# 28028  prank -once -d=pruned.fa -t=asr_rrtd.nwk -o=test.fa -once -quiet -showanc -showevents -DNA -f=fastas
-
-# 28029  less pruned.fa
-# 28030  less asr_rrtd.nwk
-
-
-# Realized it was the multifurcation so copying over ml results
-
-# 28031  cp output/kate-qrs-v10-dnaml/QA255.006-VL/QA255-l-IgL/run-viterbi-best-plus-0/asr.nwk asr2.nwk
-# 28032  cp output/kate-qrs-v10-dnaml/QA255.006-VL/QA255-l-IgL/run-viterbi-best-plus-0/pruned.fa pruned2.fa
-# ---------------------------------------------------------------------------------------------------------
-
-
-# Now trying prank
-
-# typos..
-# 28033  prank -once -d=pruned2.fa -t=asr2.nwk -o=test.fa -once -quiet -showanc -showevents -DNA -f=fastas
-# 28034  prank -once -d=pruned2.fa -t=asr2.nwk -o=test.fasta -once -quiet -showanc -showevents -DNA -f=fastas
-# 28035  prank -once -d=pruned2.fa -t=asr2.nwk -o=test.fast -once -quiet -showanc -showevents -DNA -f=fastas
-
-# There we go; this is the one:
-# 28036  prank -once -d=pruned2.fa -t=asr2.nwk -o=test.fa -once -quiet -showanc -showevents -DNA -f=fasta
-
-# reroot!
-# 28037  nw_reroot asr2.nwk > asr2.rrtd.nwk
-
-# try running again
-# 28038  prank -once -d=pruned2.fa -t=asr2.rrtd.nwk -o=test.fa -once -quiet -showanc -showevents -DNA -f=fasta
-
-# still not working? trying condense wtf?
-# 28039  nw_condense -h
-# oh god, was this where I tried manually editing?
-# 28040  vim asr2.nwk
-# 28041  vim pruned2.fa
-# 28042  prank -once -d=pruned2.fa -t=asr2.rrtd.nwk -o=test.fa -once -quiet -showanc -showevents -DNA -f=fasta
-# 28043  vim asr2.rrtd.nwk
-# 28044  prank -once -d=pruned2.fa -t=asr2.rrtd.nwk -o=test.fa -once -quiet -showanc -showevents -DNA -f=fasta
-# 28045  j prank
-# 28046  seqids pruned2.fa
-# 28047  nw_labels asr2.rrtd.nwk
-# 28048  prank -once -d=pruned2.fa -t=asr2.rrtd.nwk -o=test.fa -once -quiet -showanc -showevents -DNA -f=fasta
-# 28049  prank -version
-# 28050  j encap
-# 28051  mkdir prank
-# 28052  ls
-# 28053  rmdir prank
-
-
-# Oh right... tried for all hell long, and then realized it all had to do with the version of prank that was
-# installed. So now updating encap...
-# 28054  wget http://wasabiapp.org/download/prank/prank.linux64.150803.tgz
-# 28055  tar -gxf prank.linux64.150803.tgz
-# 28056  tar -zxf prank.linux64.150803.tgz
-# 28057  ls prank
-# 28058  mv prank prank.linux64.150803
-# 28059  less prank.linux64.150803/prank.1
-# 28060  ln -s ../encap/prank.linux64.150803/bin/prank ../bin/prank
-# 28061  ls ../bin/prank
-# 28062  l ../bin/prank
-# 28063  ll ../bin/prank
-# 28064  mv ../bin/prank ../bin/prank-old
-# 28065  ln -s ../encap/prank.linux64.150803/bin/prank ../bin/prank
-# 28066  prank -version
-# 28067  l  ../bin/prank
-# 28068  ./prank.linux64.150803/bin/pra
-# 28069  ./prank.linux64.150803/bin/prank
-# 28070  l ./prank.linux64.150803/bin/prank
-# 28071  ls ./prank.linux64.150803/bin/prank
-# 28072  ls ./prank.linux64.150803/bin/
-# 28073  ls prank.linux64.150803
-# 28074  ls
-# 28075  ls astyle-r409
-# 28076  l prank.linux64.150803
-# 28077  tar -zxf prank.linux64.150803.tgz
-# 28078  ls prank
-# 28079  l prank
-# 28080  chmod +x prank/bin/prank
-# 28081  chmod +r prank/bin/
-# 28082  chmod +r prank/
-# 28083  mv prank prank.linux64.150803
-# 28084  mv prank.linux64.150803 prank.linux64.150803-brokerz
-# 28085  mv prank prank.linux64.150803
-# 28086  l ../bin/prank
-# 28087  which prank
-# 28088  prank -version
-
-# Trying to run again?
-# 28089  prank -once -d=pruned2.fa -t=asr2.rrtd.nwk -o=test.fa -once -quiet -showanc -showevents -DNA -f=fasta
-
-# And success
-# Checking out results
-# 28090  less test.fa.best.events
-# 28091  less test.fa.best.
-# 28092  less test.fa.best.anc.fas
-# 28093  less test.fa.best.fas
-# 28094  less test.fa.best.anc.dnd
