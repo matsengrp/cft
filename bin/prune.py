@@ -9,13 +9,12 @@ from ete3 import Tree
 from outfile2tree import find_node, reroot_tree
 
 import subprocess
-import copy
 import tempfile
 import argparse
 
 
 def lineage_selection(args):
-    tree = copy.deepcopy(args.tree)
+    tree = args.tree
     naive_node = find_node(tree, args.naive)
     tree.set_outgroup(naive_node)
     tree = reroot_tree(tree, args.naive)
