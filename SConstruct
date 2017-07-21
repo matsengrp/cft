@@ -78,18 +78,18 @@ env.PrependENVPath('PATH', 'tree')
 # Setting up command line arguments/options
 
 AddOption('--datapaths',
-          dest='datapaths',
-          metavar='DIR_LIST',
-          default="laura-mb/latest:kate-qrs/latest",
-          help="""Specify ':' separated list of partis output directories to process on; if full path not specified,
-          assumed to be in --base-datapath. Dataset names will be assined in relation to this --base-datapath
-          if present. Note: symlinks may not work properly here unless they point to things in base-datapath also.""")
+        dest='datapaths',
+        metavar='DIR_LIST',
+        default="laura-mb/latest:kate-qrs/latest",
+        help="""Specify ':' separated list of partis output directories to process on; if full path not specified,
+        assumed to be in --base-datapath. Dataset names will be assined in relation to this --base-datapath
+        if present. Note: symlinks may not work properly here unless they point to things in base-datapath also.""")
 
 AddOption('--base-datapath',
-          dest='base_datapath',
-          metavar='DIR',
-          default="/fh/fast/matsen_e/processed-data/partis/",
-          help="""Location in which to find the --datapaths directories. Defauilts to %default%""")
+        dest='base_datapath',
+        metavar='DIR',
+        default="/fh/fast/matsen_e/processed-data/partis/",
+        help="""Location in which to find the --datapaths directories. Defauilts to %default%""")
 
 AddOption('--asr-progs',
         dest='asr_progs',
@@ -225,6 +225,11 @@ def with_data_id_and_outdir(dataset_params):
     return d
 
 
+print("Running for")
+print("  datapaths:", datapaths)
+print("  asr_progs:", asr_progs)
+print("  prune_strategies:", prune_strategies)
+
 # A collection of datasets, where the `datapath` key is the full realpath to a leaf node input directory
 datasets = [with_data_id_and_outdir({
                  'datapath': datapath,
@@ -283,7 +288,7 @@ def wrap_test_run(take_n=2):
 
 
 @w.add_nest()
-@wrap_test_run(take_n = 2)
+@wrap_test_run(take_n=2)
 def subject(c):
     study = c['dataset']['study']
     return list(set(d['subject'] for d in heads.read_metadata(study).values()))
@@ -301,7 +306,7 @@ def subject(c):
 @w.add_nest('seed')
 # would like to have a lower number here but sometimes we get no good clusters for the first two seeds?
 # (on laura-mb for example).
-@wrap_test_run(take_n = 2)
+@wrap_test_run(take_n=4)
 def seeds_fn(c):
     study = c['dataset']['study']
     subject = c['subject']
@@ -326,7 +331,7 @@ def sample_metadata(c, filename): # control dict as well?
     d = copy.deepcopy(heads.read_metadata(study)[filename])
     d.update(
         {'id': filename,
-         'timepoints': [{'cft.timepoint:id':  d['timepoint']}]})
+         'timepoints': [{'cft.timepoint:id': d['timepoint']}]})
     return d
 
 #dataset,shorthand,species,timepoint,subject,locus
