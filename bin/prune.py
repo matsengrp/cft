@@ -11,7 +11,6 @@ from process_asr import find_node, reroot_tree
 import subprocess
 import tempfile
 import argparse
-import copy
 
 
 def seed_lineage_selection(args):
@@ -79,7 +78,7 @@ def seed_lineage_selection(args):
     # Repeatedly pass through this list of subtrees, grabbing the one
     # closest leaf (to the seed lineage) from each, until we get how many we
     # need.
-    while len(leaves_to_keep) < (args.n_keep - 1): # -1 because we naive gets rerooted out, and have to manually yield as below
+    while len(leaves_to_keep) < (args.n_keep - 1): # -1 because naive gets rerooted out, and we manually yield as below
         for subtree in subtrees:
             # Obtain all the leaves in this subtree that aren't already in leaves_to_keep.
             leaves = [leaf for leaf in subtree.iter_leaves() if leaf not in leaves_to_keep]
