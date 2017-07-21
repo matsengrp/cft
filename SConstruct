@@ -94,9 +94,10 @@ AddOption('--base-datapath',
 AddOption('--asr-progs',
         dest='asr_progs',
         metavar='LIST',
-        default='dnaml:dnapars:raxml',
+        #default='dnaml:dnapars:raxml',
+        default='dnaml',
         help="""Specify ':' separated list of ancestral state reconstruction programs to run. Options are `dnaml` and
-        `dnapars`. Defaults to running both (`dnaml:dnapars`)""")
+        `dnapars`. Defaults to running dnaml.""")
 
 AddOption('--prune-strategies',
         dest='prune_strategies',
@@ -280,6 +281,14 @@ def dataset_outdir(c):
     "Returns _dataset_outdir of `c['dataset']`, for easier access via `c` below."
     return c['dataset']['outdir']
 
+@w.add_target('cft.dataset:seqmeta')
+def dataset_seqmeta(outdir, c):
+    "The sequence metadata file path for the entire dataset."
+    return env.Command(
+        path.join(outdir, 'seqmeta.csv'),
+        glob.glob(path.join(base_datapath, c['dataset']['datapath'], '*-translations.csv')),
+        'csvstack $SOURCES > $TARGET')
+
 def dataset_id(c):
     return c['dataset']['id']
 
@@ -397,6 +406,9 @@ def annotation(c):
 def partis_log(c):
     return path.join(input_dir(c), 'partition.log')
 
+def translations(c):
+    return path.join(input_dir(c), 'partition.log')
+
 def partition_file_metadata(partition_handle, cluster_step):
     parts = list(csv.DictReader(partition_handle))
     for i, x in enumerate(parts):
@@ -441,6 +453,7 @@ def _process_partis(outdir, c):
                 '--partition ${SOURCES[0]} ' +
                 '--annotations ${SOURCES[1]} ' +
                 #'--param_dir ' + parameter_dir(c) + ' '
+                '--remove-frameshifts ' +
                 '--partis-log ' + partis_log(c) + ' ' +
                 '--cluster-base cluster ' +
                 '--melted-base base_seqmeta ' +
@@ -566,6 +579,18 @@ def pruned_ids(outdir, c):
         path.join(outdir, "pruned_ids.txt"),
         c['fasttree'],
         "prune.py -n " + str(prune_n(c)) + " --strategy " + strategy + " --seed " + c['seed'] + " $SOURCE > $TARGET")
+        # Should really be explicit and switch to the below sometime soon when we rerun
+        #"prune.py -n " + str(prune_n(c)) + " --strategy " + strategy + " --naive naive0 --seed " + c['seed'] + " $SOURCE > $TARGET")
+
+
+@w.add_target()
+def cluster_mapping(outdir, c):
+    if prune_strategy(c) == 'min_adcl':
+        return env.Command(
+            path.join(outdir, 'cluster_mapping.csv'),
+            [c['fasttree'], c['pruned_ids']],
+            'minadcl_clusters.py $SOURCES $TARGET')
+
 
 
 # prune out sequences to reduce taxa, making sure to cut out columns in the alignment that are now entirely
@@ -590,19 +615,23 @@ def infname_base(outdir, c):
     infname_base = infname_regex.match(partis_command).group('infname_base')
     return infname_base
 
-infname_regex = re.compile('.*--infname\s+(?P<infname_base>\S+)\.fa')
-@w.add_target()
-def merge_translations(outdir, c):
-    "Returns the filename of the translation file for the merge operation, which includes timepoint info"
-    return c['infname_base'] + '-translations.csv'
-
-@w.add_target(ingest=True, attr_map={'bio.seq:id': 'sequence', 'cft.timepoint:id': 'timepoint', 'cft.seq:duplicity': 'duplicity'})
+@w.add_target(ingest=True, attr_map={'bio.seq:id': 'sequence', 'cft.timepoint:id': 'timepoint',
+    'cft.seq:duplicity': 'duplicity'})
+    #'cft.seq:duplicity': 'duplicity', 'cft.seq:cluster_duplicity': 'cluster_duplicity'})
 def seqmeta(outdir, c):
-    "Merge the base_seqmeta from process_partis with the timepoint mappings"
-    return env.Command(
-        path.join(outdir, 'seqmeta.csv'),
-        [c['base_seqmeta'], c['merge_translations']],
-        'merge_timepoints_and_duplicity.py $SOURCES $TARGET')
+    """The merge of process_partis output with pre sequence metadata spit out by datascripts containing
+    timepoint mappings. Base input duplicity is coded into the original input sequence names from vlad as N-M,
+    where N is the ranking of vlads untrimmed deduplication, and """
+    sources = [c['base_seqmeta'], c['cft.dataset:seqmeta']]
+    base_call =  'merge_timepoints_and_duplicity.py '
+    # This option controls which sequences get joined on in the merge for the base_seqmeta file, which has
+    # orig/new names, joined on sequence from the other file
+    if not separate_timepoints:
+        base_call += '--merged '
+    if prune_strategy(c) == 'min_adcl':
+        sources = [c['cluster_mapping']] + sources
+        base_call += '--cluster-mapping '
+    return env.Command(path.join(outdir, 'seqmeta.csv'), sources, base_call + '$SOURCES $TARGET')
 
 @w.add_target()
 def full_orig_seqs(outdir, c):
@@ -631,7 +660,7 @@ def phy(outdir, c):
 # Run dnapars/dnaml by passing in the "config file" as stdin hoping the menues all stay sane
 # (Aside: If gets any messier can look at Expect; https://en.wikipedia.org/wiki/Expect)
 @w.add_target()
-def _asr(outdir, c):
+def _asr_tree(outdir, c):
     "run dnapars/dnaml (from phylip package) to create tree with inferred sequences at internal nodes"
     if asr_prog(c) in {'dnapars', 'dnaml'}:
         config = env.Command(
@@ -645,25 +674,27 @@ def _asr(outdir, c):
             ignore_errors=True)
         # Manually depend on phy so that we rerun dnapars/dnaml if the input sequences change (without this, dnapars/dnaml will
         # only get rerun if one of the targets are removed or if the iput asr_config file is changed).
-        basename = 'asr'
+        basename = 'asr_input'
         tgt = env.Command(
-                [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg']],
+                [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg', 'fa']],
                 [phylip_out, c['seqmeta']],
                 # Note that `-` at the beggining lets things keep running if there's an error here; This is
                 # protecting us at the moment from clusters with 2 seqs. We should be catching this further
                 # upstream and handling more appropriately, but for now this is an easy stopgap...
                 "- xvfb-run -a bin/process_asr.py --seed " + c['seed'] + " --outdir " + outdir + 
                     " --basename " + basename + " $SOURCES")
-        asr_tree, asr_tree_svg = tgt
+        asr_tree, asr_tree_svg, asr_seqs = tgt
         # manually depnd on this because the script isn't in first position
         env.Depends(tgt, 'bin/process_asr.py')
-        return [asr_tree, asr_tree_svg]
+        env.Depends(tgt, 'bin/plot_tree.py')
+        return [asr_tree, asr_tree_svg, asr_seqs]
     elif asr_prog(c) == 'raxml':
         asr_supports_tree = env.SRun(
             path.join(outdir, 'asr.sup.nwk'),
             c['pruned_seqs'],
             # Question should use -T for threads? how many?
-            'raxml.py --rapid-bootstrap 30 -x 3243 $SOURCE $TARGET')
+            # Don't know if the reroot will really do what we want here
+            'raxml.py --rapid-bootstrap 30 -x 3243 -o naive0 $SOURCE $TARGET')
         asr_tree_svg = env.Command(
             path.join(outdir, 'asr.svg'),
             [asr_supports_tree, c['seqmeta']],
@@ -678,32 +709,45 @@ def _asr(outdir, c):
 
 
 
-@w.add_target(ingest=True)
-def asr_tree(outdir, c):
-    return c['_asr'][0]
+#@w.add_target(ingest=True)
+#def asr_input_tree(outdir, c):
+    #return c['_asr_tree'][0]
 
 @w.add_target(ingest=True)
 def asr_tree_svg(outdir, c):
-    return c['_asr'][1]
+    return c['_asr_tree'][1]
 
-@w.add_target()
-def asr_supports_tree(outdir, c):
-    vals = c['_asr']
-    if len(vals) > 2:
-        return c['_asr'][2]
+#@w.add_target()
+#def asr_supports_tree(outdir, c):
+    #vals = c['_asr_tree']
+    #if len(vals) > 2:
+        #return c['_asr_tree'][2]
 
 #@w.add_target(ingest=True)
-#def _asr_seqs(outdir, c):
-    #return c['_asr'][2]
+#def _asr(outdir, c):
+    #return env.Command(
+        #[path.join(outdir, 'asr_tree.nwk'), path.join(outdir, 'asr_seqs.fa')],
+        #[c['asr_input_tree'], c['pruned_seqs']],
+        #'joker.py ' + ('--no-reroot ' if asr_prog(c) == 'raxml' else '') + '-t $SOURCES $TARGETS')
+
+#@w.add_target(ingest=True)
+#def asr_tree(outdir, c):
+    #return c['_asr'][0]
+
+#@w.add_target(ingest=True)
+#def asr_seqs(outdir, c):
+    #return c['_asr'][1]
+
+@w.add_target(ingest=True)
+def asr_tree(outdir, c):
+    return c['_asr_tree'][0]
 
 @w.add_target(ingest=True)
 def asr_seqs(outdir, c):
-    return env.Command(
-        path.join(outdir, 'asr_seqs.fa'),
-        [c['asr_tree'], c['pruned_seqs']],
-        'joker.py $SOURCES $TARGET')
+    return c['_asr_tree'][2]
 
-@w.add_target()
+
+@w.add_target(ingest=True)
 def cluster_aa(outdir, c):
     return env.Command(
         path.join(outdir, 'cluster_aa.fa'),
