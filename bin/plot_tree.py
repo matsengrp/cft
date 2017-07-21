@@ -49,7 +49,10 @@ def iter_lineage(tree, pattern):
 
 def timepoint_colors(annotations):
     # Should really improve this sort so that we're fully chronological
-    timepoints = sorted(set(x['timepoint'] for x in annotations.values()))
+    def annotation_timepoints(annotation):
+        return set(filter(lambda x: x, annotation.get('cluster_timepoints',
+            annotation['timepoints']).split(':')))
+    timepoints = sorted(reduce(set.union, (annotation_timepoints(x) for x in annotations.values()), set()))
     colors = ['#%02x%02x%02x' % c for c in colorbrewer.RdYlBu[max(len(timepoints), 3)]]
     # note:      ^^^ this bit    converts into a hex
     return dict(zip(timepoints, colors))
@@ -98,9 +101,9 @@ def leaf_style(node, seqmeta, tp_colors, highlight_node=None):
             nstyle['fgcolor'] = tp_colors[seqmeta['timepoint']]
         nstyle['size'] = 14
         node.set_style(nstyle)
-    timepoints = filter(lambda x: x, seqmeta['timepoints'].split(':'))
-    duplicities = [int(n) for n in seqmeta['timepoint_duplicities'].split(':') if n]
-    duplicity = int(seqmeta['duplicity'])
+    timepoints = filter(lambda x: x, seqmeta.get('cluster_timepoints', seqmeta['timepoints']).split(':'))
+    duplicities = [int(n) for n in seqmeta.get('cluster_timepoint_duplicities', seqmeta['timepoint_duplicities']).split(':') if n]
+    duplicity = int(seqmeta.get('cluster_duplicity', seqmeta['duplicity']))
     percents = [d * 100 / duplicity for d in duplicities]
     colors = [tp_colors[t] for t in timepoints]
     pie_node = ete3.PieChartFace(percents, width=scale_node(duplicity), height=scale_node(duplicity),
@@ -108,7 +111,7 @@ def leaf_style(node, seqmeta, tp_colors, highlight_node=None):
     ete3.add_face_to_node(pie_node, node, column=0)
 
 
-def render_tree(fname, tree, annotations, highlight_node, supports=False):
+def render_tree(fname, tree, annotations, highlight_node, supports=False, support_cuttof=0.8):
     "render tree SVG"
     ts = ete3.TreeStyle()
     ts.show_leaf_name = False
@@ -136,6 +139,9 @@ def render_tree(fname, tree, annotations, highlight_node, supports=False):
 
     ts.layout_fn = my_layout
     if supports:
+        for node in tree.get_descendants():
+            if node.support and node.support < 0.8:
+                node.support = None
         ts.show_branch_support = True
     timepoint_legend(ts, tp_colors)
     duplicity_legend(ts)
