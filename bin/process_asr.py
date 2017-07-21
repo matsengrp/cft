@@ -8,17 +8,17 @@ from __future__ import print_function
 
 import argparse
 import ete3
-from ete3 import Tree, NodeStyle, TreeStyle, TextFace, add_face_to_node
 import csv
 import re
 import os
 from warnings import warn
 from collections import defaultdict
-import colorbrewer
 
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+
+import plot_tree
 
 
 # iterate over recognized sections in the phylip output file.
@@ -108,7 +108,7 @@ def build_tree(sequences, parents):
     # build an ete tree
     # first a dictionary of disconnected nodes
     def mknode(r):
-        n = Tree(
+        n = ete3.Tree(
             name=r.id,
             dist=parents[r.id][1] if r.id in parents else 0,
             format=1)
@@ -130,7 +130,6 @@ def build_tree(sequences, parents):
     if orphan_nodes != 1:
         raise RuntimeError("The tree is not properly rooted; expected a single root but there are {}.".format(orphan_nodes))
     return tree
-
 
 def find_node(tree, pattern):
     regex = re.compile(pattern).search
@@ -158,82 +157,11 @@ def reroot_tree(tree, pattern='.*naive.*'):
     return tree
 
 
-# iterate up a lineage toward the root.
-# lineage starts at node whose name matches pattern.
-def iter_lineage(tree, pattern):
-    node = find_node(tree, pattern)
-    while node:
-        yield node
-        node = node.up
-
-
-def timepoint_colors(annotations):
-    # Should really improve this sort so that we're fully chronological
-    timepoints = sorted(set(x['timepoint'] for x in annotations.values()))
-    colors = ['#%02x%02x%02x' % c for c in colorbrewer.RdYlBu[max(len(timepoints), 3)]]
-    # note:      ^^^ this bit    converts into a hex
-    return dict(zip(timepoints, colors))
-
-
-def timepoint_legend(ts, tp_colors):
-    for timepoint, color in tp_colors.iteritems():
-        ts.legend.add_face(ete3.faces.CircleFace(12, color, "circle"), 0)
-        ts.legend.add_face(ete3.faces.TextFace(timepoint), 1)
-    ts.legend.add_face(ete3.faces.CircleFace(8, 'brown', "circle"), 0)
-    ts.legend.add_face(ete3.faces.TextFace("seedlineage"), 1)
-
-
-def render_tree(fname, tree, annotations, highlight_node):
-    "render tree SVG"
-    ts = TreeStyle()
-    ts.show_leaf_name = False
-    tp_colors = timepoint_colors(annotations)
-
-    seed_lineage = [n for n in iter_lineage(tree, highlight_node)]
-
-    def my_layout(node):
-        name = node.name
-        seqmeta = annotations.get(node.name)
-        # handle leaves
-        if seqmeta and not re.compile(".*naive.*").match(node.name):
-            # Add the node name for tips
-            name = node.name + " (mf={}) ".format(round(float(seqmeta['mut_freqs']), 3))
-            F = TextFace(name)
-            add_face_to_node(F, node, column=0, position='branch-right')
-            # Style the node with color corresponding to timepoint
-            nstyle = NodeStyle()
-            if node.name == highlight_node:
-                nstyle['fgcolor'] = 'brown'
-            else:
-                nstyle['fgcolor'] = tp_colors[seqmeta['timepoint']]
-            nstyle['size'] = 14
-            node.set_style(nstyle)
-        # Deal with naive and true internal nodes
-        else:
-            # Have to set all node sizes to 0 or we end up distorting the x-axis
-            nstyle = NodeStyle()
-            nstyle['size'] = 0
-            node.set_style(nstyle)
-            # Highlight just those nodes in the seedlineage which have nonzero branch lengths, or bad things
-            if node in seed_lineage and node.dist > 0:
-                position = "float"
-                # Note; we use circleface instead of node style to avoid borking the x-axis
-                circle_face = ete3.CircleFace(radius=5, color='brown', style="circle")
-                add_face_to_node(circle_face, node, column=0, position=position)
-
-    ts.layout_fn = my_layout
-    timepoint_legend(ts, tp_colors)
-    # whether or not we had rerooted on naive before, we want to do so for the SVG tree
-    if 'naive' not in tree.name:
-        tree = reroot_tree(tree, '.*naive.*')
-    tree.render(fname, tree_style=ts)
-
-
 
 def get_args():
     def seqmeta_input(fname):
         with open(fname, 'r') as fhandle:
-            return dict((row['unique_ids'], row) for row in csv.DictReader(fhandle))
+            return dict((row['sequence'], row) for row in csv.DictReader(fhandle))
 
     def existing_file(fname):
         """
@@ -284,7 +212,7 @@ def main():
     fname = outbase + '.nwk'
     tree.write(format=1, format_root_node=True, outfile=fname)
 
-    render_tree(outbase+'.svg', tree, args.seqmeta, args.seed)
+    plot_tree.render_tree(outbase+'.svg', tree, args.seqmeta, args.seed)
 
 
 if __name__ == "__main__":

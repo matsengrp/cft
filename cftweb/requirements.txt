@@ -1,9 +1,0 @@
-pandas
-biopython
-flask
-slackclient
-ete3
-flask-breadcrumbs
-slacker-log-handler
-cottonmouth
-colorbrewer

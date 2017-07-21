@@ -9,7 +9,6 @@ from ete3 import Tree
 from process_asr import find_node, reroot_tree
 
 import subprocess
-import copy
 import tempfile
 import argparse
 
@@ -41,7 +40,7 @@ def seed_lineage_selection(args):
     closest taxon to the root to seed lineage, until we have gotten the required
     number of taxa.
     """
-    tree = copy.deepcopy(args.tree)
+    tree = args.tree
     naive_node = find_node(tree, args.naive)
     tree.set_outgroup(naive_node)
     tree = reroot_tree(tree, args.naive)
@@ -118,7 +117,7 @@ def with_temporary_handle(lines):
 
 def min_adcl_selection(args):
     """
-    Minimize ADCL for a tree.
+    Minimize ADCL for a tree using pplacer suite.
     """
     tipnames = [t.name for t in args.tree.iter_leaves()]
     if len(tipnames) <= args.n_keep:
