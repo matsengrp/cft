@@ -48,6 +48,9 @@ def joiner(base_path):
         return os.path.join(base_path, *args)
     return p
 
+def move(x, y):
+    subprocess.check_output(['cp', x, y])
+
 def raxml(sequences, output_tree, stats_path=None, log_path=None, quiet=False,
         executable='raxmlHPC-SSE3', model='GTRGAMMA', threads=None,
         rapid_bootstrap=None, bootstrap_seed=None, tmp_prefix=None, outgroup=None):
@@ -88,12 +91,12 @@ def raxml(sequences, output_tree, stats_path=None, log_path=None, quiet=False,
 
             # Get the result - either bootstrap-annotated tree or result
             key = 'bipartitions' if rapid_bootstrap else 'result'
-            shutil.move(p(f(key)), output_tree)
+            move(p(f(key)), output_tree)
 
             if stats_path:
-                shutil.move(p(f('info')), stats_path)
+                move(p(f('info')), stats_path)
             if log_path:
-                shutil.move(p(f('log')), log_path)
+                move(p(f('log')), log_path)
 
 def main():
     parser = argparse.ArgumentParser(description="""Simple wrapper around
