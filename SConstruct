@@ -683,7 +683,7 @@ def _asr_tree(outdir, c):
                 # Note that `-` at the beggining lets things keep running if there's an error here; This is
                 # protecting us at the moment from clusters with 2 seqs. We should be catching this further
                 # upstream and handling more appropriately, but for now this is an easy stopgap...
-                "- xvfb-run -a bin/process_asr.py --seed " + c['seed'] + " --outdir " + outdir + 
+                "xvfb-run -a bin/process_asr.py --seed " + c['seed'] + " --outdir " + outdir + 
                     " --basename " + basename + " $SOURCES")
         asr_tree, asr_tree_svg, asr_seqs = tgt
         # manually depnd on this because the script isn't in first position

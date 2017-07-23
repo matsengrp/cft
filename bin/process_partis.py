@@ -153,14 +153,13 @@ def indel_offset(indelfo):
                    indelfo['indels']))
 
 def infer_frameshifts(line):
-    attrs = ['stops', 'indelfos', 'input_seqs']
+    "Infer frameshifts based on `in_frame` attr in partis output, or if more than one stop codon."
+    attrs = ['in_frames', 'input_seqs']
     def infer_(args):
-        stop, indelfo, input_seq = args
+        in_frame, input_seq = args
         aa = Seq(input_seq).translate()
         stop_count = aa.count("*")
-        # We say it's a frameshift if the indell offsets don't leave us with a multiple of three, and if there
-        # are stop codons. Can tweak this down the road, but for now...
-        return bool(stop_count > 0 and indel_offset(indelfo) % 3)
+        return (not in_frame) or stop_count > 1
     return map(infer_,
                zip(*map(lambda x: line[x], attrs)))
 
@@ -265,18 +264,27 @@ def write_fasta(df, fname):
 
     
 def write_separate_fasta(df, output_dir, cluster_base):
-    # Remove frameshift seqs if requested
     for k, g in df.groupby(['cluster']):
         fname = os.path.join(output_dir, cluster_base+'{}.fa'.format(k))
         write_fasta(g, fname)
 
 
 def handle_frameshifts(df, remove_frameshifts=False):
+    """Remove frameshited sequences from the data frame, if remove_frameshifts is set; otherwise, just warn.
+    Note that a sequence could be considered frameshifted merely by having more than 1 stop codon, but this
+    might not actually be due to a frameshift."""
     frameshifted_seqs = list(df[df.frameshifts].unique_ids)
     if frameshifted_seqs:
         if remove_frameshifts:
-            print "Removing frameshifted seqs:", frameshifted_seqs
-            df = df[- df.frameshifts]
+            df_ = df[- df.frameshifts]
+            # This check is to make sure we don't end up with any clusters with fewer than 3 sequences, which
+            # would stimy our attempts at making trees
+            if len(df_) > 2:
+                print "Removing frameshifted seqs:", frameshifted_seqs
+                df = df_
+            else:
+                warnings.warn("Not removing frameshifted seqs from cluster to avoid < 3 issue: " +
+                        str(frameshifted_seqs))
         else:
             warnings.warn("Found possible frameshifted input_seqs: " + str(frameshifted_seqs))
     return df
