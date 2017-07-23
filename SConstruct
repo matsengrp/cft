@@ -388,11 +388,17 @@ def input_dir(c):
 def path_base_root(full_path):
     return path.splitext(path.basename(full_path))[0]
 
-def valid_partition(fname):
+cluster_step_re = re.compile('.*-plus-(?P<cluster_step>\d+)').match
+def cluster_step(partition_filename):
+    return int(cluster_step_re(partition_filename).group('cluster_step'))
+
+def partition_size(fname):
     with open(fname, 'r') as partition_handle:
         partition = csv.DictReader(partition_handle).next()
         unique_ids = partition['unique_ids'].split(':')
-        return len(unique_ids) >= 2 # Do we want >2 or >=2?
+        # add 1 for naive
+        return len(unique_ids) + 1
+
 
 # Setting up the partition nest level
 
@@ -424,9 +430,8 @@ def partition_file_metadata(partition_handle, cluster_step):
     cluster_i = best_i + cluster_step
     return parts[cluster_i]
 
-cluster_step = re.compile('.*-plus-(?P<cluster_step>\d+)').match
 def partition_metadata(c, filename):
-    step = int(cluster_step(filename).group('cluster_step'))
+    step = cluster_step(filename)
     metadata = partition_file_metadata(file(partitions(c)), step)
     return {'cluster_step': step,
             'logprob': metadata['logprob'],
@@ -438,10 +443,17 @@ def partition_metadata(c, filename):
 def partition(c):
     """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
     for actual analysis."""
-    return map(path_base_root,
-               # We might eventually want to handle small partitions more manually, so there's data on the other end, but for now, filter is easiest
-               filter(valid_partition,
-                      glob.glob(path.join(input_dir(c), "*-plus-*.csv"))))
+    partitions = sorted(glob.glob(path.join(input_dir(c), "*-plus-*.csv")), key=cluster_step)
+    keep_partitions = []
+    for partition in partitions:
+        size = partition_size(partition)
+        # We only add clusters bigger than two, since we can only make trees if we have hits
+        if size > 2:
+            keep_partitions.append(partition)
+        # Once we get a cluster of size 50, we don't need later cluster steps
+        if size >= 50:
+            break
+    return map(path_base_root, keep_partitions)
 
 # This is a little silly, but gives us the right semantics for partitions > clusters
 #w.add('cluster', ['cluster0'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
