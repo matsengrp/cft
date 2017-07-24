@@ -41,6 +41,12 @@ def seed_lineage_selection(args):
     number of taxa.
     """
     tree = args.tree
+
+    # Set args.n_keep to the min of requested value and the actual number of seqs (make sure to do this before
+    # rerooting, or len(tree) will have decremented...)
+    n_keep = min(args.n_keep, len(tree))
+
+    # Reroot the tree on naive
     naive_node = find_node(tree, args.naive)
     tree.set_outgroup(naive_node)
     tree = reroot_tree(tree, args.naive)
@@ -50,10 +56,6 @@ def seed_lineage_selection(args):
     if args.seed is 'seed' and seed_node is None:
         seed_node = tree.get_farthest_leaf()[0]
 
-    # Set args.n_keep to the number of leaves minus 1 (the naive counts as a
-    # leaf) if args.n_keep is smaller than this quantity.
-    args.n_keep = min(args.n_keep, len(tree) - 1)
-
     distance_dict = {}
     def distances(lineage_node, leaf):
         if leaf not in distance_dict:
@@ -61,7 +63,7 @@ def seed_lineage_selection(args):
         return distance_dict[leaf]
 
     # Iterate over seed lineage and find closest taxon from each branch, and
-    # repeat until we have args.n_keep leaf sequences.
+    # repeat until we have n_keep leaf sequences.
     leaves_to_keep = set(find_node(tree, n) for n in args.always_include if tree.get_leaves_by_name(n))
     # Extract the sequence of nodes on lineage from root to seed.
     # Note: ete doc suggests get_ancestors() would include the seed node, but it doesn't.
@@ -78,7 +80,7 @@ def seed_lineage_selection(args):
     # Repeatedly pass through this list of subtrees, grabbing the one
     # closest leaf (to the seed lineage) from each, until we get how many we
     # need.
-    while len(leaves_to_keep) < (args.n_keep - 1): # -1 because naive gets rerooted out, and we manually yield as below
+    while len(leaves_to_keep) < (n_keep - 1): # -1 because naive gets rerooted out, and we manually yield as below
         for subtree in subtrees:
             # Obtain all the leaves in this subtree that aren't already in leaves_to_keep.
             leaves = [leaf for leaf in subtree.iter_leaves() if leaf not in leaves_to_keep]
@@ -88,7 +90,7 @@ def seed_lineage_selection(args):
                 # node on the lineage from root to seed (rather than the root
                 # of the subtree).
                 leaves_to_keep.add(min(leaves, key=lambda leaf: distances(subtree.up, leaf)))
-                if len(leaves_to_keep) == args.n_keep - 1:
+                if len(leaves_to_keep) == n_keep - 1:
                     break
 
     # Yield all the selected leaves (including naive and seed)
