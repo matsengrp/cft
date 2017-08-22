@@ -82,20 +82,41 @@ def parse_outfile(outfile, seqmeta):
     name_map = {seq_id[0:10]: seq_id for seq_id in seqmeta}
     if len(name_map) != len(seqmeta):
         raise RuntimeError("Conflicting shortened names!")
+
+    # Keeping track of which names match up for validation and error handling
+    goods = set()
+    bads = set()
     def full_name(x):
-        return name_map.get(x, x)
+        name = name_map.get(x)
+        if not name and not re.match('\d*$', x):
+            bads.add(x)
+        elif name:
+            goods.add(x)
+        return name or x
     # Ugg... for compilation need to let python know that these will definely both be defined :-/
     sequences, parents = [], {}
     with open(outfile, 'rU') as fh:
         for sect in sections(fh):
             if sect == 'parents':
+                print("Processing tree")
                 parents = { full_name(parent): (full_name(child), dist) for parent, child, dist in iter_edges(fh) }
             elif sect[0] == 'sequences':
+                print("Processing sequences")
                 d = parse_seqdict(fh, sect[1])
                 sequences = [ SeqRecord(Seq(seq), id=full_name(seq_id), description="")
                                 for seq_id, seq in d.items() ]
             else:
                 raise RuntimeError("unrecognized phylip setion = {}".format(sect))
+
+    if bads:
+        print("good sequences:", sorted(goods))
+        print("bad sequences:", sorted(bads))
+        print("name_map misses:")
+        for k, v in sorted(name_map.items()):
+            if k not in goods:
+                print("  ", k, ":", v)
+        raise RuntimeError("mismatched sequence/node names")
+
     # sanity check;  a valid tree should have exactly one node that is parentless
     if not len(parents) == len(sequences) - 1:
         raise RuntimeError('invalid results attempting to parse {}: there are {} parentless sequences'.format(outfile, len(sequences) - len(parents)))

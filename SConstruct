@@ -687,7 +687,9 @@ def _asr_tree(outdir, c):
             'cd ' + outdir + ' && rm -f outtree && ' + asr_prog(c) + ' < $SOURCE.file > ' + asr_prog(c) + '.log',
             ignore_errors=True)
         # Manually depend on phy so that we rerun dnapars/dnaml if the input sequences change (without this, dnapars/dnaml will
-        # only get rerun if one of the targets are removed or if the iput asr_config file is changed).
+        # only get rerun if one of the targets are removed or if the iput asr_config file is changed). IMPORTANT!
+        env.Depends(phylip_out, c['phy'])
+        # Now process the phylip output into something that isn't shit
         basename = 'asr_input'
         tgt = env.Command(
                 [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg', 'fa']],
