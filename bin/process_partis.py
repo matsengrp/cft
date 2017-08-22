@@ -159,7 +159,7 @@ def infer_frameshifts(line):
         in_frame, input_seq = args
         aa = Seq(input_seq).translate()
         stop_count = aa.count("*")
-        return (not in_frame) or stop_count > 1
+        return (not in_frame) or stop_count > 0
     return map(infer_,
                zip(*map(lambda x: line[x], attrs)))
 
