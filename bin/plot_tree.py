@@ -75,9 +75,11 @@ def scale_node(size):
 def duplicity_legend(ts):
     ts.legend.add_face(ete3.faces.TextFace(""), 0)
     ts.legend.add_face(ete3.faces.TextFace("Duplicity"), 1)
-    for count in [1, 10, 100]:
-        ts.legend.add_face(ete3.faces.CircleFace(scale_node(count), 'grey', "circle"), 0)
-        ts.legend.add_face(ete3.faces.TextFace(str(count)), 1)
+    for duplicity in [1, 10, 100]:
+        size = scale_node(duplicity)
+        pie_face = ete3.PieChartFace([100], width=size, height=size, colors=['grey'])
+        ts.legend.add_face(pie_face, 0)
+        ts.legend.add_face(ete3.faces.TextFace(str(duplicity)), 1)
 
 
 def leaf_style(node, seqmeta, tp_colors, highlight_node=None):
