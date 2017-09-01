@@ -360,12 +360,18 @@ def seeds_fn(c):
 is_merged = re.compile('[A-Z]+\d+-\w-Ig[A-Z]').match
 is_unmerged = re.compile('Hs-(LN-?\w+)-.*').match
 
+def timepoint(c, sample_filename):
+    study = c['dataset']['study']
+    d = heads.read_metadata(study)[sample_filename]
+    return d['timepoint']
+
+
 def sample_metadata(c, filename): # control dict as well?
     study = c['dataset']['study']
     d = copy.deepcopy(heads.read_metadata(study)[filename])
     d.update(
         {'id': filename,
-         'timepoints': [{'cft.timepoint:id': d['timepoint']}]})
+         'timepoints': [{'cft.timepoint:id': timepoint(c, filename)}]})
     return d
 
 #dataset,shorthand,species,timepoint,subject,locus
@@ -373,7 +379,7 @@ def sample_metadata(c, filename): # control dict as well?
 @wrap_test_run()
 def sample(c):
     def keep(filename):
-        return is_merged(filename) or (c['dataset']['separate_timepoints'] and is_unmerged(filename))
+        return is_unmerged(filename) if separate_timepoints else is_merged(filename)
     return filter(keep,
                   os.listdir(path.join(datapath(c), 'seeds', c['seed'])))
 
@@ -388,6 +394,7 @@ def input_dir(c):
 def path_base_root(full_path):
     return path.splitext(path.basename(full_path))[0]
 
+# If there are duplicates 
 cluster_step_re = re.compile('.*-plus-(?P<cluster_step>\d+)').match
 def cluster_step(partition_filename):
     return int(cluster_step_re(partition_filename).group('cluster_step'))
@@ -463,7 +470,7 @@ w.add('cluster', ['cluster0'])
 def _process_partis(outdir, c):
     # Should get this to explicitly depend on cluster0.fa
     return env.Command(
-            [path.join(outdir, x) for x in ['partis_metadata.json', 'cluster0.fa', 'base_seqmeta.csv']],
+            [path.join(outdir, x) for x in ['partis_metadata.json', 'cluster0.fa', 'partis_seqmeta.csv']],
             [partitions(c), annotation(c)],
             'process_partis.py -F ' +
                 '--partition ${SOURCES[0]} ' +
@@ -472,7 +479,7 @@ def _process_partis(outdir, c):
                 '--remove-frameshifts ' +
                 '--partis-log ' + partis_log(c) + ' ' +
                 '--cluster-base cluster ' +
-                '--melted-base base_seqmeta ' +
+                '--melted-base partis_seqmeta ' +
                 '--output-dir ' + outdir + ' ' +
                 '--paths-relative-to ' + dataset_outdir(c))
 
@@ -485,7 +492,7 @@ def inseqs(outdir, c):
     return c['_process_partis'][1]
 
 @w.add_target()
-def base_seqmeta(outdir, c):
+def partis_seqmeta(outdir, c):
     return c['_process_partis'][2]
 
 
@@ -635,13 +642,13 @@ def infname_base(outdir, c):
 def seqmeta(outdir, c):
     """The merge of process_partis output with pre sequence metadata spit out by datascripts containing
     timepoint mappings. Base input duplicity is coded into the original input sequence names from vlad as N-M,
-    where N is the ranking of vlads untrimmed deduplication, and """
-    sources = [c['base_seqmeta'], c['cft.dataset:seqmeta']]
+    where N is the ranking of vlads untrimmed deduplication, and M is the duplicity of said deduplication."""
+    sources = [c['partis_seqmeta'], c['cft.dataset:seqmeta']]
     base_call =  'merge_timepoints_and_duplicity.py '
-    # This option controls which sequences get joined on in the merge for the base_seqmeta file, which has
+    # This option controls which sequences get joined on in the merge for the partis_seqmeta file, which has
     # orig/new names, joined on sequence from the other file
-    if not separate_timepoints:
-        base_call += '--merged '
+    if separate_timepoints:
+        base_call += '--timepoint ' + timepoint(c, c['sample']) + ' '
     if prune_strategy(c) == 'min_adcl':
         sources = [c['cluster_mapping']] + sources
         base_call += '--cluster-mapping '

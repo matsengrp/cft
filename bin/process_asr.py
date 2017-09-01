@@ -98,16 +98,17 @@ def parse_outfile(outfile, seqmeta):
     with open(outfile, 'rU') as fh:
         for sect in sections(fh):
             if sect == 'parents':
-                print("Processing tree")
                 parents = { full_name(parent): (full_name(child), dist) for parent, child, dist in iter_edges(fh) }
             elif sect[0] == 'sequences':
-                print("Processing sequences")
                 d = parse_seqdict(fh, sect[1])
                 sequences = [ SeqRecord(Seq(seq), id=full_name(seq_id), description="")
                                 for seq_id, seq in d.items() ]
             else:
                 raise RuntimeError("unrecognized phylip setion = {}".format(sect))
 
+    if 'naive0' in bads:
+        warn("Uh... naive0 in bad sequences?")
+        bads.remove('naive0')
     if bads:
         print("good sequences:", sorted(goods))
         print("bad sequences:", sorted(bads))

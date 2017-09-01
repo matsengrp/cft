@@ -4,12 +4,17 @@ import argparse
 import csv
 import re
 import collections
-import itertools
+#import itertools
 
 
 # The core merge/processing logic here
 
 duplicate_seqid_regex = re.compile('\d+-(\d+)')
+
+def upstream_seqmeta(args, seqid):
+    default = {'original': seqid, 'timepoint': args.timepoint} if args.timepoint else {}
+    return args.upstream_seqmeta.get(seqid, default)
+    
 
 def merge(args):
     """"Initial merge of upstream (pre-partis) metadata, including timepoint and duplicity info coded in orig
@@ -17,19 +22,21 @@ def merge(args):
     # For each row of our partis sequence metadata (as output from process_partis)
     for seqid, row in args.partis_seqmeta.items():
         # We get the corresponding row of the upstream metadata (which contains our full lenght sequence duplicities...)
-        upstream_row = args.upstream_seqmeta.get(seqid, {})
+        upstream_row = upstream_seqmeta(args, seqid)
         duplicates = filter(lambda x: x, row['duplicates'].split(':'))
         seqids = [seqid] + duplicates
         timepoints_dict = collections.defaultdict(lambda: 0)
         for dup_seqid in seqids:
-            dup_upstream_row = args.upstream_seqmeta.get(dup_seqid, {})
+            dup_upstream_row = upstream_seqmeta(args, seqid)
             # The original seqid and orig duplicity are the duplicites from vlad's pre-partis processing
             orig_seqid = dup_upstream_row.get('original')
             orig_seqid_match = duplicate_seqid_regex.match(orig_seqid) if isinstance(orig_seqid, str) else False
             if orig_seqid_match:
                 orig_duplicity = int(orig_seqid_match.groups()[0])
+                #print "  duplicity ", orig_duplicity
             else:
                 # TODO For seeds this is good but not for naive...
+                #print "no duplicity for", orig_seqid
                 orig_duplicity = 1
             timepoints_dict[dup_upstream_row.get('timepoint')] += orig_duplicity
         timepoints = sorted(timepoints_dict.items())
@@ -86,13 +93,17 @@ def format_results(results):
 
 # Wrapping together the CLI
 
-def csv_reader(index=None):
+def csv_reader(index=None, filter_by=None):
     def f(filename):
         with open(filename) as fh:
+            reader = csv.DictReader(fh)
+            if filter_by:
+                reader = filter(filter_by, reader)
+            reader = list(reader)
             if index:
-                return {r[index]: r for r in csv.DictReader(fh)}
+                return {r[index]: r for r in reader}
             else:
-                return list(csv.DictReader(fh))
+                return list(reader)
     return f
 
 def cluster_reader(filename):
@@ -104,15 +115,29 @@ def cluster_reader(filename):
     return result
 
 
+def timepoint_filter(args):
+    mappings = []
+    def f(x):
+        mappings.append(x)
+        return x['timepoint'] == args.timepoint
+    if args.timepoint:
+        return f
+
+
 def get_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--timepoint', help="optionally specify a specific timepoint on which to restrict")
     parser.add_argument('--cluster-mapping', type=cluster_reader)
-    parser.add_argument('--merged', action='store_true')
     parser.add_argument('partis_seqmeta', type=csv_reader('unique_ids'))
     parser.add_argument('upstream_seqmeta')
     parser.add_argument('output', type=argparse.FileType('w'))
     args = parser.parse_args()
-    args.upstream_seqmeta = csv_reader('new' if args.merged else 'original')(args.upstream_seqmeta)
+    index_by = 'original' if args.timepoint else 'new'
+    args.upstream_seqmeta = \
+            csv_reader(index=index_by,
+                       filter_by=timepoint_filter(args))(
+                               args.upstream_seqmeta
+                               )
     return args
 
 def main():
