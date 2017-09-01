@@ -106,6 +106,9 @@ def parse_outfile(outfile, seqmeta):
             else:
                 raise RuntimeError("unrecognized phylip setion = {}".format(sect))
 
+    if 'naive0' in bads:
+        warn("Uh... naive0 in bad sequences?")
+        bads.remove('naive0')
     if bads:
         print("good sequences:", sorted(goods))
         print("bad sequences:", sorted(bads))
