@@ -84,7 +84,7 @@ def duplicity_legend(ts):
 
 def leaf_style(node, seqmeta, tp_colors, highlight_node=None):
     name = node.name + " (mf={}) ".format(round(float(seqmeta['mut_freqs']), 3))
-    F = ete3.faces.TextFace(name)
+    F = ete3.faces.TextFace(name, fsize=9)
     ete3.add_face_to_node(F, node, column=1, position='branch-right')
     ## Style the node with color corresponding to timepoint
     nstyle = ete3.NodeStyle()
@@ -150,6 +150,7 @@ def render_tree(fname, tree, annotations, highlight_node, supports=False, suppor
     # whether or not we had rerooted on naive before, we want to do so for the SVG tree
     if 'naive' not in tree.name:
         tree = reroot_tree(tree, '.*naive.*')
+    ts.scale = 2300
     tree.render(fname, tree_style=ts)
 
 
