@@ -337,6 +337,8 @@ def _seeds(outdir, c):
     study = c['dataset']['study']
     subject = c['subject']
     seeds = heads.get_seeds(study, subject)
+    # If we don't have a directory for a seed, it might not be done running yet, so just run on all complete
+    seeds = filter(lambda x: path.isdir(path.join(datapath(c), 'seeds', x)), seeds)
     return seeds
 
 # Initialize our first sub dataset nest level
