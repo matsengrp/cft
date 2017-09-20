@@ -663,21 +663,25 @@ def full_orig_seqs(outdir, c):
     elif c['dataset']['study'] == 'laura-mb':
         return c['infname_base'] + '.fasta'
 
-@w.add_target(ingest=True)
-def orig_seqs(outdir, c):
-    "The original input seqs to partis, including the non-VDJ, trimmed out regions"
-    return env.Command(
-        path.join(outdir, 'orig_seqs.fa'),
-        [c['pruned_ids'], c['full_orig_seqs']],
-        "seqmagick convert --include-from-file $SOURCES $TARGET")
 
-# Convert to phylip format for dnapars/dnaml
+@w.add_target()
+def _phy(outdir, c):
+    "Save seqs in phylip format for dnaml, renaming sequences as necessary to avoid seqname limits"
+    return env.Command(
+        [path.join(outdir, x) for x in ('pruned.phy', 'seqname_mapping.csv')],
+        c['pruned_seqs'],
+        'make_phylip.py $SOURCE $TARGETS --dont-rename naive0')
+
+
 @w.add_target()
 def phy(outdir, c):
-    return env.Command(
-        path.join(outdir, "pruned.phy"),
-        c['pruned_seqs'],
-        "seqmagick convert $SOURCE $TARGET")
+    return c['_phy'][0]
+
+@w.add_target()
+def seqname_mapping(outdir, c):
+    """Seqname translations for reinterpretting dnaml output in terms of original seqnames, due to phulip name
+    length constraints."""
+    return c['_phy'][1]
 
 
 # Run dnapars/dnaml by passing in the "config file" as stdin hoping the menues all stay sane
@@ -702,12 +706,12 @@ def _asr_tree(outdir, c):
         basename = 'asr_input'
         tgt = env.Command(
                 [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg', 'fa']],
-                [phylip_out, c['seqmeta']],
+                [c['seqname_mapping'], phylip_out, c['seqmeta']],
                 # Note that `-` at the beggining lets things keep running if there's an error here; This is
                 # protecting us at the moment from clusters with 2 seqs. We should be catching this further
                 # upstream and handling more appropriately, but for now this is an easy stopgap...
                 "xvfb-run -a bin/process_asr.py --seed " + c['seed'] + " --outdir " + outdir + 
-                    " --basename " + basename + " $SOURCES")
+                    " --basename " + basename + " --seqname-mapping $SOURCES")
         asr_tree, asr_tree_svg, asr_seqs = tgt
         # manually depnd on this because the script isn't in first position
         env.Depends(tgt, 'bin/process_asr.py')
