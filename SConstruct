@@ -203,25 +203,56 @@ w = nestly_tripl.NestWrap(w,
         id_attrs=['cft.dataset:id', 'cft.build:id'])
 
 
+# Recording software versions
+# ---------------------------
+
+# First import some libs we'll need versions for
+import ete3, Bio, dendropy #, pandas
+from nestly import nestly
+# tripl version is a little messy because sometimes we load from local checkout
+def tripl_version():
+    try:
+        import tripl
+        return tripl.__version__
+    except:
+        from tripl import tripl
+        return tripl.__version__
+
+# The contract here is that a string val mapped to here is a command string to get a software version. A
+# function value is called to get a version. And as long as it's not a function value, then it's assumed it's
+# assumed the program name is something that `which` can be called on. If function value, assumed to be a lib
+# and which is not called. For now... this is a little arbitrary and specific to our use case here.
 software = {
     'dnaml': None,
     'muscle': 'muscle -version',
     'seqmagick': 'seqmagick --version',
     'FastTree': None,
-    'prank': 'prank -v'
+    'prank': 'prank -v',
+    'tripl': tripl_version,
+    'nestly': lambda: nestly.__version__,
+    'ete3': lambda: ete3.__version__,
+    'biopython': lambda: Bio.__version__,
+    'scons': 'scons -v',
+    'dendropy': lambda: dendropy.__version__,
+    # For some reason pandas won't load here... so no version tracking for now
+    #'pandas': lambda: pandas.__version__,
+    # For minadcl
+    'rppr': 'rppr --version'
     }
 
 
 def software_info(prog):
     version_command = software[prog]
     return {'cft.software:name': prog,
-            'cft.software:version': subprocess.check_output(version_command.split()) if version_command else None,
-            'cft.software:which': subprocess.check_output(['which', prog])}
+            'cft.software:version': version_command() if callable(version_command) else (
+                 subprocess.check_output(version_command.split()) if version_command else None),
+            'cft.software:which': subprocess.check_output(['which', prog]) if not callable(version_command) else None}
 
 
 @w.add_target('cft.build:software')
 def software(outdir, c):
     return [software_info(prog) for prog in software]
+
 
 
 # Could do the metadata as a separate target?
@@ -241,7 +272,7 @@ def _dataset_outdir(dataset_params):
         base += '-' + 'minadcl'
     if dataset_params['separate_timepoints']:
         base += '-' + 'septmpts'
-    if dataset_params['unseeded']:
+    if unseeded:
         base += '-' + 'unseeded'
     return base + '-' + dataset_params['asr_prog']
 
@@ -350,6 +381,8 @@ def _seeds(outdir, c):
     study = c['dataset']['study']
     subject = c['subject']
     seeds = heads.get_seeds(study, subject)
+    # If we don't have a directory for a seed, it might not be done running yet, so just run on all complete
+    seeds = filter(lambda x: path.isdir(path.join(datapath(c), 'seeds', x)), seeds)
     return seeds
 
 # Initialize our first sub dataset nest level
@@ -370,8 +403,17 @@ def seeds_fn(c):
 # What this should eventually look like is that we have already specified the relationships between the data
 # and the directories (timepoints etc) upstream, so we don't have to muck around with this.
 
-is_merged = re.compile('[A-Z]+\d+-\w-Ig[A-Z]').match
-is_unmerged = re.compile('Hs-(LN-?\w+)-.*').match
+def is_merged(c, x):
+    if c['dataset']['study'] in {'kate-qrs', 'laura-mb'}:
+        return re.compile('[A-Z]+\d+-\w-Ig[A-Z]').match(x)
+    elif c['dataset']['study'] in {'laura-mb-2'}:
+        return re.compile('\w+-\w+-merged').match(x)
+
+def is_unmerged(c, x):
+    if c['dataset']['study'] in {'kate-qrs', 'laura-mb'}:
+        return re.compile('Hs-(LN-?\w+)-.*').match(x)
+    elif c['dataset']['study'] in {'laura-mb-2'}:
+        return re.compile('\w+-\w+-(?!merged)').match(x)
 
 def timepoint(c, sample_filename):
     study = c['dataset']['study']
@@ -392,9 +434,11 @@ def sample_metadata(c, filename): # control dict as well?
 @wrap_test_run()
 def sample(c):
     def keep(filename):
-        return is_unmerged(filename) if separate_timepoints else is_merged(filename)
-    return filter(keep,
+        return is_unmerged(c, filename) if separate_timepoints else is_merged(c, filename)
+    results = filter(keep,
                   os.listdir(path.join(datapath(c), 'seeds', c['seed'])))
+    #print('results', results)
+    return results
 
 
 # Some helpers at the seed level
@@ -678,27 +722,23 @@ def add_cluster_analysis(w):
         return env.Command(path.join(outdir, 'seqmeta.csv'), sources, base_call + '$SOURCES $TARGET')
 
     @w.add_target()
-    def full_orig_seqs(outdir, c):
-        if c['dataset']['study'] == 'kate-qrs':
-            return c['infname_base'] + '.fa'
-        elif c['dataset']['study'] == 'laura-mb':
-            return c['infname_base'] + '.fasta'
-
-    @w.add_target(ingest=True)
-    def orig_seqs(outdir, c):
-        "The original input seqs to partis, including the non-VDJ, trimmed out regions"
+    def _phy(outdir, c):
+        "Save seqs in phylip format for dnaml, renaming sequences as necessary to avoid seqname limits"
         return env.Command(
-            path.join(outdir, 'orig_seqs.fa'),
-            [c['pruned_ids'], c['full_orig_seqs']],
-            "seqmagick convert --include-from-file $SOURCES $TARGET")
+            [path.join(outdir, x) for x in ('pruned.phy', 'seqname_mapping.csv')],
+            c['pruned_seqs'],
+            'make_phylip.py $SOURCE $TARGETS --dont-rename naive0')
 
-    # Convert to phylip format for dnapars/dnaml
+
     @w.add_target()
     def phy(outdir, c):
-        return env.Command(
-            path.join(outdir, "pruned.phy"),
-            c['pruned_seqs'],
-            "seqmagick convert $SOURCE $TARGET")
+        return c['_phy'][0]
+
+    @w.add_target()
+    def seqname_mapping(outdir, c):
+        """Seqname translations for reinterpretting dnaml output in terms of original seqnames, due to phulip name
+        length constraints."""
+        return c['_phy'][1]
 
 
     # Run dnapars/dnaml by passing in the "config file" as stdin hoping the menues all stay sane
@@ -723,12 +763,12 @@ def add_cluster_analysis(w):
             basename = 'asr_input'
             tgt = env.Command(
                     [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg', 'fa']],
-                    [phylip_out, c['seqmeta']],
+                    [c['seqname_mapping'], phylip_out, c['seqmeta']],
                     # Note that `-` at the beggining lets things keep running if there's an error here; This is
                     # protecting us at the moment from clusters with 2 seqs. We should be catching this further
                     # upstream and handling more appropriately, but for now this is an easy stopgap...
                     "xvfb-run -a bin/process_asr.py --seed " + c['seed'] + " --outdir " + outdir + 
-                        " --basename " + basename + " $SOURCES")
+                        " --basename " + basename + " --seqname-mapping $SOURCES")
             asr_tree, asr_tree_svg, asr_seqs = tgt
             # manually depnd on this because the script isn't in first position
             env.Depends(tgt, 'bin/process_asr.py')
@@ -752,7 +792,6 @@ def add_cluster_analysis(w):
             return [asr_tree, asr_tree_svg, asr_supports_tree]
         else:
             print("something has gone terribly wrong")
-
 
 
     #@w.add_target(ingest=True)
@@ -803,6 +842,7 @@ def add_cluster_analysis(w):
 
 # Now actually add all of these build targets
 add_cluster_analysis(w)
+
 
 
 # Popping out

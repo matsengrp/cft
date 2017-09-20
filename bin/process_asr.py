@@ -77,10 +77,10 @@ def parse_seqdict(fh, mode='dnaml'):
 # parse the dnaml output file and return data strictures containing a
 # list biopython.SeqRecords and a dict containing adjacency
 # relationships and distances between nodes.
-def parse_outfile(outfile, seqmeta):
+def parse_outfile(outfile, seqmeta, seqname_mapping=None):
     '''parse phylip outfile'''
-    name_map = {seq_id[0:10]: seq_id for seq_id in seqmeta}
-    if len(name_map) != len(seqmeta):
+    name_map = seqname_mapping or {seq_id[0:10]: seq_id for seq_id in seqmeta}
+    if len(name_map) != len(seqmeta) and not seqname_mapping:
         raise RuntimeError("Conflicting shortened names!")
 
     # Keeping track of which names match up for validation and error handling
@@ -171,6 +171,13 @@ def reroot_tree(tree, pattern='.*naive.*'):
     # find all nodes matching pattern
     node = find_node(tree, pattern)
     if tree != node:
+        # In general this would be necessary, but we are actually assuming that naive has been set as an
+        # outgroup in dnaml, and if it hasn't, we want to raise an error, as below
+        #tree.set_outgroup(node)
+        # Raise error if naive isn't in root's children
+        if node not in tree.children:
+            raise "Naive node not set as outgroup; Check dnaml/asr run to make sure this is the case"
+        # This actually assumes the `not in` condition above, but we check as above for clarity
         tree.remove_child(node)
         node.add_child(tree)
         tree.dist = node.dist
@@ -178,7 +185,9 @@ def reroot_tree(tree, pattern='.*naive.*'):
         tree = node
     return tree
 
-
+def seqname_mapping_arg(filename):
+    with open(filename, 'r') as fh:
+        return {row['new_id']: row['original_id'] for row in csv.DictReader(fh)}
 
 def get_args():
     def seqmeta_input(fname):
@@ -201,6 +210,10 @@ def get_args():
         'seqmeta', type=seqmeta_input,
         help="Sequence metadata file for annotating mut_freqs")
     parser.add_argument(
+        '--seqname-mapping',
+        type=seqname_mapping_arg,
+        help="optional csv file translating original_id to new_id for phylip 10 char cludgery")
+    parser.add_argument(
         '--outdir', default='.',
         help="output directory where results are left.  [default '%(default)s']")
     parser.add_argument(
@@ -217,7 +230,7 @@ def main():
     basename = args.basename if args.basename else os.path.basename(args.phylip_outfile)
     outbase = os.path.join(args.outdir, os.path.splitext(basename)[0])
 
-    sequences, parents = parse_outfile(args.phylip_outfile, args.seqmeta)
+    sequences, parents = parse_outfile(args.phylip_outfile, args.seqmeta, args.seqname_mapping)
 
     if not sequences or not parents:
         raise RuntimeError("No sequences were available; are you sure this is a dnaml output file?")
