@@ -359,8 +359,17 @@ def seeds_fn(c):
 # What this should eventually look like is that we have already specified the relationships between the data
 # and the directories (timepoints etc) upstream, so we don't have to muck around with this.
 
-is_merged = re.compile('[A-Z]+\d+-\w-Ig[A-Z]').match
-is_unmerged = re.compile('Hs-(LN-?\w+)-.*').match
+def is_merged(c, x):
+    if c['dataset']['study'] in {'kate-qrs', 'laura-mb'}:
+        return re.compile('[A-Z]+\d+-\w-Ig[A-Z]').match(x)
+    elif c['dataset']['study'] in {'laura-mb-2'}:
+        return re.compile('\w+-\w+-merged').match(x)
+
+def is_unmerged(c, x):
+    if c['dataset']['study'] in {'kate-qrs', 'laura-mb'}:
+        return re.compile('Hs-(LN-?\w+)-.*').match(x)
+    elif c['dataset']['study'] in {'laura-mb-2'}:
+        return re.compile('\w+-\w+-(?!merged)').match(x)
 
 def timepoint(c, sample_filename):
     study = c['dataset']['study']
@@ -381,9 +390,11 @@ def sample_metadata(c, filename): # control dict as well?
 @wrap_test_run()
 def sample(c):
     def keep(filename):
-        return is_unmerged(filename) if separate_timepoints else is_merged(filename)
-    return filter(keep,
+        return is_unmerged(c, filename) if separate_timepoints else is_merged(c, filename)
+    results = filter(keep,
                   os.listdir(path.join(datapath(c), 'seeds', c['seed'])))
+    #print('results', results)
+    return results
 
 
 # Some helpers at the seed level
