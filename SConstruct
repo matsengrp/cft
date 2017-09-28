@@ -41,8 +41,10 @@ from os import path
 #from warnings import warn
 
 
+#import nestly
 #from nestly import Nest
 #from nestly.scons import SConsWrap
+from nestly import nestly
 from nestly.nestly import Nest
 from nestly.nestly.scons import SConsWrap
 from datascripts import heads
@@ -208,7 +210,6 @@ w = nestly_tripl.NestWrap(w,
 
 # First import some libs we'll need versions for
 import ete3, Bio, dendropy #, pandas
-from nestly import nestly
 # tripl version is a little messy because sometimes we load from local checkout
 def tripl_version():
     try:
