@@ -21,6 +21,7 @@ See README for typical environment setup and usage.
 '''
 
 
+# Basic imports
 from __future__ import print_function
 import os
 import re
@@ -34,24 +35,28 @@ import glob
 import sconsutils
 import itertools
 import copy
+#import json
 #import functools as fun
-
 
 from os import path
 #from warnings import warn
 
 
-#from nestly import Nest
-#from nestly.scons import SConsWrap
-from nestly.nestly import Nest
-from nestly.nestly.scons import SConsWrap
-from datascripts import heads
+# Nestly things
+import nestly
+import nestly.scons
 
-
-#from SCons import Node
+# Scons requirements
 from SCons.Script import Environment, AddOption
 
-#import json
+
+from datascripts import heads
+
+# Build modules (in site_scons):
+import backtrans_align
+
+
+
 
 # Need this in order to read csv files with sequences in the fields
 csv.field_size_limit(sys.maxsize)
@@ -128,12 +133,6 @@ AddOption('--outdir`',
         default='output',
         help="Directory in which to output results; defaults to `output`")
 
-AddOption('--unseeded',
-        dest='unseeded',
-        action='store_true',
-        default=False,
-        help="Run on unseeded data")
-
 
 # prefer realpath so that running latest vs explicit vN doesn't require rerun; also need for defaults below
 base_datapath = env.GetOption('base_datapath')
@@ -145,11 +144,6 @@ test_run = env.GetOption("test_run")
 separate_timepoints = env.GetOption("separate_timepoints")
 dataset_tag = env.GetOption('dataset_tag') or ('test' if test_run else None)
 outdir_base = env.GetOption('outdir')
-unseeded = env.GetOption('unseeded')
-if unseeded:
-    prune_strategies = ['min_adcl']
-    # for now, there are only unseeded, so we'll make the implication as a convenience for now
-    separate_timepoints = True
 
 
 print("outdir = {}".format(outdir_base))
@@ -184,8 +178,8 @@ def git(*args):
 
 import tripl.tripl.nestly as nestly_tripl
 
-nest = Nest()
-w = SConsWrap(nest, outdir_base, alias_environment=env)
+nest = nestly.Nest()
+w = nestly.scons.SConsWrap(nest, outdir_base, alias_environment=env)
 w = nestly_tripl.NestWrap(w,
         name='build',
         # Need to base hashing off of this for optimal incrementalization
@@ -208,7 +202,6 @@ w = nestly_tripl.NestWrap(w,
 
 # First import some libs we'll need versions for
 import ete3, Bio, dendropy #, pandas
-from nestly import nestly
 # tripl version is a little messy because sometimes we load from local checkout
 def tripl_version():
     try:
@@ -268,13 +261,9 @@ def _dataset_outdir(dataset_params):
     "Outputs the basename of the path to which this dataset's output lives; e.g. 'kate-qrs-v10-dnaml'"
     base = dataset_tag + '-' if dataset_tag else ''
     base += path.relpath(dataset_params['datapath'], base_datapath).replace('/', '-')
-    if dataset_params['prune_strategy'] == 'min_adcl':
-        base += '-' + 'minadcl'
     if dataset_params['separate_timepoints']:
         base += '-' + 'septmpts'
-    if unseeded:
-        base += '-' + 'unseeded'
-    return base + '-' + dataset_params['asr_prog']
+    return base
 
 
 def _dataset_id(outdir):
@@ -293,20 +282,15 @@ def with_data_id_and_outdir(dataset_params):
 
 print("Running for")
 print("  datapaths:", datapaths)
-print("  asr_progs:", asr_progs)
-print("  prune_strategies:", prune_strategies)
 
 # A collection of datasets, where the `datapath` key is the full realpath to a leaf node input directory
 datasets = [with_data_id_and_outdir({
                  'datapath': datapath,
                  'study': datapath.split('/')[-2],
                  'version': datapath.split('/')[-1],
-                 'asr_prog': asr_prog,
-                 'prune_strategy': prune_strategy,
                  'separate_timepoints': separate_timepoints,
                  })
-             for datapath, asr_prog, prune_strategy
-             in itertools.product(datapaths, asr_progs, prune_strategies)]
+             for datapath in datapaths]
 
 # This is a little idiosynchratic the way we're doing things here, because of how we wanted to think about
 # uniqueness before; This will probably get scrapped and we'll have everything build off of attributes of the
@@ -335,14 +319,6 @@ def dataset_seqmeta(outdir, c):
 
 def dataset_id(c):
     return c['dataset']['id']
-
-def asr_prog(c):
-    "Retrieve the asr_prog from the dataset map"
-    return c['dataset']['asr_prog']
-
-def prune_strategy(c):
-    "Retrieve the asr_prog from the dataset map"
-    return c['dataset']['prune_strategy']
 
 def datapath(c):
     "Returns the input realpath datapath value of the dataset"
@@ -422,6 +398,8 @@ def timepoint(c, sample_filename):
 
 
 def sample_metadata(c, filename): # control dict as well?
+    print("DEBUG filename", filename)
+    print("DEBUG c keys", c.keys())
     study = c['dataset']['study']
     d = copy.deepcopy(heads.read_metadata(study)[filename])
     d.update(
@@ -512,8 +490,6 @@ def partition(c):
 w.add('cluster', ['cluster0'])
 
 
-
-
 # These functions define the "interface" of the nesting for a cluster analysis, if you will
 
 def partis_log(c):
@@ -537,7 +513,7 @@ def add_cluster_analysis(w):
     def _process_partis(outdir, c):
         # Should get this to explicitly depend on cluster0.fa
         return env.Command(
-                [path.join(outdir, x) for x in ['partis_metadata.json', 'cluster0.fa', 'partis_seqmeta.csv']],
+                [path.join(outdir, x) for x in ['partis_metadata.json', c['cluster'] + '.fa', 'partis_seqmeta.csv']],
                 [partitions(c), annotation(c)],
                 'process_partis.py -F ' +
                     '--partition ${SOURCES[0]} ' +
@@ -564,85 +540,10 @@ def add_cluster_analysis(w):
 
 
 
-
     # Sequence Alignment
     # ------------------
 
-    # What follows is a rather convoluted backtranslation strategy for sequence alignment.
-    # The basic idea is that we translate our sequences, align them (taking advantage of coding information),
-    # and from this infer the a nucleotide alignment using `seqmagick backtrans-align`.
-    # The problem is that `seqmagick` rather finicky here about sequence ordering and nucleotide seqs being in
-    # lengths of multiples of three.
-    # So there's a bunch of housekeeping here in making sure all of this is the case for our final backtrans-align
-    # step.
-
-    @w.add_target()
-    def translated_inseqs_(outdir, c):
-        return env.Command(
-            #path.join(outdir, "translated_inseqs.fa"),
-            #c['inseqs'],
-            #'seqmagick convert --translate dna2protein $SOURCE $TARGET')
-            [path.join(outdir, "translated_inseqs.fa"), path.join(outdir, 'inseqs_trimmed.fa')],
-            [c['partis_metadata'], c['inseqs']],
-            'translate_seqs.py $SOURCES $TARGET -t ${TARGETS[1]}')
-
-    @w.add_target()
-    def translated_inseqs(outdir, c):
-        return c['translated_inseqs_'][0]
-
-    @w.add_target()
-    def trimmed_inseqs(outdir, c):
-        return c['translated_inseqs_'][1]
-
-    @w.add_target()
-    def aligned_translated_inseqs(outdir, c):
-        return env.SRun(
-            path.join(outdir, "aligned_translated_inseqs.fa"),
-            c['translated_inseqs'],
-            # Replace stop codons with X, or muscle inserts gaps, which messed up seqmagick backtrans-align below
-            # Note that things will break down at backtrans-align if any seq ids have * in them...
-            'sed \'s/\*/X/g\' $SOURCE | muscle -in /dev/stdin -out $TARGET 2> $TARGET-.log')
-
-    # Not sure why we're not using this any more; I think we want to be, but it must have been causing some
-    # issue... need to look at this XXX
-    # This script will replace the X characters in our alignment with stop codons where they were taken out in the
-    # sed step prior to alignment above. We should try to use these when possible in alignments we display.
-    # However, this may be less useful here than it is further down where we translate our ancestral state
-    # inferences, since those are the seqs we use elsewhere.
-
-    #@w.add_target()
-    #def fixed_aligned_translated_inseqs(outdir, c):
-        #return env.Command(
-            #path.join(outdir, 'fixed_aligned_translated_inseqs.fa'),
-            #[c['aligned_translated_inseqs'], c['translated_inseqs']],
-            #'fix_stop_deletions.py $SOURCES $TARGET')
-
-    # Sort the sequences to have the same order, so that seqmagick doesn't freak out
-
-    @w.add_target()
-    def sorted_inseqs(outdir, c):
-        return env.Command(
-            path.join(outdir, "sorted_inseqs.fa"),
-            c['trimmed_inseqs'],
-            'seqmagick convert --sort name-asc $SOURCE $TARGET')
-
-    @w.add_target()
-    def sorted_aligned_translated_inseqs(outdir, c):
-        return env.Command(
-            path.join(outdir, "sorted_aligned_translated_inseqs.fa"),
-            #c['fixed_aligned_translated_inseqs'],
-            c['aligned_translated_inseqs'],
-            'seqmagick convert --sort name-asc $SOURCE $TARGET')
-
-    # Now, finally, we can backtranslate
-
-    @w.add_target()
-    def aligned_inseqs(outdir, c):
-        return env.Command(
-            path.join(outdir, 'aligned_inseqs.fa'),
-            [c['sorted_aligned_translated_inseqs'], c['sorted_inseqs']],
-            'seqmagick backtrans-align -a warn $SOURCES -o $TARGET')
-
+    backtrans_align.add(env, w)
 
 
     # On with trees and other things...
@@ -656,24 +557,41 @@ def add_cluster_analysis(w):
             c['aligned_inseqs'],
             "FastTree -nt -quiet $SOURCE > $TARGET 2> $TARGET-.log")
 
-    # pruning is dependent on which program we use, dnapars seems to handle bigger trees more quickly
-    def prune_n(c):
-        prune_n_ = {'dnapars': 300, 'dnaml': 100, 'raxml': 100}
-        return prune_n_[asr_prog(c)]
+    @w.add_nest('reconstruction',
+        label_func=lambda d: d['id'],
+        metadata=lambda c, d: d)
+    def reconstruction(c):
+        return [{'id': prune_strategy + '-' + asr_prog,
+                 'prune_strategy': prune_strategy,
+                 'asr_prog': asr_prog,
+                 # Just 100 for everyone now
+                 'prune_count': 100}
+                 for prune_strategy, asr_prog
+                 in itertools.product(
+                     ['minadcl', 'seedlineage'] if c['seed'] else ['minadcl'],
+                     #['dnaml', 'ecgtheow']]
+                     # ^ in the future?
+                     ['dnaml'])]
+
 
     # calculate list of sequences to be pruned
     @w.add_target()
     def pruned_ids(outdir, c):
-        strategy = prune_strategy(c)
+        recon = c['reconstruction']
         return env.Command(
             path.join(outdir, "pruned_ids.txt"),
             c['fasttree'],
-            "prune.py -n " + str(prune_n(c)) + " --always-include " + ','.join(c['_seeds']) + " --strategy " + strategy + " --naive naive0 --seed " + c['seed'] + " $SOURCE > $TARGET")
+            "prune.py -n " + str(recon['prune_count'])
+                + " --always-include " + ','.join(c['_seeds'])
+                + " --strategy " + recon['prune_strategy']
+                + " --naive naive0"
+                + (" --seed " + c['seed'] if c['seed'] else '')
+                + " $SOURCE > $TARGET")
 
 
     @w.add_target()
     def cluster_mapping(outdir, c):
-        if prune_strategy(c) == 'min_adcl':
+        if c['reconstruction']['prune_strategy'] == 'min_adcl':
             return env.Command(
                 path.join(outdir, 'cluster_mapping.csv'),
                 [c['fasttree'], c['pruned_ids']],
@@ -716,7 +634,7 @@ def add_cluster_analysis(w):
         # orig/new names, joined on sequence from the other file
         if separate_timepoints:
             base_call += '--timepoint ' + timepoint(c, c['sample']) + ' '
-        if prune_strategy(c) == 'min_adcl':
+        if c['reconstruction']['prune_strategy'] == 'min_adcl':
             sources = [c['cluster_mapping']] + sources
             base_call += '--cluster-mapping '
         return env.Command(path.join(outdir, 'seqmeta.csv'), sources, base_call + '$SOURCES $TARGET')
@@ -746,15 +664,16 @@ def add_cluster_analysis(w):
     @w.add_target()
     def _asr_tree(outdir, c):
         "run dnapars/dnaml (from phylip package) to create tree with inferred sequences at internal nodes"
-        if asr_prog(c) in {'dnapars', 'dnaml'}:
+        asr_prog = c['reconstruction']['asr_prog']
+        if asr_prog in {'dnapars', 'dnaml'}:
             config = env.Command(
-                path.join(outdir, asr_prog(c) + ".cfg"),
+                path.join(outdir, asr_prog + ".cfg"),
                 c['phy'],
-                'python bin/mkconfig.py $SOURCE ' + asr_prog(c) + ' > $TARGET')
+                'python bin/mkconfig.py $SOURCE ' + asr_prog + ' > $TARGET')
             phylip_out = env.SRun(
                 path.join(outdir, "outfile"),
                 config,
-                'cd ' + outdir + ' && rm -f outtree && ' + asr_prog(c) + ' < $SOURCE.file > ' + asr_prog(c) + '.log',
+                'cd ' + outdir + ' && rm -f outtree && ' + asr_prog + ' < $SOURCE.file > ' + asr_prog + '.log',
                 ignore_errors=True)
             # Manually depend on phy so that we rerun dnapars/dnaml if the input sequences change (without this, dnapars/dnaml will
             # only get rerun if one of the targets are removed or if the iput asr_config file is changed). IMPORTANT!
@@ -767,14 +686,17 @@ def add_cluster_analysis(w):
                     # Note that `-` at the beggining lets things keep running if there's an error here; This is
                     # protecting us at the moment from clusters with 2 seqs. We should be catching this further
                     # upstream and handling more appropriately, but for now this is an easy stopgap...
-                    "xvfb-run -a bin/process_asr.py --seed " + c['seed'] + " --outdir " + outdir + 
-                        " --basename " + basename + " --seqname-mapping $SOURCES")
+                    "xvfb-run -a bin/process_asr.py"
+                        + (" --seed " + c['seed'] if c['seed'] else '')
+                        + " --outdir " + outdir
+                        + " --basename " + basename
+                        + " --seqname-mapping $SOURCES")
             asr_tree, asr_tree_svg, asr_seqs = tgt
             # manually depnd on this because the script isn't in first position
             env.Depends(tgt, 'bin/process_asr.py')
             env.Depends(tgt, 'bin/plot_tree.py')
             return [asr_tree, asr_tree_svg, asr_seqs]
-        elif asr_prog(c) == 'raxml':
+        elif asr_prog == 'raxml':
             asr_supports_tree = env.SRun(
                 path.join(outdir, 'asr.sup.nwk'),
                 c['pruned_seqs'],
@@ -784,7 +706,8 @@ def add_cluster_analysis(w):
             asr_tree_svg = env.Command(
                 path.join(outdir, 'asr.svg'),
                 [asr_supports_tree, c['seqmeta']],
-                'xvfb-run -a bin/plot_tree.py $SOURCES $TARGET --supports --seed ' + c['seed'])
+                'xvfb-run -a bin/plot_tree.py $SOURCES $TARGET --supports'
+                    + (' --seed ' + c['seed'] if c['seed'] else ''))
             asr_tree = env.Command(
                 path.join(outdir, 'asr.nwk'),
                 asr_supports_tree,
@@ -840,8 +763,18 @@ def add_cluster_analysis(w):
             "sed 's/\?/N/g' $SOURCE | seqmagick convert --translate dna2protein - $TARGET")
 
 
+# The following is for debugging
+
+@w.add_metadata()
+def debug(outdir, c):
+    # Should get this to explicitly depend on cluster0.fa
+    return env.Command(
+            [], [],
+            'XXXX debug $SOURCES $TARGETS')
+
+# Temporarily turn off to debug above
 # Now actually add all of these build targets
-add_cluster_analysis(w)
+#add_cluster_analysis(w)
 
 
 
@@ -852,6 +785,8 @@ add_cluster_analysis(w)
 # We're doing this so we can add_cluster_analysis for the unseeded runs.
 
 w.pop('seed')
+
+
 
 
 
@@ -894,16 +829,6 @@ def add_unseeded_analysis(w):
         return filter(keep,
                       os.listdir(path.join(datapath(c), 'partitions')))
 
-    # leftoff...
-
-
-    # Some helpers at the seed level
-
-
-    # If there are duplicates 
-    cluster_step_re = re.compile('.*-plus-(?P<cluster_step>\d+)').match
-    def cluster_step(partition_filename):
-        return int(cluster_step_re(partition_filename).group('cluster_step'))
 
     def partition_size(fname):
         with open(fname, 'r') as partition_handle:
@@ -915,7 +840,9 @@ def add_unseeded_analysis(w):
 
     # Setting up the partition nest level
 
-    def partition_file_metadata(partition_handle, cluster_step):
+    # Assuming for now, only the best partition has been taken
+
+    def partition_file_metadata(partition_handle):
         parts = list(csv.DictReader(partition_handle))
         for i, x in enumerate(parts):
             x['index'] = i
@@ -927,20 +854,17 @@ def add_unseeded_analysis(w):
         return parts[cluster_i]
 
     def partition_metadata(c, filename):
-        step = cluster_step(filename)
-        metadata = partition_file_metadata(file(partitions(c)), step)
-        return {'cluster_step': step,
+        metadata = partition_file_metadata(file(partitions(c)), 0)
+        # For now, just assume the cluster
+        return {'cluster_step': 0,
                 'logprob': metadata['logprob'],
                 'n_clusters': metadata['n_clusters']}
 
 
     def input_dir(c):
-        "Return the `seed > sample` directory given the closed over datapath and a nestly control dictionary"
-        # This 'seeds' thing here is potentially not a very general assumption; not sure how variable that might be upstream
-        return path.join(datapath(c), 'seeds', c['seed'], c['sample'])
+        "Return the `sample` directory given the closed over datapath and a nestly control dictionary"
+        return path.join(datapath(c), 'partitions', c['sample'])
 
-    # Should we add target so it's just in the c dictionary?
-    #@w.add_target()
     def path_base_root(full_path):
         return path.splitext(path.basename(full_path))[0]
 
@@ -950,7 +874,7 @@ def add_unseeded_analysis(w):
     def partition(c):
         """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
         for actual analysis."""
-        partitions = sorted(glob.glob(path.join(input_dir(c), "*-plus-*.csv")), key=cluster_step)
+        partitions = sorted(glob.glob(path.join(input_dir(c), "partition-cluster-annotations.csv")), key=cluster_step)
         keep_partitions = []
         for partition in partitions:
             size = partition_size(partition)
@@ -960,6 +884,8 @@ def add_unseeded_analysis(w):
             # Once we get a cluster of size 50, we don't need later cluster steps
             if size >= 50:
                 break
+            # Note: It would be better if this data was known at a higher level, so that cases of no
+            # partitions leaving detritis won't be found.
         return map(path_base_root, keep_partitions)
 
 
@@ -976,7 +902,7 @@ def add_unseeded_analysis(w):
     add_cluster_analysis(w)
 
 
-if unseeded:
+if False:
     add_unseeded_analysis(w)
 
 # Next we recreate our whole nesting thing.
