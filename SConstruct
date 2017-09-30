@@ -43,11 +43,15 @@ from os import path
 
 
 # Nestly things
-import nestly
-import nestly.scons
+# this is temporary
+#import nestly
+#import nestly_scons
+from nestly import nestly
+from nestly.nestly import scons as nestly_scons
 
 # Scons requirements
 from SCons.Script import Environment, AddOption
+
 
 
 from datascripts import heads
@@ -127,7 +131,7 @@ AddOption('--dataset-tag',
         metavar='TAG',
         help="Adds a tag to the beginning of the automatically generated dataset ids")
 
-AddOption('--outdir`',
+AddOption('--outdir',
         dest='outdir',
         metavar='DIR',
         default='output',
@@ -179,7 +183,7 @@ def git(*args):
 import tripl.tripl.nestly as nestly_tripl
 
 nest = nestly.Nest()
-w = nestly.scons.SConsWrap(nest, outdir_base, alias_environment=env)
+w = nestly_scons.SConsWrap(nest, outdir_base, alias_environment=env)
 w = nestly_tripl.NestWrap(w,
         name='build',
         # Need to base hashing off of this for optimal incrementalization
@@ -391,17 +395,21 @@ def is_unmerged(c, x):
     elif c['dataset']['study'] in {'laura-mb-2'}:
         return re.compile('\w+-\w+-(?!merged)').match(x)
 
-def timepoint(c, sample_filename):
-    study = c['dataset']['study']
-    d = heads.read_metadata(study)[sample_filename]
-    return d['timepoint']
 
+def canonical_sample_name(c, sample_filename):
+    study_metadata = heads.read_metadata(c['dataset']['study'])
+    sample_name = [k for k in study_metadata if k in sample_filename][0]
+    return sample_name
+
+def raw_sample_metadata(c, sample_filename):
+    study_metadata = heads.read_metadata(c['dataset']['study'])
+    return study_metadata[canonical_sample_name(c, sample_filename)]
+
+def timepoint(c, sample_filename):
+    return raw_sample_metadata(c, sample_filename)['timepoint']
 
 def sample_metadata(c, filename): # control dict as well?
-    print("DEBUG filename", filename)
-    print("DEBUG c keys", c.keys())
-    study = c['dataset']['study']
-    d = copy.deepcopy(heads.read_metadata(study)[filename])
+    d = copy.deepcopy(raw_sample_metadata(c, filename))
     d.update(
         {'id': filename,
          'timepoints': [{'cft.timepoint:id': timepoint(c, filename)}]})
@@ -457,9 +465,14 @@ def partition_metadata(c, filename):
 
 
 def input_dir(c):
-    "Return the `seed > sample` directory given the closed over datapath and a nestly control dictionary"
+    """If seeded, return the `seed > sample` directory given the closed over datapath and a nestly control
+    dictionary. Else return the `sample` directory given the closed over datapath and a nestly control dictionary."""
     # This 'seeds' thing here is potentially not a very general assumption; not sure how variable that might be upstream
-    return path.join(datapath(c), 'seeds', c['seed'], c['sample'])
+    if 'seed' in c:
+        return path.join(datapath(c), 'seeds', c['seed'], c['sample'])
+    else:
+        return path.join(datapath(c), 'partitions', c['sample'])
+
 
 # Should we add target so it's just in the c dictionary?
 #@w.add_target()
@@ -496,7 +509,10 @@ def partis_log(c):
     return path.join(input_dir(c), 'partition.log')
 
 def annotation(c):
-    return path.join(input_dir(c), c['partition'] + '.csv')
+    if 'seed' in c:
+        return path.join(input_dir(c), c['partition'] + '.csv')
+    else:
+        return path.join(input_dir(c), 'partition-cluster-annotations.csv')
 
 def partitions(c):
     "Returns the `partition.csv` file path with all the partition information for every partition output by partis."
@@ -513,18 +529,19 @@ def add_cluster_analysis(w):
     def _process_partis(outdir, c):
         # Should get this to explicitly depend on cluster0.fa
         return env.Command(
-                [path.join(outdir, x) for x in ['partis_metadata.json', c['cluster'] + '.fa', 'partis_seqmeta.csv']],
+                [path.join(outdir, x) for x in ['partis_metadata.json', 'cluster0.fa', 'partis_seqmeta.csv']],
                 [partitions(c), annotation(c)],
-                'process_partis.py -F ' +
-                    '--partition ${SOURCES[0]} ' +
-                    '--annotations ${SOURCES[1]} ' +
-                    #'--param_dir ' + parameter_dir(c) + ' '
-                    '--remove-frameshifts ' +
-                    '--partis-log ' + partis_log(c) + ' ' +
-                    '--cluster-base cluster ' +
-                    '--melted-base partis_seqmeta ' +
-                    '--output-dir ' + outdir + ' ' +
-                    '--paths-relative-to ' + dataset_outdir(c))
+                'process_partis.py -F' +
+                    ' --partition ${SOURCES[0]}' +
+                    ' --annotations ${SOURCES[1]}' +
+                    #' --param_dir ' + parameter_dir(c) +
+                    ' --remove-frameshifts' +
+                    ' --partis-log ' + partis_log(c) +
+                    ' --cluster-base cluster' +
+                    ' --melted-base partis_seqmeta' +
+                    ' --output-dir ' + outdir +
+                    ' --paths-relative-to ' + dataset_outdir(c) +
+                    ('' if c.get('seed') else ' --unique-ids ' + ':'.join(c['cluster']['unique_ids'])))
 
     @w.add_target(ingest=True)
     def partis_metadata(outdir, c):
@@ -568,7 +585,7 @@ def add_cluster_analysis(w):
                  'prune_count': 100}
                  for prune_strategy, asr_prog
                  in itertools.product(
-                     ['minadcl', 'seedlineage'] if c['seed'] else ['minadcl'],
+                     ['min_adcl', 'seed_lineage'] if 'seed' in c else ['min_adcl'],
                      #['dnaml', 'ecgtheow']]
                      # ^ in the future?
                      ['dnaml'])]
@@ -585,7 +602,7 @@ def add_cluster_analysis(w):
                 + " --always-include " + ','.join(c['_seeds'])
                 + " --strategy " + recon['prune_strategy']
                 + " --naive naive0"
-                + (" --seed " + c['seed'] if c['seed'] else '')
+                + (" --seed " + c['seed'] if 'seed' in c else '')
                 + " $SOURCE > $TARGET")
 
 
@@ -687,7 +704,7 @@ def add_cluster_analysis(w):
                     # protecting us at the moment from clusters with 2 seqs. We should be catching this further
                     # upstream and handling more appropriately, but for now this is an easy stopgap...
                     "xvfb-run -a bin/process_asr.py"
-                        + (" --seed " + c['seed'] if c['seed'] else '')
+                        + (" --seed " + c['seed'] if 'seed' in c else '')
                         + " --outdir " + outdir
                         + " --basename " + basename
                         + " --seqname-mapping $SOURCES")
@@ -707,7 +724,7 @@ def add_cluster_analysis(w):
                 path.join(outdir, 'asr.svg'),
                 [asr_supports_tree, c['seqmeta']],
                 'xvfb-run -a bin/plot_tree.py $SOURCES $TARGET --supports'
-                    + (' --seed ' + c['seed'] if c['seed'] else ''))
+                    + (' --seed ' + c['seed'] if 'seed' in c else ''))
             asr_tree = env.Command(
                 path.join(outdir, 'asr.nwk'),
                 asr_supports_tree,
@@ -763,18 +780,10 @@ def add_cluster_analysis(w):
             "sed 's/\?/N/g' $SOURCE | seqmagick convert --translate dna2protein - $TARGET")
 
 
-# The following is for debugging
-
-@w.add_metadata()
-def debug(outdir, c):
-    # Should get this to explicitly depend on cluster0.fa
-    return env.Command(
-            [], [],
-            'XXXX debug $SOURCES $TARGETS')
 
 # Temporarily turn off to debug above
 # Now actually add all of these build targets
-#add_cluster_analysis(w)
+add_cluster_analysis(w)
 
 
 
@@ -804,20 +813,19 @@ def add_unseeded_analysis(w):
     # and the directories (timepoints etc) upstream, so we don't have to muck around with this.
 
     is_merged = re.compile('[A-Z]+\d+-\w-Ig[A-Z]').match
-    is_unmerged = re.compile('Hs-(LN-?\w+)-.*').match
-
-    def timepoint(c, sample_filename):
-        study = c['dataset']['study']
-        sample_name = re.compile('-\d+k').sub('', sample_filename)
-        d = heads.read_metadata(study)[sample_name]
-        return d['timepoint']
+    is_unmerged = re.compile('Hs-(LN-?\w+)(?:-5RACE)?-Ig\w').match
 
     def sample_metadata(c, filename): # control dict as well?
         study = c['dataset']['study']
-        d = copy.deepcopy(heads.read_metadata(study)[filename])
+        matcher = is_unmerged if separate_timepoints else is_merged
+        sample_name = matcher(filename).group(0)
+        meta = heads.read_metadata(study)
+        #print('meta keys', sample_name)
+        #print('meta keys', meta.keys())
+        d = copy.deepcopy(meta[sample_name])
         d.update(
             {'id': filename,
-             'timepoints': [{'cft.timepoint:id': timepoint(c, filename)}]})
+             'timepoints': [{'cft.timepoint:id': d['timepoint']}]})
         return d
 
     #dataset,shorthand,species,timepoint,subject,locus
@@ -830,80 +838,65 @@ def add_unseeded_analysis(w):
                       os.listdir(path.join(datapath(c), 'partitions')))
 
 
-    def partition_size(fname):
-        with open(fname, 'r') as partition_handle:
-            partition = csv.DictReader(partition_handle).next()
-            unique_ids = partition['unique_ids'].split(':')
-            # add 1 for naive
-            return len(unique_ids) + 1
-
-
     # Setting up the partition nest level
-
-    # Assuming for now, only the best partition has been taken
-
-    def partition_file_metadata(partition_handle):
-        parts = list(csv.DictReader(partition_handle))
-        for i, x in enumerate(parts):
-            x['index'] = i
-            x['n_clusters'] = int(x['n_clusters'])
-            x['logprob'] = float(x['logprob'])
-        best_part = max(parts, key=lambda x: x['logprob'])
-        best_i = best_part['index']
-        cluster_i = best_i + cluster_step
-        return parts[cluster_i]
-
-    def partition_metadata(c, filename):
-        metadata = partition_file_metadata(file(partitions(c)), 0)
-        # For now, just assume the cluster
-        return {'cluster_step': 0,
-                'logprob': metadata['logprob'],
-                'n_clusters': metadata['n_clusters']}
-
-
-    def input_dir(c):
-        "Return the `sample` directory given the closed over datapath and a nestly control dictionary"
-        return path.join(datapath(c), 'partitions', c['sample'])
 
     def path_base_root(full_path):
         return path.splitext(path.basename(full_path))[0]
 
     # Each c["partition"] value actually points to the annotations for that partition... a little weird but...
-    @w.add_nest(metadata=partition_metadata)
+    @w.add_nest(
+            label_func=lambda d: d['base_root'],
+            metadata=lambda c, d: d)
     @wrap_test_run()
     def partition(c):
         """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
         for actual analysis."""
-        partitions = sorted(glob.glob(path.join(input_dir(c), "partition-cluster-annotations.csv")), key=cluster_step)
-        keep_partitions = []
-        for partition in partitions:
-            size = partition_size(partition)
-            # We only add clusters bigger than two, since we can only make trees if we have hits
-            if size > 2:
-                keep_partitions.append(partition)
-            # Once we get a cluster of size 50, we don't need later cluster steps
-            if size >= 50:
-                break
-            # Note: It would be better if this data was known at a higher level, so that cases of no
-            # partitions leaving detritis won't be found.
-        return map(path_base_root, keep_partitions)
+        partition_filename = partitions(c)
+        parts = list(csv.DictReader(file(partition_filename)))
+        for i, part in enumerate(parts):
+            clusters = sorted([clust.split(':') for clust in part['partition'].split(';')],
+                    key=len,
+                    reverse=True)[0:5]
+            #print("  ", map(len, clusters))
+            part['clusters'] = clusters
+            part['cluster_step'] = 0
+            part['n_clusters'] = int(part['n_clusters'])
+            part['logprob'] = float(part['logprob'])
+            part['base_root'] = path_base_root(partition_filename)
+        best_part = max(parts, key=lambda part: part['logprob'])
+        best_i = best_part['cluster_step']
+        return [parts[best_i]]
 
+
+    def without_key(d, k):
+        d = copy.deepcopy(d)
+        try:
+            del d[k]
+        except:
+            pass
+        return d
 
     # This is a little silly, but gives us the right semantics for partitions > clusters
     #w.add('cluster', ['cluster0'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
-    @w.add_nest()
+    @w.add_nest(metadata=lambda c, d: without_key(d, 'clusters'),
+            label_func=lambda d: d['id']
+            )
     def cluster(c):
-        "A cluster in the partition file"
-        clusters = []
-        return clusters
+        #print('c[partition]', c['partition']['clusters'])
+        return [{'id': 'cluster' + str(i),
+                 'unique_ids': clust
+                 }
+                for i, clust
+                in enumerate(c['partition']['clusters'])]
+
+
 
 
     # Finally call out to the separate cluster analyses
     add_cluster_analysis(w)
 
 
-if False:
-    add_unseeded_analysis(w)
+add_unseeded_analysis(w)
 
 # Next we recreate our whole nesting thing.
 

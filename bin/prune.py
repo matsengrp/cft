@@ -129,7 +129,11 @@ def min_adcl_selection(args):
             command = "rppr min_adcl_tree --algorithm pam --leaves".split(" ") \
                 + [args.n_keep, "--always-include", ai_handle.name, args.tree_file]
             command = map(str, command)
-            results.append(subprocess.check_output(command))
+            output = subprocess.check_output(command)
+            # Should do a better job of catching here, and logging error when necessary; don't mess up stdout
+            # though on good runs!
+            #print("output is", output)
+            results.append(output)
         cut_names = [n for n in results[0].split("\n")]
         return (x for x in tipnames if x not in cut_names)
 
@@ -148,7 +152,7 @@ def get_args():
     parser.add_argument(
         '--naive', help='id of root [default \'naive0\']', default='naive0')
     parser.add_argument(
-        '--seed', help='id of leaf [default \'seed\']', default='seed')
+        '--seed', help='id of leaf [default \'seed\']')
     parser.add_argument(
         '--always-include', type=lambda x: set(x.split(',')), help='comma separated list of ids to keep',
         default=set())
@@ -157,7 +161,8 @@ def get_args():
         help='number of sequences to keep [default: 100]', default=100)
     args = parser.parse_args()
     args.tree = tree_arg(args.tree_file)
-    args.always_include = set([args.seed, args.naive] \
+    args.always_include = set([args.naive] \
+            + [args.seed] if args.seed else []
             + [leaf_name for leaf_name in args.always_include if leaf_name in args.tree.get_leaf_names()])
     return args
 
