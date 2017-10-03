@@ -176,7 +176,7 @@ def reroot_tree(tree, pattern='.*naive.*'):
         #tree.set_outgroup(node)
         # Raise error if naive isn't in root's children
         if node not in tree.children:
-            raise "Naive node not set as outgroup; Check dnaml/asr run to make sure this is the case"
+            raise ValueError("Naive node not set as outgroup; Check dnaml/asr run to make sure this is the case")
         # This actually assumes the `not in` condition above, but we check as above for clarity
         tree.remove_child(node)
         node.add_child(tree)
