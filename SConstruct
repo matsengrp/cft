@@ -374,15 +374,6 @@ def seeds_fn(c):
     return c['_seeds']
 
 
-# Initialize parameter set nest
-# -----------------------------
-
-# Next we nest on parameter sets; I believe these correspond to sequencing runs.
-# They're the things that look like "Hs-LN2-5RACE-IgG", and are nested within each seed's output directory.
-#
-# What this should eventually look like is that we have already specified the relationships between the data
-# and the directories (timepoints etc) upstream, so we don't have to muck around with this.
-
 def is_merged(c, x):
     if c['dataset']['study'] in {'kate-qrs', 'laura-mb'}:
         return re.compile('[A-Z]+\d+-\w-Ig[A-Z]').match(x)
@@ -414,6 +405,13 @@ def sample_metadata(c, filename): # control dict as well?
         {'id': filename,
          'timepoints': [{'cft.timepoint:id': timepoint(c, filename)}]})
     return d
+
+
+# Initialize sample nest
+# -----------------------------
+
+# Next we nest on sample.
+# These things look like "Hs-LN2-5RACE-IgG", and are nested within each seed's output directory.
 
 #dataset,shorthand,species,timepoint,subject,locus
 @w.add_nest(metadata=sample_metadata)
@@ -615,7 +613,6 @@ def add_cluster_analysis(w):
                 'minadcl_clusters.py $SOURCES $TARGET')
 
 
-
     # prune out sequences to reduce taxa, making sure to cut out columns in the alignment that are now entirely
     # gaps from insertions in sequences that have been pruned out.
     @w.add_target()
@@ -700,9 +697,8 @@ def add_cluster_analysis(w):
             tgt = env.Command(
                     [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg', 'fa']],
                     [c['seqname_mapping'], phylip_out, c['seqmeta']],
-                    # Note that `-` at the beggining lets things keep running if there's an error here; This is
-                    # protecting us at the moment from clusters with 2 seqs. We should be catching this further
-                    # upstream and handling more appropriately, but for now this is an easy stopgap...
+                    # Note that adding `-` at the beginning of this command string can keep things running if
+                    # there's an error trying to build a tree from 2 sequences; should be filtered prior now...
                     "xvfb-run -a bin/process_asr.py"
                         + (" --seed " + c['seed'] if 'seed' in c else '')
                         + " --outdir " + outdir
@@ -803,18 +799,13 @@ w.pop('seed')
 # ===================================
 
 def add_unseeded_analysis(w):
-    # Initialize parameter set nest
-    # -----------------------------
 
-    # Next we nest on parameter sets; I believe these correspond to sequencing runs.
-    # They're the things that look like "Hs-LN2-5RACE-IgG", and are nested within each seed's output directory.
-    #
-    # What this should eventually look like is that we have already specified the relationships between the data
-    # and the directories (timepoints etc) upstream, so we don't have to muck around with this.
-
+    # Nest directly on samples
+    # This is what these things look like:
     is_merged = re.compile('[A-Z]+\d+-\w-Ig[A-Z]').match
     is_unmerged = re.compile('Hs-(LN-?\w+)(?:-5RACE)?-Ig\w').match
 
+    # Extract metadata per sample.
     def sample_metadata(c, filename): # control dict as well?
         study = c['dataset']['study']
         matcher = is_unmerged if separate_timepoints else is_merged
@@ -879,20 +870,16 @@ def add_unseeded_analysis(w):
     # This is a little silly, but gives us the right semantics for partitions > clusters
     #w.add('cluster', ['cluster0'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
     @w.add_nest(metadata=lambda c, d: without_key(d, 'clusters'),
-            label_func=lambda d: d['id']
-            )
+            label_func=lambda d: d['id'])
     def cluster(c):
         #print('c[partition]', c['partition']['clusters'])
         return [{'id': 'cluster' + str(i),
-                 'unique_ids': clust
-                 }
+                 'unique_ids': clust}
                 for i, clust
                 in enumerate(c['partition']['clusters'])]
 
 
-
-
-    # Finally call out to the separate cluster analyses
+    # Finally call out to the separate cluster analyses as defined above
     add_cluster_analysis(w)
 
 
