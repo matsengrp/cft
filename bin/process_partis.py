@@ -81,6 +81,10 @@ def parse_args():
         help='log file containing relevant information about partis run (required if --param_dir not specified)',
         required=True,
         type=existing_file)
+    parser.add_argument(
+        '--unique-ids',
+        help='select a specific cluster using its unique_ids signature',
+        type=lambda x: set(x.split(':')))
     #parser.add_argument('--select_clustering', dest='select_clustering',
     #        help='choose a row from partition file for a different cluster',
     #        default=0, type=int)
@@ -164,7 +168,34 @@ def infer_frameshifts(line):
                zip(*map(lambda x: line[x], attrs)))
 
 
-def process_data(annot_file, part_file, locus, glpath):
+to_keep = ['v_gene', 'd_gene', 'j_gene', 'cdr3_length']
+
+def process_cluster(cluster, glfo, seed_ids, idx):
+    current_df = pd.DataFrame()
+    line = cluster.to_dict()
+    utils.process_input_line(line)
+    utils.add_implicit_info(glfo, line)
+    current_df['unique_ids'] = line['unique_ids'] + ['naive{}'.format(idx)]
+    current_df['seqs'] = line['input_seqs'] + [line['naive_seq']]
+    current_df['duplicates'] = [':'.join(x) for x in line['duplicates']] + [None]
+    current_df['frameshifts'] = infer_frameshifts(line) + [False] # mocking last entry
+    current_df['mut_freqs'] = line['mut_freqs'] + [0.0] # mocking last entry
+    for col in to_keep:
+        current_df[col] = line[col]
+    current_df['cluster'] = idx
+    current_df['has_seed'] = any(seed_id in line['unique_ids'] for seed_id in \
+            seed_ids)
+    current_df['seed_ids'] = ':'.join(seed_ids)
+    #current_df['seed_ids'] = map(seed_ids)
+    current_df['cdr3_start'] = line['codon_positions']['v']
+    for gene in 'vdj':
+        for pos in ['start', 'end']:
+            current_df[gene+'_'+pos] = line['regional_bounds'][gene][pos.startswith('e')]
+    return current_df
+
+
+
+def process_data(annot_file, part_file, locus, glpath, unique_ids=None):
     """
     Melt data into dataframe from annotations and partition files
     """
@@ -183,34 +214,21 @@ def process_data(annot_file, part_file, locus, glpath):
     #    # repartition based on the selected partition
     #    annotations = select_different_cluster(args, annotations)
 
-    output_df = pd.DataFrame()
-    annotations = pd.read_csv(annot_file, dtype=object)
     glfo = glutils.read_glfo(glpath, locus)
-    to_keep = ['v_gene', 'd_gene', 'j_gene', 'cdr3_length']
-    for idx, cluster in annotations.fillna('').iterrows():
-        current_df = pd.DataFrame()
-        line = cluster.to_dict()
-        utils.process_input_line(line)
-        utils.add_implicit_info(glfo, line)
-        current_df['unique_ids'] = line['unique_ids'] + ['naive{}'.format(idx)]
-        current_df['seqs'] = line['input_seqs'] + [line['naive_seq']]
-        current_df['duplicates'] = [':'.join(x) for x in line['duplicates']] + [None]
-        current_df['frameshifts'] = infer_frameshifts(line) + [False] # mocking last entry
-        current_df['mut_freqs'] = line['mut_freqs'] + [0.0] # mocking last entry
-        for col in to_keep:
-            current_df[col] = line[col]
-        current_df['cluster'] = idx
-        current_df['has_seed'] = any(seed_id in line['unique_ids'] for seed_id in \
-                seed_ids)
-        current_df['seed_ids'] = ':'.join(seed_ids)
-        #current_df['seed_ids'] = map(seed_ids)
-        current_df['cdr3_start'] = line['codon_positions']['v']
-        for gene in 'vdj':
-            for pos in ['start', 'end']:
-                current_df[gene+'_'+pos] = line['regional_bounds'][gene][pos.startswith('e')]
-        output_df = pd.concat([output_df, current_df])
-
-    return output_df
+    annotations = pd.read_csv(annot_file, dtype=object)
+    # If unique_ids are specified, we find that specific cluster and use it
+    if unique_ids:
+        for _, cluster in annotations.fillna('').iterrows():
+            if set(cluster['unique_ids'].split(':')) == unique_ids:
+                return process_cluster(cluster, glfo, seed_ids, 0)
+            raise ValueError("Cluster not found for unique_ids set {}".format(repr(unique_ids)))
+    # Otherwise, we iterate through clusters
+    else:
+        output_df = pd.DataFrame()
+        for idx, cluster in annotations.fillna('').iterrows():
+            current_df = process_cluster(cluster, glfo, seed_ids, idx)
+            output_df = pd.concat([output_df, current_df])
+        return output_df
 
 
 def write_json(df, fname, mod_date, cluster_base, annotations, partition, outdir, paths_relative_to):
@@ -327,12 +345,13 @@ def main():
     melted_annotations = process_data(args.annotations,
                                       args.partition,
                                       locus,
-                                      inferred_gls)
+                                      inferred_gls,
+                                      args.unique_ids)
+
+    melted_annotations = handle_frameshifts(melted_annotations, args.remove_frameshifts)
 
     write_melted_partis(melted_annotations,
                         melted_path(args.output_dir, args.melted_base))
-
-    melted_annotations = handle_frameshifts(melted_annotations, args.remove_frameshifts)
 
     write_separate_fasta(melted_annotations,
                          args.output_dir,
