@@ -49,12 +49,14 @@ from os import path
 from nestly import nestly
 from nestly.nestly import scons as nestly_scons
 
+# Partis and datascripts things
+sys.path.append(path.join(os.environ['PARTIS'], 'python'))
+import clusterpath
+from datascripts import heads
+
 # Scons requirements
 from SCons.Script import Environment, AddOption
 
-
-
-from datascripts import heads
 
 # Build modules (in site_scons):
 import backtrans_align
@@ -843,20 +845,15 @@ def add_unseeded_analysis(w):
         """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
         for actual analysis."""
         partition_filename = partitions(c)
-        parts = list(csv.DictReader(file(partition_filename)))
-        for i, part in enumerate(parts):
-            clusters = sorted([clust.split(':') for clust in part['partition'].split(';')],
-                    key=len,
-                    reverse=True)[0:5]
-            #print("  ", map(len, clusters))
-            part['clusters'] = clusters
-            part['cluster_step'] = 0
-            part['n_clusters'] = int(part['n_clusters'])
-            part['logprob'] = float(part['logprob'])
-            part['base_root'] = path_base_root(partition_filename)
-        best_part = max(parts, key=lambda part: part['logprob'])
-        best_i = best_part['cluster_step']
-        return [parts[best_i]]
+        cp = clusterpath.ClusterPath()
+        cp.readfile(partition_filename)
+        clusters = cp.partitions[cp.i_best]
+        return [{'clusters': clusters,
+                 # Should cluster step be partition step?
+                 'cluster_step': 0,
+                 'n_clusters': len(clusters),
+                 'logprob': cp.logprobs[cp.i_best],
+                 'base_root': path_base_root(partition_filename)}]
 
 
     def without_key(d, k):
@@ -867,6 +864,9 @@ def add_unseeded_analysis(w):
             pass
         return d
 
+    def has_seeds(cluster, c):
+        return False
+
     # This is a little silly, but gives us the right semantics for partitions > clusters
     #w.add('cluster', ['cluster0'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
     @w.add_nest(metadata=lambda c, d: without_key(d, 'clusters'),
@@ -876,7 +876,10 @@ def add_unseeded_analysis(w):
         return [{'id': 'cluster' + str(i),
                  'unique_ids': clust}
                 for i, clust
-                in enumerate(c['partition']['clusters'])]
+                # Sort by len (dec) and apply index i
+                in enumerate(sorted(c['partition']['clusters'], key=len, reverse=True))
+                # Select top 5 or any matching seeds
+                if i < 5 or has_seeds(clust, c)]
 
 
     # Finally call out to the separate cluster analyses as defined above
