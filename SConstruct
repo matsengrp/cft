@@ -603,7 +603,7 @@ def add_cluster_analysis(w):
                 + " --strategy " + recon['prune_strategy']
                 + " --naive naive0"
                 + (" --seed " + c['seed'] if 'seed' in c else '')
-                + " $SOURCE > $TARGET")
+                + " $SOURCE $TARGET")
 
 
     @w.add_target()
