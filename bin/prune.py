@@ -164,9 +164,11 @@ def get_args():
 
 def main(args):
     selection_fn = seed_lineage_selection if args.strategy == "seed_lineage" else min_adcl_selection
+    out_handle = file(args.output, 'w')
     for name in selection_fn(args):
         # Writes to stdout
-        print name
+        out_handle.write(name +"\n")
+    out_handle.close()
 
 
 if __name__ == "__main__":
