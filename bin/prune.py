@@ -127,7 +127,7 @@ def min_adcl_selection(args):
             sys.stderr.write("rppr stderr:\n")
             sys.stderr.write(stderr + "\n")
         cut_names = [n for n in output.split("\n")]
-        return (x for x in tipnames if x not in cut_names)
+        return [x for x in tipnames if x not in cut_names]
 
 
 def tree_arg(tree_arg_value):
@@ -146,8 +146,8 @@ def get_args():
     parser.add_argument(
         '--seed', help='id of leaf [default \'seed\']')
     parser.add_argument(
-        '--always-include', type=lambda x: set(x.split(',')), help='comma separated list of ids to keep',
-        default=set())
+        '--always-include', type=lambda x: x.split(','), help='comma separated list of ids to keep',
+        default=[])
     parser.add_argument(
         'output',
         help='file for output id list')
@@ -156,9 +156,10 @@ def get_args():
         help='number of sequences to keep [default: 100]', default=100)
     args = parser.parse_args()
     args.tree = tree_arg(args.tree_file)
-    args.always_include = set([args.naive]
-            + ([args.seed] if args.seed else [])
-            + ([leaf_name for leaf_name in args.always_include if leaf_name in args.tree.get_leaf_names()]))
+    leaf_names = set(args.tree.get_leaf_names())
+    args.always_include = set(
+            filter(lambda leaf_name: leaf_name and leaf_name in leaf_names,
+                [args.naive, args.seed] + args.always_include))
     return args
 
 
