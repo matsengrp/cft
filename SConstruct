@@ -595,7 +595,8 @@ def add_cluster_analysis(w):
     @w.add_target()
     def pruned_ids(outdir, c):
         recon = c['reconstruction']
-        return env.Command(
+        builder = env.SRun if recon['prune_strategy'] == 'min_adcl' else env.Command
+        return builder(
             path.join(outdir, "pruned_ids.txt"),
             c['fasttree'],
             "prune.py -n " + str(recon['prune_count'])
@@ -670,7 +671,7 @@ def add_cluster_analysis(w):
 
     @w.add_target()
     def seqname_mapping(outdir, c):
-        """Seqname translations for reinterpretting dnaml output in terms of original seqnames, due to phulip name
+        """Seqname translations for reinterpretting dnaml output in terms of original seqnames, due to phylip name
         length constraints."""
         return c['_phy'][1]
 
