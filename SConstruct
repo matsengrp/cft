@@ -601,7 +601,7 @@ def add_cluster_analysis(w):
             path.join(outdir, "pruned_ids.txt"),
             c['fasttree'],
             "prune.py -n " + str(recon['prune_count'])
-                + " --always-include " + ','.join(c['_seeds'])
+                + ((" --always-include " + ','.join(c['_seeds'])) if c['_seeds'] else '')
                 + " --strategy " + recon['prune_strategy']
                 + " --naive naive0"
                 + (" --seed " + c['seed'] if 'seed' in c else '')
