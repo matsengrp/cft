@@ -72,14 +72,14 @@ def scale_node(size):
     return 6 + (math.log(size) * 2)
 
 
-def duplicity_legend(ts):
+def multiplicity_legend(ts):
     ts.legend.add_face(ete3.faces.TextFace(""), 0)
-    ts.legend.add_face(ete3.faces.TextFace("Duplicity"), 1)
-    for duplicity in [1, 10, 100]:
-        size = scale_node(duplicity)
+    ts.legend.add_face(ete3.faces.TextFace("Multiplicity"), 1)
+    for multiplicity in [1, 10, 100]:
+        size = scale_node(multiplicity)
         pie_face = ete3.PieChartFace([100], width=size, height=size, colors=['grey'])
         ts.legend.add_face(pie_face, 0)
-        ts.legend.add_face(ete3.faces.TextFace(str(duplicity)), 1)
+        ts.legend.add_face(ete3.faces.TextFace(str(multiplicity)), 1)
 
 
 def leaf_style(node, seqmeta, tp_colors, highlight_node=None):
@@ -105,10 +105,10 @@ def leaf_style(node, seqmeta, tp_colors, highlight_node=None):
         node.set_style(nstyle)
     timepoints = filter(lambda x: x, seqmeta.get('cluster_timepoints', seqmeta['timepoints']).split(':'))
     duplicities = [int(n) for n in seqmeta.get('cluster_timepoint_duplicities', seqmeta['timepoint_duplicities']).split(':') if n]
-    duplicity = int(seqmeta.get('cluster_duplicity', seqmeta['duplicity']))
-    percents = [d * 100 / duplicity for d in duplicities]
+    multiplicity = int(seqmeta.get('cluster_multiplicity', seqmeta['multiplicity']))
+    percents = [d * 100 / multiplicity for d in duplicities]
     colors = [tp_colors[t] for t in timepoints]
-    pie_node = ete3.PieChartFace(percents, width=scale_node(duplicity), height=scale_node(duplicity),
+    pie_node = ete3.PieChartFace(percents, width=scale_node(multiplicity), height=scale_node(multiplicity),
             colors=colors, line_color='black')
     ete3.add_face_to_node(pie_node, node, column=0)
 
@@ -146,7 +146,7 @@ def render_tree(fname, tree, annotations, highlight_node, supports=False, suppor
                 node.support = None
         ts.show_branch_support = True
     timepoint_legend(ts, tp_colors)
-    duplicity_legend(ts)
+    multiplicity_legend(ts)
     # whether or not we had rerooted on naive before, we want to do so for the SVG tree
     if 'naive' not in tree.name:
         tree = reroot_tree(tree, '.*naive.*')

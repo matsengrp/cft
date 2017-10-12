@@ -384,9 +384,10 @@ def is_merged(c, x):
 
 def is_unmerged(c, x):
     if c['dataset']['study'] in {'kate-qrs', 'laura-mb'}:
-        return re.compile('Hs-(LN-?\w+)-.*').match(x)
+        #return re.compile('Hs-(LN-?\w+)-.*').match(x)
+        return re.compile('Hs-(LN-?\w+)(?:-5RACE)?-Ig\w').match(x)
     elif c['dataset']['study'] in {'laura-mb-2'}:
-        return re.compile('\w+-\w+-(?!merged)').match(x)
+        return re.compile('\w+-\w+-(?!merged)\w+').match(x)
 
 
 def canonical_sample_name(c, sample_filename):
@@ -639,14 +640,14 @@ def add_cluster_analysis(w):
         return infname_base
 
     @w.add_target(ingest=True, attr_map={'bio.seq:id': 'sequence', 'cft.timepoint:id': 'timepoint',
-        'cft.seq:duplicity': 'duplicity'})
-        #'cft.seq:duplicity': 'duplicity', 'cft.seq:cluster_duplicity': 'cluster_duplicity'})
+        #'cft.seq:multiplicity': 'multiplicity'})
+        'cft.seq:multiplicity': 'multiplicity', 'cft.seq:cluster_multiplicity': 'cluster_multiplicity'})
     def seqmeta(outdir, c):
         """The merge of process_partis output with pre sequence metadata spit out by datascripts containing
-        timepoint mappings. Base input duplicity is coded into the original input sequence names from vlad as N-M,
-        where N is the ranking of vlads untrimmed deduplication, and M is the duplicity of said deduplication."""
+        timepoint mappings. Base input multiplicity is coded into the original input sequence names from vlad as N-M,
+        where N is the ranking of vlads untrimmed deduplication, and M is the multiplicity of said deduplication."""
         sources = [c['partis_seqmeta'], c['cft.dataset:seqmeta']]
-        base_call =  'merge_timepoints_and_duplicity.py '
+        base_call =  'merge_timepoints_and_multiplicity.py '
         # This option controls which sequences get joined on in the merge for the partis_seqmeta file, which has
         # orig/new names, joined on sequence from the other file
         if separate_timepoints:
@@ -803,16 +804,11 @@ w.pop('seed')
 
 def add_unseeded_analysis(w):
 
-    # Nest directly on samples
-    # This is what these things look like:
-    is_merged = re.compile('[A-Z]+\d+-\w-Ig[A-Z]').match
-    is_unmerged = re.compile('Hs-(LN-?\w+)(?:-5RACE)?-Ig\w').match
-
     # Extract metadata per sample.
     def sample_metadata(c, filename): # control dict as well?
         study = c['dataset']['study']
         matcher = is_unmerged if separate_timepoints else is_merged
-        sample_name = matcher(filename).group(0)
+        sample_name = matcher(c, filename).group(0)
         meta = heads.read_metadata(study)
         #print('meta keys', sample_name)
         #print('meta keys', meta.keys())
@@ -827,7 +823,7 @@ def add_unseeded_analysis(w):
     @wrap_test_run()
     def sample(c):
         def keep(filename):
-            return is_unmerged(filename) if separate_timepoints else is_merged(filename)
+            return is_unmerged(c, filename) if separate_timepoints else is_merged(c, filename)
         return filter(keep,
                       os.listdir(path.join(datapath(c), 'partitions')))
 

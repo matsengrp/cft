@@ -17,7 +17,7 @@ def upstream_seqmeta(args, seqid):
     
 
 def merge(args):
-    """"Initial merge of upstream (pre-partis) metadata, including timepoint and duplicity info coded in orig
+    """"Initial merge of upstream (pre-partis) metadata, including timepoint and multiplicity info coded in orig
     seqids, with the metadata output of process_partis (partis_seqmeta)."""
     # For each row of our partis sequence metadata (as output from process_partis)
     for seqid, row in args.partis_seqmeta.items():
@@ -28,19 +28,19 @@ def merge(args):
         timepoints_dict = collections.defaultdict(lambda: 0)
         for dup_seqid in seqids:
             dup_upstream_row = upstream_seqmeta(args, seqid)
-            # The original seqid and orig duplicity are the duplicites from vlad's pre-partis processing
+            # The original seqid and orig multiplicity are the duplicites from vlad's pre-partis processing
             orig_seqid = dup_upstream_row.get('original')
             orig_seqid_match = duplicate_seqid_regex.match(orig_seqid) if isinstance(orig_seqid, str) else False
             if orig_seqid_match:
-                orig_duplicity = int(orig_seqid_match.groups()[0])
-                #print "  duplicity ", orig_duplicity
+                orig_multiplicity = int(orig_seqid_match.groups()[0])
+                #print "  multiplicity ", orig_multiplicity
             else:
                 # TODO For seeds this is good but not for naive...
-                #print "no duplicity for", orig_seqid
-                orig_duplicity = 1
-            timepoints_dict[dup_upstream_row.get('timepoint')] += orig_duplicity
+                #print "no multiplicity for", orig_seqid
+                orig_multiplicity = 1
+            timepoints_dict[dup_upstream_row.get('timepoint')] += orig_multiplicity
         timepoints = sorted(timepoints_dict.items())
-        duplicity = sum(t[1] for t in timepoints)
+        multiplicity = sum(t[1] for t in timepoints)
         result_row = {
                 'sequence': seqid,
                 'timepoint': upstream_row.get('timepoint'),
@@ -48,7 +48,7 @@ def merge(args):
                 'mut_freqs': row['mut_freqs'],
                 'is_seed': not duplicate_seqid_regex.match(seqid),
                 'orig_seqid': upstream_row.get('original'),
-                'duplicity': duplicity,
+                'multiplicity': multiplicity,
                 'timepoints': [tp[0] or '' for tp in timepoints],
                 'timepoint_duplicities': [tp[1] for tp in timepoints]
                 }
@@ -64,11 +64,11 @@ def aggregate_clusters(merge_results, cluster_mapping):
         timepoint_duplicities = collections.defaultdict(lambda: 0)
         # Aggregate our timepoint duplicities
         for seq in sequences:
-            for timepoint, timepoint_duplicity in zip(seq['timepoints'], seq['timepoint_duplicities']):
-                timepoint_duplicities[timepoint] += timepoint_duplicity
+            for timepoint, timepoint_multiplicity in zip(seq['timepoints'], seq['timepoint_duplicities']):
+                timepoint_duplicities[timepoint] += timepoint_multiplicity
         centroid_data.update({
             'cluster_duplicates': cluster_duplicates,
-            'cluster_duplicity': sum(seq['duplicity'] for seq in sequences),
+            'cluster_multiplicity': sum(seq['multiplicity'] for seq in sequences),
             'cluster_timepoints': timepoint_duplicities.keys(),
             'cluster_timepoint_duplicities': timepoint_duplicities.values(),
             })
@@ -142,12 +142,12 @@ def get_args():
 
 def main():
     args = get_args()
-    fieldnames = ['sequence', 'orig_seqid', 'timepoint', 'mut_freqs', 'is_seed', 'duplicity', 'timepoints',
+    fieldnames = ['sequence', 'orig_seqid', 'timepoint', 'mut_freqs', 'is_seed', 'multiplicity', 'timepoints',
             'timepoint_duplicities', 'duplicates']
             #'timepoint_duplicities']
     if args.cluster_mapping:
-        fieldnames += ['cluster_duplicity', 'cluster_timepoints', 'cluster_timepoint_duplicities', 'cluster_duplicates']
-        #fieldnames += ['cluster_duplicity', 'cluster_timepoints', 'cluster_timepoint_duplicities']
+        fieldnames += ['cluster_multiplicity', 'cluster_timepoints', 'cluster_timepoint_duplicities', 'cluster_duplicates']
+        #fieldnames += ['cluster_multiplicity', 'cluster_timepoints', 'cluster_timepoint_duplicities']
 
     out_writer = csv.DictWriter(args.output, fieldnames=fieldnames)
     out_writer.writeheader()
