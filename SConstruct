@@ -862,7 +862,9 @@ def add_unseeded_analysis(w):
         return d
 
     def has_seeds(cluster, c):
-        return False
+        """Manual selection of seeds to check for from Laura; If this becomes generally useful can put in a
+        data hook."""
+        return any((('BF520.1-ig' + x) in cluster) for x in ['h', 'k'])
 
     # This is a little silly, but gives us the right semantics for partitions > clusters
     #w.add('cluster', ['cluster0'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
