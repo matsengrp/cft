@@ -9,8 +9,8 @@ from ete3 import Tree
 from process_asr import find_node, reroot_tree
 
 import subprocess
-import tempfile
 import argparse
+import sys
 
 
 def seed_lineage_selection(args):
@@ -99,22 +99,6 @@ def seed_lineage_selection(args):
         yield leaf.name
 
 
-def with_temporary_handle(lines):
-    """
-    Given some lines of text to be placed in a temporary file, returns a decorator function that immediately
-    calls the decorated function with as sole argument a temporary file containing the given lines of text.
-    Closes the named temporary file when done.
-    """
-    def deco(f):
-        handle = tempfile.NamedTemporaryFile("w+")
-        handle.writelines([line + "\n" for line in lines])
-        handle.flush()
-        f(handle)
-        handle.close()
-        return f
-    return deco
-
-
 def min_adcl_selection(args):
     """
     Minimize ADCL for a tree using pplacer suite.
@@ -123,19 +107,27 @@ def min_adcl_selection(args):
     if len(tipnames) <= args.n_keep:
         return tipnames
     else:
-        results = []
-        @with_temporary_handle(args.always_include)
-        def always_include(ai_handle):
-            command = "rppr min_adcl_tree --algorithm pam --leaves".split(" ") \
-                + [args.n_keep, "--always-include", ai_handle.name, args.tree_file]
-            command = map(str, command)
-            output = subprocess.check_output(command)
-            # Should do a better job of catching here, and logging error when necessary; don't mess up stdout
-            # though on good runs!
-            #print("output is", output)
-            results.append(output)
-        cut_names = [n for n in results[0].split("\n")]
-        return (x for x in tipnames if x not in cut_names)
+        # set up file for telling rppr min_adcl what sequences to always include (always include ids = aiids)
+        aiids_fn = args.output + '.aiids'
+        handle = file(aiids_fn, 'w')
+        lines = [line + "\n" for line in args.always_include]
+        handle.writelines(lines)
+        handle.flush()
+        handle.close()
+        # Set up the command for execution
+        command = "rppr min_adcl_tree --algorithm pam --leaves".split(" ") \
+            + [args.n_keep, "--always-include", args.output + '.aiids', args.tree_file]
+        sys.stderr.write("rppr command:\n")
+        sys.stderr.write(" ".join(str(x) for x in command) + "\n")
+        command = map(str, command)
+        proc = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, stderr = proc.communicate()
+        # Print out any stderr for debugging; Should maybe also look for errors and fix
+        if stderr:
+            sys.stderr.write("rppr stderr:\n")
+            sys.stderr.write(stderr + "\n")
+        cut_names = [n for n in output.split("\n")]
+        return [x for x in tipnames if x not in cut_names]
 
 
 def tree_arg(tree_arg_value):
@@ -154,24 +146,30 @@ def get_args():
     parser.add_argument(
         '--seed', help='id of leaf [default \'seed\']')
     parser.add_argument(
-        '--always-include', type=lambda x: set(x.split(',')), help='comma separated list of ids to keep',
-        default=set())
+        '--always-include', type=lambda x: x.split(','), help='comma separated list of ids to keep',
+        default=[])
+    parser.add_argument(
+        'output',
+        help='file for output id list')
     parser.add_argument(
         '-n', '--n-keep', type=int,
         help='number of sequences to keep [default: 100]', default=100)
     args = parser.parse_args()
     args.tree = tree_arg(args.tree_file)
-    args.always_include = set([args.naive] \
-            + [args.seed] if args.seed else []
-            + [leaf_name for leaf_name in args.always_include if leaf_name in args.tree.get_leaf_names()])
+    leaf_names = set(args.tree.get_leaf_names())
+    args.always_include = set(
+            filter(lambda leaf_name: leaf_name and leaf_name in leaf_names,
+                [args.naive, args.seed] + args.always_include))
     return args
 
 
 def main(args):
     selection_fn = seed_lineage_selection if args.strategy == "seed_lineage" else min_adcl_selection
+    out_handle = file(args.output, 'w')
     for name in selection_fn(args):
         # Writes to stdout
-        print name
+        out_handle.write(name +"\n")
+    out_handle.close()
 
 
 if __name__ == "__main__":

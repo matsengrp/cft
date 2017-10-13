@@ -49,12 +49,14 @@ from os import path
 from nestly import nestly
 from nestly.nestly import scons as nestly_scons
 
+# Partis and datascripts things
+sys.path.append(path.join(os.environ['PARTIS'], 'python'))
+import clusterpath
+from datascripts import heads
+
 # Scons requirements
 from SCons.Script import Environment, AddOption
 
-
-
-from datascripts import heads
 
 # Build modules (in site_scons):
 import backtrans_align
@@ -382,9 +384,10 @@ def is_merged(c, x):
 
 def is_unmerged(c, x):
     if c['dataset']['study'] in {'kate-qrs', 'laura-mb'}:
-        return re.compile('Hs-(LN-?\w+)-.*').match(x)
+        #return re.compile('Hs-(LN-?\w+)-.*').match(x)
+        return re.compile('Hs-(LN-?\w+)(?:-5RACE)?-Ig\w').match(x)
     elif c['dataset']['study'] in {'laura-mb-2'}:
-        return re.compile('\w+-\w+-(?!merged)').match(x)
+        return re.compile('\w+-\w+-(?!merged)\w+').match(x)
 
 
 def canonical_sample_name(c, sample_filename):
@@ -593,15 +596,16 @@ def add_cluster_analysis(w):
     @w.add_target()
     def pruned_ids(outdir, c):
         recon = c['reconstruction']
-        return env.Command(
+        builder = env.SRun if recon['prune_strategy'] == 'min_adcl' else env.Command
+        return builder(
             path.join(outdir, "pruned_ids.txt"),
             c['fasttree'],
             "prune.py -n " + str(recon['prune_count'])
-                + " --always-include " + ','.join(c['_seeds'])
+                + ((" --always-include " + ','.join(c['_seeds'])) if c['_seeds'] else '')
                 + " --strategy " + recon['prune_strategy']
                 + " --naive naive0"
                 + (" --seed " + c['seed'] if 'seed' in c else '')
-                + " $SOURCE > $TARGET")
+                + " $SOURCE $TARGET")
 
 
     @w.add_target()
@@ -636,14 +640,14 @@ def add_cluster_analysis(w):
         return infname_base
 
     @w.add_target(ingest=True, attr_map={'bio.seq:id': 'sequence', 'cft.timepoint:id': 'timepoint',
-        'cft.seq:duplicity': 'duplicity'})
-        #'cft.seq:duplicity': 'duplicity', 'cft.seq:cluster_duplicity': 'cluster_duplicity'})
+        #'cft.seq:multiplicity': 'multiplicity'})
+        'cft.seq:multiplicity': 'multiplicity', 'cft.seq:cluster_multiplicity': 'cluster_multiplicity'})
     def seqmeta(outdir, c):
         """The merge of process_partis output with pre sequence metadata spit out by datascripts containing
-        timepoint mappings. Base input duplicity is coded into the original input sequence names from vlad as N-M,
-        where N is the ranking of vlads untrimmed deduplication, and M is the duplicity of said deduplication."""
+        timepoint mappings. Base input multiplicity is coded into the original input sequence names from vlad as N-M,
+        where N is the ranking of vlads untrimmed deduplication, and M is the multiplicity of said deduplication."""
         sources = [c['partis_seqmeta'], c['cft.dataset:seqmeta']]
-        base_call =  'merge_timepoints_and_duplicity.py '
+        base_call =  'merge_timepoints_and_multiplicity.py '
         # This option controls which sequences get joined on in the merge for the partis_seqmeta file, which has
         # orig/new names, joined on sequence from the other file
         if separate_timepoints:
@@ -668,7 +672,7 @@ def add_cluster_analysis(w):
 
     @w.add_target()
     def seqname_mapping(outdir, c):
-        """Seqname translations for reinterpretting dnaml output in terms of original seqnames, due to phulip name
+        """Seqname translations for reinterpretting dnaml output in terms of original seqnames, due to phylip name
         length constraints."""
         return c['_phy'][1]
 
@@ -800,16 +804,11 @@ w.pop('seed')
 
 def add_unseeded_analysis(w):
 
-    # Nest directly on samples
-    # This is what these things look like:
-    is_merged = re.compile('[A-Z]+\d+-\w-Ig[A-Z]').match
-    is_unmerged = re.compile('Hs-(LN-?\w+)(?:-5RACE)?-Ig\w').match
-
     # Extract metadata per sample.
     def sample_metadata(c, filename): # control dict as well?
         study = c['dataset']['study']
         matcher = is_unmerged if separate_timepoints else is_merged
-        sample_name = matcher(filename).group(0)
+        sample_name = matcher(c, filename).group(0)
         meta = heads.read_metadata(study)
         #print('meta keys', sample_name)
         #print('meta keys', meta.keys())
@@ -824,7 +823,7 @@ def add_unseeded_analysis(w):
     @wrap_test_run()
     def sample(c):
         def keep(filename):
-            return is_unmerged(filename) if separate_timepoints else is_merged(filename)
+            return is_unmerged(c, filename) if separate_timepoints else is_merged(c, filename)
         return filter(keep,
                       os.listdir(path.join(datapath(c), 'partitions')))
 
@@ -843,20 +842,15 @@ def add_unseeded_analysis(w):
         """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
         for actual analysis."""
         partition_filename = partitions(c)
-        parts = list(csv.DictReader(file(partition_filename)))
-        for i, part in enumerate(parts):
-            clusters = sorted([clust.split(':') for clust in part['partition'].split(';')],
-                    key=len,
-                    reverse=True)[0:5]
-            #print("  ", map(len, clusters))
-            part['clusters'] = clusters
-            part['cluster_step'] = 0
-            part['n_clusters'] = int(part['n_clusters'])
-            part['logprob'] = float(part['logprob'])
-            part['base_root'] = path_base_root(partition_filename)
-        best_part = max(parts, key=lambda part: part['logprob'])
-        best_i = best_part['cluster_step']
-        return [parts[best_i]]
+        cp = clusterpath.ClusterPath()
+        cp.readfile(partition_filename)
+        clusters = cp.partitions[cp.i_best]
+        return [{'clusters': clusters,
+                 # Should cluster step be partition step?
+                 'cluster_step': 0,
+                 'n_clusters': len(clusters),
+                 'logprob': cp.logprobs[cp.i_best],
+                 'base_root': path_base_root(partition_filename)}]
 
 
     def without_key(d, k):
@@ -867,6 +861,11 @@ def add_unseeded_analysis(w):
             pass
         return d
 
+    def has_seeds(cluster, c):
+        """Manual selection of seeds to check for from Laura; If this becomes generally useful can put in a
+        data hook."""
+        return any((('BF520.1-ig' + x) in cluster) for x in ['h', 'k'])
+
     # This is a little silly, but gives us the right semantics for partitions > clusters
     #w.add('cluster', ['cluster0'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
     @w.add_nest(metadata=lambda c, d: without_key(d, 'clusters'),
@@ -876,7 +875,10 @@ def add_unseeded_analysis(w):
         return [{'id': 'cluster' + str(i),
                  'unique_ids': clust}
                 for i, clust
-                in enumerate(c['partition']['clusters'])]
+                # Sort by len (dec) and apply index i
+                in enumerate(sorted(c['partition']['clusters'], key=len, reverse=True))
+                # Select top 5 or any matching seeds
+                if i < 5 or has_seeds(clust, c)]
 
 
     # Finally call out to the separate cluster analyses as defined above

@@ -83,8 +83,8 @@ def parse_args():
         type=existing_file)
     parser.add_argument(
         '--unique-ids',
-        help='select a specific cluster using its unique_ids signature',
-        type=lambda x: set(x.split(':')))
+        help='select a specific cluster using its unique_ids signature')
+        #type=lambda x: x.split(':'))
     #parser.add_argument('--select_clustering', dest='select_clustering',
     #        help='choose a row from partition file for a different cluster',
     #        default=0, type=int)
@@ -219,9 +219,10 @@ def process_data(annot_file, part_file, locus, glpath, unique_ids=None):
     # If unique_ids are specified, we find that specific cluster and use it
     if unique_ids:
         for _, cluster in annotations.fillna('').iterrows():
-            if set(cluster['unique_ids'].split(':')) == unique_ids:
+            if cluster['unique_ids'] == unique_ids:
                 return process_cluster(cluster, glfo, seed_ids, 0)
-            raise ValueError("Cluster not found for unique_ids set {}".format(repr(unique_ids)))
+        # One of the above should return, or we have a problem
+        raise ValueError("Cluster not found for unique_ids set {}".format(repr(unique_ids)))
     # Otherwise, we iterate through clusters
     else:
         output_df = pd.DataFrame()
