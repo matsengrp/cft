@@ -611,7 +611,7 @@ def add_cluster_analysis(w):
     @w.add_target()
     def cluster_mapping(outdir, c):
         if c['reconstruction']['prune_strategy'] == 'min_adcl':
-            return env.Command(
+            return env.SRun(
                 path.join(outdir, 'cluster_mapping.csv'),
                 [c['fasttree'], c['pruned_ids']],
                 'minadcl_clusters.py $SOURCES $TARGET')
