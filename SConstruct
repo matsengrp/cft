@@ -611,7 +611,7 @@ def add_cluster_analysis(w):
     @w.add_target()
     def cluster_mapping(outdir, c):
         if c['reconstruction']['prune_strategy'] == 'min_adcl':
-            return env.Command(
+            return env.SRun(
                 path.join(outdir, 'cluster_mapping.csv'),
                 [c['fasttree'], c['pruned_ids']],
                 'minadcl_clusters.py $SOURCES $TARGET')
@@ -864,7 +864,7 @@ def add_unseeded_analysis(w):
     def has_seeds(cluster, c):
         """Manual selection of seeds to check for from Laura; If this becomes generally useful can put in a
         data hook."""
-        return any((('BF520.1-ig' + x) in cluster) for x in ['h', 'k'])
+        return any((('BF520.1-ig' + x) in cluster) for x in ['h', 'k']) and len(cluster) > 2
 
     # This is a little silly, but gives us the right semantics for partitions > clusters
     #w.add('cluster', ['cluster0'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
