@@ -831,7 +831,6 @@ def add_unseeded_analysis(w):
         return filter(keep,
                       os.listdir(path.join(datapath(c), 'partitions')))
 
-
     # Setting up the partition nest level
 
     def path_base_root(full_path):
@@ -840,7 +839,8 @@ def add_unseeded_analysis(w):
     # Each c["partition"] value actually points to the annotations for that partition... a little weird but...
     @w.add_nest(
             label_func=lambda d: d['base_root'],
-            metadata=lambda c, d: d)
+            #metadata=lambda c, d: {'clusters': map("".join, d['clusters'])})
+            metadata=lambda c, d: {'clusters': 'elided'})
     @wrap_test_run()
     def partition(c):
         """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
@@ -857,31 +857,21 @@ def add_unseeded_analysis(w):
                  'base_root': path_base_root(partition_filename)}]
 
 
-    def without_key(d, k):
-        d = copy.deepcopy(d)
-        try:
-            del d[k]
-        except:
-            pass
-        return d
-
     def has_seeds(cluster, c):
         """Manual selection of seeds to check for from Laura; If this becomes generally useful can put in a
         data hook."""
         return any((('BF520.1-ig' + x) in cluster) for x in ['h', 'k']) and len(cluster) > 2
 
-    # This is a little silly, but gives us the right semantics for partitions > clusters
-    #w.add('cluster', ['cluster0'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
-    @w.add_nest(metadata=lambda c, d: without_key(d, 'clusters'),
-            label_func=lambda d: d['id'])
+    # Add cluster nesting level
+
+    @w.add_nest(label_func=lambda d: d['id'])
     def cluster(c):
-        #print('c[partition]', c['partition']['clusters'])
         return [{'id': 'cluster' + str(i),
                  'unique_ids': clust}
                 for i, clust
                 # Sort by len (dec) and apply index i
                 in enumerate(sorted(c['partition']['clusters'], key=len, reverse=True))
-                # Select top 5 or any matching seeds
+                # Select top 5 or any matching seeds of interest
                 if i < 5 or has_seeds(clust, c)]
 
 
