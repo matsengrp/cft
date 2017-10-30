@@ -50,7 +50,12 @@ from nestly import nestly
 from nestly.nestly import scons as nestly_scons
 
 # Partis and datascripts things
-sys.path.append(path.join(os.environ['PARTIS'], 'python'))
+
+# If the PARTIS env var isn't already set, default to $PWD/partis (where we have a git
+# submodule checkout; this is needed for bin/process_partis.py)
+default_partis_path = path.join(os.getcwd(), 'partis')
+partis_path = os.environ.get('PARTIS', default_partis_path)
+sys.path.append(path.join(partis_path, 'python'))
 import clusterpath
 from datascripts import heads
 
@@ -75,9 +80,8 @@ sconsutils
 
 environ = os.environ.copy()
 
-# If the PARTIS env var isn't already set, default to $PWD/partis (where we have a git
-# submodule checkout; this is needed for bin/process_partis.py)
-environ['PARTIS'] = environ.get('PARTIS', path.join(os.getcwd(), 'partis'))
+# install partis path as env var if not already set
+environ['PARTIS'] = partis_path
 
 env = Environment(ENV=environ)
 
