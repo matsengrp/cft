@@ -618,7 +618,8 @@ def add_cluster_analysis(w):
             return env.SRun(
                 path.join(outdir, 'cluster_mapping.csv'),
                 [c['fasttree'], c['pruned_ids']],
-                'minadcl_clusters.py $SOURCES $TARGET')
+                'minadcl_clusters.py $SOURCES $TARGET',
+                srun_args='`minadcl_clusters_srun_args.py $SOURCE`')
 
 
     # prune out sequences to reduce taxa, making sure to cut out columns in the alignment that are now entirely
