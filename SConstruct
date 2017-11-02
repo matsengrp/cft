@@ -533,9 +533,12 @@ def add_cluster_analysis(w):
     @w.add_metadata()
     def _process_partis(outdir, c):
         # Should get this to explicitly depend on cluster0.fa
+        sources = [partitions(c), annotation(c)]
+        if not c.get('seed'):
+            sources.append(c['unique_ids_file'])
         return env.Command(
                 [path.join(outdir, x) for x in ['partis_metadata.json', 'cluster0.fa', 'partis_seqmeta.csv']],
-                [partitions(c), annotation(c)],
+                sources,
                 'process_partis.py -F' +
                     ' --partition ${SOURCES[0]}' +
                     ' --annotations ${SOURCES[1]}' +
@@ -546,7 +549,8 @@ def add_cluster_analysis(w):
                     ' --melted-base partis_seqmeta' +
                     ' --output-dir ' + outdir +
                     ' --paths-relative-to ' + dataset_outdir(c) +
-                    ('' if c.get('seed') else ' --unique-ids ' + ':'.join(c['cluster']['unique_ids'])))
+                    #('' if c.get('seed') else ' --unique-ids ' + ':'.join(c['cluster']['unique_ids'])))
+                    ('' if c.get('seed') else ' --unique-ids-file ${SOURCES[2]}'))
 
     @w.add_target(ingest=True)
     def partis_metadata(outdir, c):
@@ -807,6 +811,12 @@ w.pop('seed')
 # Unseeded cluster analysis metadata:
 # ===================================
 
+def write_unique_ids_file(target, source, env):
+    unique_ids = env['unique_ids']
+    target = str(target[0])
+    with open(target, 'w') as fp:
+        fp.write(':'.join(unique_ids))
+
 def add_unseeded_analysis(w):
 
     # Extract metadata per sample.
@@ -874,6 +884,16 @@ def add_unseeded_analysis(w):
                 in enumerate(sorted(c['partition']['clusters'], key=len, reverse=True))
                 # Select top 5 or any matching seeds of interest
                 if i < 5 or has_seeds(clust, c)]
+
+    @w.add_target()
+    def unique_ids_file(outdir, c):
+        tgt = env.Command(
+            path.join(outdir, 'unique_ids.txt'),
+            [],
+            write_unique_ids_file,
+            unique_ids=c['cluster']['unique_ids'])
+        env.Depends(tgt, partitions(c))
+        return tgt
 
 
     # Finally call out to the separate cluster analyses as defined above

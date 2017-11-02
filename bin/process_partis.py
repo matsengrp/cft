@@ -84,16 +84,20 @@ def parse_args():
     parser.add_argument(
         '--unique-ids',
         help='select a specific cluster using its unique_ids signature')
-        #type=lambda x: x.split(':'))
+    parser.add_argument(
+        '--unique-ids-file',
+        help='select a specific cluster using its unique_ids signature in a single line in a file',
+        type=lambda x: file(x).read().strip())
     #parser.add_argument('--select_clustering', dest='select_clustering',
     #        help='choose a row from partition file for a different cluster',
     #        default=0, type=int)
 
     # default paths_relative_to is just whatever the output dir is
     args = parser.parse_args()
+    args.unique_ids = args.unique_ids or args.unique_ids_file
     args.paths_relative_to = args.paths_relative_to or args.output_dir
 
-    return parser.parse_args()
+    return args
 
 
 def process_log_file(log_file):
