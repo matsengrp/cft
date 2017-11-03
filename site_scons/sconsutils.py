@@ -63,14 +63,17 @@ Wait = ActionFactory(wait_func, lambda dir: 'Wait(%s)' % get_paths_str(dir))
 exit_code = subprocess.call("type srun", shell=True, 
                              stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 srun_exists = (exit_code == 0)
-def SRun(env, target, source, action, **kwargs):
+def SRun(env, target, source, action, srun_args=None, **kwargs):
     if not hasattr(target, '__iter__'):
         target = [target]
     waitfor = target
     if 'chdir' in kwargs:
         waitfor = [os.path.basename(w) for w in waitfor]
     if srun_exists:
-        srun_base = "- srun sh -c ' " if kwargs.get('ignore_errors') else "srun sh -c ' "
+        srun_base = "- srun " if kwargs.get('ignore_errors') else "srun "
+        if srun_args:
+            srun_base += srun_args + ' '
+        srun_base += "sh -c ' "
         action = [srun_base + action + " '", Wait(waitfor)]
     result = env.Command(target=target, source=source, action=action, **kwargs)
     return result
@@ -80,5 +83,3 @@ def SRun(env, target, source, action, **kwargs):
 AddMethod(Environment, SRun)
 
 
-
-            

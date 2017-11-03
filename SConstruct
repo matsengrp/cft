@@ -50,7 +50,12 @@ from nestly import nestly
 from nestly.nestly import scons as nestly_scons
 
 # Partis and datascripts things
-sys.path.append(path.join(os.environ['PARTIS'], 'python'))
+
+# If the PARTIS env var isn't already set, default to $PWD/partis (where we have a git
+# submodule checkout; this is needed for bin/process_partis.py)
+default_partis_path = path.join(os.getcwd(), 'partis')
+partis_path = os.environ.get('PARTIS', default_partis_path)
+sys.path.append(path.join(partis_path, 'python'))
 import clusterpath
 from datascripts import heads
 
@@ -75,9 +80,8 @@ sconsutils
 
 environ = os.environ.copy()
 
-# If the PARTIS env var isn't already set, default to $PWD/partis (where we have a git
-# submodule checkout; this is needed for bin/process_partis.py)
-environ['PARTIS'] = environ.get('PARTIS', path.join(os.getcwd(), 'partis'))
+# install partis path as env var if not already set
+environ['PARTIS'] = partis_path
 
 env = Environment(ENV=environ)
 
@@ -529,9 +533,12 @@ def add_cluster_analysis(w):
     @w.add_metadata()
     def _process_partis(outdir, c):
         # Should get this to explicitly depend on cluster0.fa
+        sources = [partitions(c), annotation(c)]
+        if not c.get('seed'):
+            sources.append(c['unique_ids_file'])
         return env.Command(
                 [path.join(outdir, x) for x in ['partis_metadata.json', 'cluster0.fa', 'partis_seqmeta.csv']],
-                [partitions(c), annotation(c)],
+                sources,
                 'process_partis.py -F' +
                     ' --partition ${SOURCES[0]}' +
                     ' --annotations ${SOURCES[1]}' +
@@ -542,7 +549,8 @@ def add_cluster_analysis(w):
                     ' --melted-base partis_seqmeta' +
                     ' --output-dir ' + outdir +
                     ' --paths-relative-to ' + dataset_outdir(c) +
-                    ('' if c.get('seed') else ' --unique-ids ' + ':'.join(c['cluster']['unique_ids'])))
+                    #('' if c.get('seed') else ' --unique-ids ' + ':'.join(c['cluster']['unique_ids'])))
+                    ('' if c.get('seed') else ' --unique-ids-file ${SOURCES[2]}'))
 
     @w.add_target(ingest=True)
     def partis_metadata(outdir, c):
@@ -614,7 +622,8 @@ def add_cluster_analysis(w):
             return env.SRun(
                 path.join(outdir, 'cluster_mapping.csv'),
                 [c['fasttree'], c['pruned_ids']],
-                'minadcl_clusters.py $SOURCES $TARGET')
+                'minadcl_clusters.py $SOURCES $TARGET',
+                srun_args='`minadcl_clusters_srun_args.py $SOURCE`')
 
 
     # prune out sequences to reduce taxa, making sure to cut out columns in the alignment that are now entirely
@@ -802,6 +811,12 @@ w.pop('seed')
 # Unseeded cluster analysis metadata:
 # ===================================
 
+def write_unique_ids_file(target, source, env):
+    unique_ids = env['unique_ids']
+    target = str(target[0])
+    with open(target, 'w') as fp:
+        fp.write(':'.join(unique_ids))
+
 def add_unseeded_analysis(w):
 
     # Extract metadata per sample.
@@ -827,7 +842,6 @@ def add_unseeded_analysis(w):
         return filter(keep,
                       os.listdir(path.join(datapath(c), 'partitions')))
 
-
     # Setting up the partition nest level
 
     def path_base_root(full_path):
@@ -836,7 +850,8 @@ def add_unseeded_analysis(w):
     # Each c["partition"] value actually points to the annotations for that partition... a little weird but...
     @w.add_nest(
             label_func=lambda d: d['base_root'],
-            metadata=lambda c, d: d)
+            #metadata=lambda c, d: {'clusters': map("".join, d['clusters'])})
+            metadata=lambda c, d: {'clusters': 'elided'})
     @wrap_test_run()
     def partition(c):
         """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
@@ -853,32 +868,32 @@ def add_unseeded_analysis(w):
                  'base_root': path_base_root(partition_filename)}]
 
 
-    def without_key(d, k):
-        d = copy.deepcopy(d)
-        try:
-            del d[k]
-        except:
-            pass
-        return d
-
     def has_seeds(cluster, c):
         """Manual selection of seeds to check for from Laura; If this becomes generally useful can put in a
         data hook."""
         return any((('BF520.1-ig' + x) in cluster) for x in ['h', 'k']) and len(cluster) > 2
 
-    # This is a little silly, but gives us the right semantics for partitions > clusters
-    #w.add('cluster', ['cluster0'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
-    @w.add_nest(metadata=lambda c, d: without_key(d, 'clusters'),
-            label_func=lambda d: d['id'])
+    # Add cluster nesting level
+
+    @w.add_nest(label_func=lambda d: d['id'])
     def cluster(c):
-        #print('c[partition]', c['partition']['clusters'])
         return [{'id': 'cluster' + str(i),
                  'unique_ids': clust}
                 for i, clust
                 # Sort by len (dec) and apply index i
                 in enumerate(sorted(c['partition']['clusters'], key=len, reverse=True))
-                # Select top 5 or any matching seeds
+                # Select top 5 or any matching seeds of interest
                 if i < 5 or has_seeds(clust, c)]
+
+    @w.add_target()
+    def unique_ids_file(outdir, c):
+        tgt = env.Command(
+            path.join(outdir, 'unique_ids.txt'),
+            [],
+            write_unique_ids_file,
+            unique_ids=c['cluster']['unique_ids'])
+        env.Depends(tgt, partitions(c))
+        return tgt
 
 
     # Finally call out to the separate cluster analyses as defined above
