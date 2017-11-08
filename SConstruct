@@ -35,6 +35,7 @@ import glob
 import sconsutils
 import itertools
 import copy
+import yaml
 #import json
 #import functools as fun
 
@@ -92,19 +93,13 @@ env.PrependENVPath('PATH', 'tree')
 
 # Setting up command line arguments/options
 
-AddOption('--datapaths',
-        dest='datapaths',
-        metavar='DIR_LIST',
-        default="laura-mb/latest:kate-qrs/latest",
+AddOption('--infiles',
+        dest='infiles',
+        metavar='FILE_LIST',
+        default="test.yaml",
         help="""Specify ':' separated list of partis output directories to process on; if full path not specified,
         assumed to be in --base-datapath. Dataset names will be assined in relation to this --base-datapath
         if present. Note: symlinks may not work properly here unless they point to things in base-datapath also.""")
-
-AddOption('--base-datapath',
-        dest='base_datapath',
-        metavar='DIR',
-        default="/fh/fast/matsen_e/processed-data/partis/",
-        help="""Location in which to find the --datapaths directories. Defauilts to %default%""")
 
 AddOption('--asr-progs',
         dest='asr_progs',
@@ -120,11 +115,6 @@ AddOption('--prune-strategies',
         default='min_adcl:seed_lineage',
         help="""Specify ':' separated list of pruning strategies. Options are 'min_adcl' and 'seed_lineage'.
         Defaults to both.""")
-
-AddOption('--separate-timepoints',
-        dest='separate_timepoints',
-        action='store_true',
-        help='Include separate timepoints (vs just running on unmerged)?')
 
 AddOption('--test',
         dest='test_run',
@@ -145,13 +135,10 @@ AddOption('--outdir',
 
 
 # prefer realpath so that running latest vs explicit vN doesn't require rerun; also need for defaults below
-base_datapath = env.GetOption('base_datapath')
-datapaths = map(path.realpath,
-                [path.join(base_datapath, x) for x in env.GetOption('datapaths').split(':')])
+infiles = env.GetOption('infiles').split(':')
 asr_progs = env.GetOption('asr_progs').split(':')
 prune_strategies = env.GetOption('prune_strategies').split(':')
 test_run = env.GetOption("test_run")
-separate_timepoints = env.GetOption("separate_timepoints")
 dataset_tag = env.GetOption('dataset_tag') or ('test' if test_run else None)
 outdir_base = env.GetOption('outdir')
 
@@ -165,7 +152,7 @@ print("test_run = {}".format(test_run))
 # -----------------
 
 def merge_dicts(d1, d2):
-    d = d1.deepcopy(d1)
+    d = copy.deepcopy(d1)
     d.update(d2)
     return d
 
@@ -197,7 +184,6 @@ w = nestly_tripl.NestWrap(w,
                   'time': build_time,
                   'command': " ".join(sys.argv),
                   'workdir': os.getcwd(),
-                  'base_datapath': base_datapath,
                   'user': getpass.getuser(),
                   'commit': git('rev-parse', 'HEAD'),
                   # This will be really cool :-)
@@ -258,74 +244,39 @@ def software(outdir, c):
 
 
 
-# Could do the metadata as a separate target?
-#@w.add_target()
-#def build_data(outdir, c):
-
-
 
 # Dataset nest level
 # =================
 
-def _dataset_outdir(dataset_params):
-    "Outputs the basename of the path to which this dataset's output lives; e.g. 'kate-qrs-v10-dnaml'"
-    base = dataset_tag + '-' if dataset_tag else ''
-    base += path.relpath(dataset_params['datapath'], base_datapath).replace('/', '-')
-    if dataset_params['separate_timepoints']:
-        base += '-' + 'septmpts'
-    return base
-
-
-def _dataset_id(outdir):
-    """The return dataset_id corresponding to the control dictionary; This is the key under which datasets are
-    organized in CFTWeb."""
-    return outdir + '-' + time.strftime('%Y.%m.%d')
-
-
-def with_data_id_and_outdir(dataset_params):
-    outdir = _dataset_outdir(dataset_params)
-    d = {'outdir': outdir,
-         'id': _dataset_id(outdir)}
-    d.update(dataset_params)
-    return d
-
-
-print("Running for")
-print("  datapaths:", datapaths)
 
 # A collection of datasets, where the `datapath` key is the full realpath to a leaf node input directory
-datasets = [with_data_id_and_outdir({
-                 'datapath': datapath,
-                 'study': datapath.split('/')[-2],
-                 'version': datapath.split('/')[-1],
-                 'separate_timepoints': separate_timepoints,
-                 })
-             for datapath in datapaths]
 
 # This is a little idiosynchratic the way we're doing things here, because of how we wanted to think about
 # uniqueness before; This will probably get scrapped and we'll have everything build off of attributes of the
 # cluster, and let tripl take care of identity and uniquness. We may not be able to preserve uniquness though,
 # unless we specify a route mapping via a pull expression.
 
-w.add('dataset', datasets,
-        full_dump=True,
-        label_func=lambda d: d['outdir'],
-        metadata=lambda c, d: d,
-        id_attrs=['cft.subject:id', 'cft.sample:id'])
+
+def dataset_metadata(infile):
+    with open(infile) as fp:
+        d = yaml.load(fp)
+    outdir = (dataset_tag + '-' if dataset_tag else '') + d['id']
+    return merge_dicts(d, {'id': d['id'] + '-' + time.strftime('%Y.%m.%d'), 'outdir': outdir})
+
+@w.add_nest(full_dump= True,
+        label_func= lambda d: d['outdir'],
+        metadata= lambda c, d: {'samples': None},
+        id_attrs= ['cft.subject:id', 'cft.sample:id'])
+def dataset(c):
+    return map(dataset_metadata, infiles)
+
+
 
 # Helpers for accessing info about the dataset
 
 def dataset_outdir(c):
     "Returns _dataset_outdir of `c['dataset']`, for easier access via `c` below."
     return c['dataset']['outdir']
-
-@w.add_target('cft.dataset:seqmeta')
-def dataset_seqmeta(outdir, c):
-    "The sequence metadata file path for the entire dataset."
-    return env.Command(
-        path.join(outdir, 'seqmeta.csv'),
-        glob.glob(path.join(base_datapath, c['dataset']['datapath'], '*-translations.csv')),
-        'csvstack $SOURCES > $TARGET')
 
 def dataset_id(c):
     return c['dataset']['id']
@@ -347,11 +298,17 @@ def wrap_test_run(take_n=2):
     return deco
 
 
+def get_in(d, ks, default=None):
+    if len(ks) > 1:
+        return get_in(d.get(ks[0], {}), ks[1:], default=default)
+    else:
+        return d.get(ks[0], default)
+
 @w.add_nest()
 @wrap_test_run(take_n=2)
 def subject(c):
-    study = c['dataset']['study']
-    return list(set(d['subject'] for d in heads.read_metadata(study).values()))
+    return list(set(get_in(sample, ['meta', 'subject'])
+                    for sample_id, sample in c['dataset']['samples'].items()))
 
 
 # Initialize seed nest
@@ -362,56 +319,37 @@ def subject(c):
 # For the sake of testing, we allow for switching between the full set of seeds, as returned by `seeds_fn`, or
 # just a small subsampling thereof via execution with the `--test` cli flag
 
-@w.add_target()
-def _seeds(outdir, c):
-    study = c['dataset']['study']
-    subject = c['subject']
-    seeds = heads.get_seeds(study, subject)
-    # If we don't have a directory for a seed, it might not be done running yet, so just run on all complete
-    seeds = filter(lambda x: path.isdir(path.join(datapath(c), 'seeds', x)), seeds)
-    return seeds
+# At some point below, we'll pop off the seed nest level
+
+
+# There may eventually be some required arguments here as this is where we get our locus and isotype and such
+@w.add_nest(metadata=lambda c, d: merge_dicts(d.get('meta', {}), {'id': d['id']}))
+@wrap_test_run(take_n=2)
+def sample(c):
+    return [merge_dicts(sample, {'id': sample_id})
+            for sample_id, sample in c['dataset']['samples'].items()
+            if sample.get('subject') == c['subject']]
+
 
 # Initialize our first sub dataset nest level
-@w.add_nest('seed')
+@w.add_nest(metadata=lambda c, d: merge_dicts(d.get('meta', {}), {'id': d['id']}))
 # would like to have a lower number here but sometimes we get no good clusters for the first two seeds?
 # (on laura-mb for example).
 @wrap_test_run(take_n=4)
-def seeds_fn(c):
-    return c['_seeds']
+def seed(c):
+    return [merge_dicts(seed, {'id': seed_id})
+            for seed_id, seed in c['dataset']['samples'][c['sample']['id']].get('seeds', {}).items()]
 
 
-def is_merged(c, x):
-    if c['dataset']['study'] in {'kate-qrs', 'laura-mb'}:
-        return re.compile('[A-Z]+\d+-\w-Ig[A-Z]').match(x)
-    elif c['dataset']['study'] in {'laura-mb-2'}:
-        return re.compile('\w+-\w+-merged').match(x)
+def timepoint(c):
+    return get_in(c, ['sample', 'meta', 'timepoint'])
 
-def is_unmerged(c, x):
-    if c['dataset']['study'] in {'kate-qrs', 'laura-mb'}:
-        #return re.compile('Hs-(LN-?\w+)-.*').match(x)
-        return re.compile('Hs-(LN-?\w+)(?:-5RACE)?-Ig\w').match(x)
-    elif c['dataset']['study'] in {'laura-mb-2'}:
-        return re.compile('\w+-\w+-(?!merged)\w+').match(x)
+def is_merged(c):
+    return timepoint(c) == 'merged'
 
+def is_unmerged(c):
+    return not is_merged(c)
 
-def canonical_sample_name(c, sample_filename):
-    study_metadata = heads.read_metadata(c['dataset']['study'])
-    sample_name = [k for k in study_metadata if k in sample_filename][0]
-    return sample_name
-
-def raw_sample_metadata(c, sample_filename):
-    study_metadata = heads.read_metadata(c['dataset']['study'])
-    return study_metadata[canonical_sample_name(c, sample_filename)]
-
-def timepoint(c, sample_filename):
-    return raw_sample_metadata(c, sample_filename)['timepoint']
-
-def sample_metadata(c, filename): # control dict as well?
-    d = copy.deepcopy(raw_sample_metadata(c, filename))
-    d.update(
-        {'id': filename,
-         'timepoints': [{'cft.timepoint:id': timepoint(c, filename)}]})
-    return d
 
 
 # Initialize sample nest
@@ -420,25 +358,12 @@ def sample_metadata(c, filename): # control dict as well?
 # Next we nest on sample.
 # These things look like "Hs-LN2-5RACE-IgG", and are nested within each seed's output directory.
 
-#dataset,shorthand,species,timepoint,subject,locus
-@w.add_nest(metadata=sample_metadata)
-@wrap_test_run()
-def sample(c):
-    def keep(filename):
-        return is_unmerged(c, filename) if separate_timepoints else is_merged(c, filename)
-    results = filter(keep,
-                  os.listdir(path.join(datapath(c), 'seeds', c['seed'])))
-    #print('results', results)
-    return results
 
 
 # Some helpers at the seed level
 
 
 # If there are duplicates 
-cluster_step_re = re.compile('.*-plus-(?P<cluster_step>\d+)').match
-def cluster_step(partition_filename):
-    return int(cluster_step_re(partition_filename).group('cluster_step'))
 
 def partition_size(fname):
     with open(fname, 'r') as partition_handle:
@@ -447,26 +372,24 @@ def partition_size(fname):
         # add 1 for naive
         return len(unique_ids) + 1
 
+exit()
 
 # Setting up the partition nest level
 
+
+def partition_metadata(i, part):
+    return merge_dicts(part,
+            {'index': i,
+             'size': len(part['unique_ids'].split(':')) + 1,
+             'n_clusters': int(part['n_clusters']),
+             'logprob': float(part['logprob'])})
+
 def partition_file_metadata(partition_handle, cluster_step):
-    parts = list(csv.DictReader(partition_handle))
-    for i, x in enumerate(parts):
-        x['index'] = i
-        x['n_clusters'] = int(x['n_clusters'])
-        x['logprob'] = float(x['logprob'])
+
     best_part = max(parts, key=lambda x: x['logprob'])
     best_i = best_part['index']
     cluster_i = best_i + cluster_step
     return parts[cluster_i]
-
-def partition_metadata(c, filename):
-    step = cluster_step(filename)
-    metadata = partition_file_metadata(file(partitions(c)), step)
-    return {'cluster_step': step,
-            'logprob': metadata['logprob'],
-            'n_clusters': metadata['n_clusters']}
 
 
 def input_dir(c):
@@ -488,19 +411,17 @@ def path_base_root(full_path):
 @w.add_nest(metadata=partition_metadata)
 @wrap_test_run()
 def partition(c):
-    """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
-    for actual analysis."""
-    partitions = sorted(glob.glob(path.join(input_dir(c), "*-plus-*.csv")), key=cluster_step)
+    parts = list(csv.DictReader(partition_handle))
     keep_partitions = []
-    for partition in partitions:
-        size = partition_size(partition)
+    for i, part in enumerate(parts):
+        meta = partition_metadata(i, part)
         # We only add clusters bigger than two, since we can only make trees if we have hits
-        if size > 2:
+        if meta['size'] > 2:
             keep_partitions.append(partition)
         # Once we get a cluster of size 50, we don't need later cluster steps
-        if size >= 50:
+        if meta['size'] >= 50:
             break
-    return map(path_base_root, keep_partitions)
+    return keep_partitions
 
 
 # This is a little silly, but gives us the right semantics for partitions > clusters
