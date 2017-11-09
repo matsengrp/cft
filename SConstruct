@@ -24,19 +24,14 @@ See README for typical environment setup and usage.
 # Basic imports
 from __future__ import print_function
 import os
-import re
 import sys
 import csv
 import time
 import subprocess
 import datetime
 import getpass
-import glob
 import itertools
-import copy
 import yaml
-#import json
-#import functools as fun
 
 from os import path
 #from warnings import warn
@@ -57,7 +52,6 @@ default_partis_path = path.join(os.getcwd(), 'partis')
 partis_path = os.environ.get('PARTIS', default_partis_path)
 sys.path.append(path.join(partis_path, 'python'))
 import clusterpath
-from datascripts import heads
 
 # Scons requirements
 from SCons.Script import Environment

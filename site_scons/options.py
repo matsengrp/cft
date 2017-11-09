@@ -50,6 +50,7 @@ def get_options(env):
     test_run = env.GetOption("test_run")
     return dict(
         infiles = env.GetOption('infiles').split(':'),
+        test_run = env.GetOption('test_run'),
         asr_progs = env.GetOption('asr_progs').split(':'),
         prune_strategies = env.GetOption('prune_strategies').split(':'),
         dataset_tag = env.GetOption('dataset_tag') or ('test' if test_run else None),

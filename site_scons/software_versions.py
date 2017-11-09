@@ -1,5 +1,4 @@
 
-import nestly
 import subprocess
 
 
@@ -21,14 +20,14 @@ def tripl_version():
 # function value is called to get a version. And as long as it's not a function value, then it's assumed it's
 # assumed the program name is something that `which` can be called on. If function value, assumed to be a lib
 # and which is not called. For now... this is a little arbitrary and specific to our use case here.
-software = {
+software_versions = {
     'dnaml': None,
     'muscle': 'muscle -version',
     'seqmagick': 'seqmagick --version',
     'FastTree': None,
     'prank': 'prank -v',
     'tripl': tripl_version,
-    'nestly': lambda: nestly.__version__,
+    #'nestly': lambda: nestly.__version__,
     'ete3': lambda: ete3.__version__,
     'biopython': lambda: Bio.__version__,
     'scons': 'scons -v',
@@ -41,7 +40,7 @@ software = {
 
 
 def software_info(prog):
-    version_command = software[prog]
+    version_command = software_versions[prog]
     return {'cft.software:name': prog,
             'cft.software:version': version_command() if callable(version_command) else (
                  subprocess.check_output(version_command.split()) if version_command else None),
@@ -52,6 +51,6 @@ def software_info(prog):
 def add_software_versions(w):
     @w.add_target('cft.build:software')
     def software(outdir, c):
-        return [software_info(prog) for prog in software]
+        return [software_info(prog) for prog in software_versions]
 
 
