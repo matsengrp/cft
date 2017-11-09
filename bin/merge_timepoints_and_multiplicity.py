@@ -126,10 +126,9 @@ def timepoint_filter(args):
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--timepoint', help="optionally specify a specific timepoint on which to restrict")
     parser.add_argument('--cluster-mapping', type=cluster_reader)
-    parser.add_argument('partis_seqmeta', type=csv_reader('unique_ids'))
-    parser.add_argument('upstream_seqmeta')
+    parser.add_argument('--partis-seqmeta', type=csv_reader('unique_ids'))
+    parser.add_argument('--upstream-seqmeta')
     parser.add_argument('output', type=argparse.FileType('w'))
     args = parser.parse_args()
     index_by = 'original' if args.timepoint else 'new'
