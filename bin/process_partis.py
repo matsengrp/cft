@@ -79,8 +79,12 @@ def parse_args():
     parser.add_argument(
         '--partis-log',
         help='log file containing relevant information about partis run (required if --param_dir not specified)',
-        required=True,
         type=existing_file)
+    parser.add_argument(
+        '--parameter-dir',
+        help='parameter dir path, as passed to partis')
+    parser.add_argument(
+        '--locus')
     parser.add_argument(
         '--unique-ids',
         help='select a specific cluster using its unique_ids signature')
@@ -132,28 +136,25 @@ def process_log_file(log_file):
         # we have no other way of getting this information since it's printed
         # to stdout if it's not provided. should we assume it's always
         # provided?
-        inferred_gls = partis_path + '/data/germlines/human'
+        gls = partis_path + '/data/germlines/human'
     else:
-        inferred_gls = call_args[1+call_args.index('--parameter-dir')] + \
+        gls = call_args[1+call_args.index('--parameter-dir')] + \
                 '/hmm/germline-sets'
-    # Hacky temp fix for the dataset rename 2017/04/03
-    inferred_gls = inferred_gls.replace('kate-qrs-2016-09-09', 'kate-qrs')
-    inferred_gls = inferred_gls.replace('laura-mb-2016-12-22', 'laura-mb')
 
     # if the parameter file is not an absolute path then we don't know where
     # to look since we don't know where partis was run from!
     # so for now we'll spit an error
     # This may not make as much sense now that we've moved into datascripts, and is partof why this shouold be
     # here
-    if not os.path.isabs(inferred_gls):
+    if not os.path.isabs(gls):
         raise ValueError('Parameter directory must be an absolute path: ' \
-                + str(inferred_gls))
+                + str(gls))
 
     # even if the path is absolute it might have been deleted...
-    if not os.path.isdir(inferred_gls):
-        raise ValueError('Invalid parameter directory: ' + str(inferred_gls))
+    if not os.path.isdir(gls):
+        raise ValueError('Invalid parameter directory: ' + str(gls))
 
-    return locus, inferred_gls
+    return locus, gls
 
 
 def indel_offset(indelfo):
@@ -231,8 +232,9 @@ def process_data(annot_file, part_file, locus, glpath, unique_ids=None):
     else:
         output_df = pd.DataFrame()
         for idx, cluster in annotations.fillna('').iterrows():
-            current_df = process_cluster(cluster, glfo, seed_ids, idx)
-            output_df = pd.concat([output_df, current_df])
+            if set(seed_ids).intersection(cluster['unique_ids'].split(':')):
+                current_df = process_cluster(cluster, glfo, seed_ids, idx)
+                output_df = pd.concat([output_df, current_df])
         return output_df
 
 
@@ -344,13 +346,26 @@ def main():
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
 
-    print("Inferring chain and gls from partis log")
-    locus, inferred_gls = process_log_file(args.partis_log)
+    if args.partis_log:
+        print("Inferring chain and gls from partis log")
+        locus, gls = process_log_file(args.partis_log)
+    else:
+        locus = args.locus
+        if args.parameter_dir:
+            gls = os.path.join(args.parameter_dir, 'hmm/germline-sets')
+        else:
+            # currently we use IMGT germlines if no cached parameters provided.
+            # we have no other way of getting this information since it's printed
+            # to stdout if it's not provided. should we assume it's always
+            # provided? For now just raising a warnings
+            gls = partis_path + '/data/germlines/human'
+            warnings.warn("assuming germline set is:", gls)
+
 
     melted_annotations = process_data(args.annotations,
                                       args.partition,
                                       locus,
-                                      inferred_gls,
+                                      gls,
                                       args.unique_ids)
 
     melted_annotations = handle_frameshifts(melted_annotations, args.remove_frameshifts)

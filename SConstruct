@@ -39,10 +39,16 @@ from os import path
 
 # Nestly things
 # this temporarily switches between a local checkout and whatever is installed
-#import nestly
-#import nestly_scons
-from nestly import nestly
-from nestly.nestly import scons as nestly_scons
+# Uncomment this line for a local checkout
+#sys.path.append(path.join(os.getcwd(), 'nestly'))
+import nestly
+from nestly import scons as nestly_scons
+
+# Tripl data modelling
+# Uncomment this line for a local checkout
+sys.path = [path.join(os.getcwd(), 'tripl')] + sys.path
+from tripl import nestly as nestly_tripl
+
 
 # Partis and datascripts things
 
@@ -108,7 +114,6 @@ build_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 def git(*args):
     return subprocess.check_output(['git'] + list(args))
 
-import tripl.tripl.nestly as nestly_tripl
 
 nest = nestly.Nest()
 w = nestly_scons.SConsWrap(nest, options['outdir_base'], alias_environment=env)
@@ -144,16 +149,16 @@ software_versions.add_software_versions(w)
 def dataset_metadata(infile):
     with open(infile) as fp:
         d = yaml.load(fp)
-    outdir = (options['dataset_tag'] + '-' if options['dataset_tag'] else '') + d['id']
-    return utils.merge_dicts(d, {'id': d['id'] + '-' + time.strftime('%Y.%m.%d'), 'outdir': outdir})
+    label = (options['dataset_tag'] + '-' if options['dataset_tag'] else '') + d['id']
+    outdir = path.join(options['outdir_base'], label)
+    return utils.merge_dicts(d, {'id': d['id'] + '-' + time.strftime('%Y.%m.%d'), 'label': label, 'outdir': outdir})
 
 @w.add_nest(full_dump= True,
-        label_func= lambda d: d['outdir'],
+        label_func= lambda d: d['label'],
         metadata= lambda c, d: {'samples': None},
         id_attrs= ['cft.subject:id', 'cft.sample:id'])
 def dataset(c):
     return map(dataset_metadata, options['infiles'])
-
 
 
 # Helpers for accessing info about the dataset
@@ -207,14 +212,14 @@ def subject(c):
 # These are handled in separate nest loops below, with a pop in between.
 
 # There may eventually be some required arguments here as this is where we get our locus and isotype and such
-@w.add_nest(metadata=lambda c, d: utils.merge_dicts(d.get('meta', {}), {'id': d['id']}))
+@w.add_nest(metadata=lambda c, d: utils.merge_dicts(d.get('meta', {}),
+                                                    {'id': d['id'], 'seeds': None, 'meta': None}))
 @wrap_test_run(take_n=2)
 def sample(c):
     # Make sure to add timepoints here as necessary
     return [utils.merge_dicts(sample, {'id': sample_id})
             for sample_id, sample in c['dataset']['samples'].items()
-            if sample.get('subject') == c['subject']]
-
+            if utils.get_in(sample, ['meta', 'subject']) == c['subject']]
 
 
 
@@ -263,19 +268,20 @@ def seed_cluster(cp, i, seed_id):
 def seed_cluster_size(cp, i, seed_id):
     return len(seed_cluster(cp, i, seed_id))
 
-def partition_metadata(cp, i, seed=None, other_id=None):
+def partition_metadata(part, cp, i, seed=None, other_id=None):
     clusters = cp.partitions[i]
-    print(cp.__dict__.keys())
     meta = {'id': (other_id + "-" + str(i)) if other_id else i,
             'clusters': clusters,
             # Should cluster step be partition step?
             'cluster_step': i,
             'n_clusters': len(clusters),
-            'largest_cluster_size': len(),
-            'logprob': cp.logprobs[i]}
+            'largest_cluster_size': max(map(len, clusters)),
+            'logprob': cp.logprobs[i],
+            'partition-file': part['partition-file'],
+            'cluster-annotation-file': part['cluster-annotation-file']}
     if seed:
         meta['seed_cluster_size'] = seed_cluster_size(cp, i, seed)
-    return meta
+    return utils.merge_dicts(meta, part.get('meta') or {})
 
 # Whenever we iterate over partitions, we always want to assume there could be an `other-partitions` mapping,
 # and iterate over all these things, while tracking their other_id keys in the `other-partitions` dict.
@@ -284,7 +290,9 @@ def with_other_partitions(node):
     if node.get('partition-file') and node.get('cluster-annotation-file'):
         parts.append(node)
     if node.get('other-partitions'):
-        parts += [utils.merge_dicts(part, {'other_id': other_id}) for other_id, part in node['other-partitions'].items()]
+        parts += [utils.merge_dicts(part, {'other_id': other_id})
+                  for other_id, part in node['other-partitions'].items()
+                  if part.get('partition-file') and part.get('cluster-annotation-file')]
     return parts
 
 # The actual nest construction for this
@@ -301,7 +309,7 @@ def partition(c):
         cp = clusterpath.ClusterPath()
         cp.readfile(part['partition-file'])
         for i in range(len(cp.partitions)):
-            meta = partition_metadata(cp, i, seed=c['seed']['id'], other_id=part.get('other_id'))
+            meta = partition_metadata(part, cp, i, seed=c['seed']['id'], other_id=part.get('other_id'))
             # We only add clusters bigger than two, since we can only make trees if we have hits
             if meta['seed_cluster_size'] > 2:
                 keep_partitions.append(meta)
@@ -333,8 +341,8 @@ def add_cluster_analysis(w):
     @w.add_metadata()
     def _process_partis(outdir, c):
         # Should get this to explicitly depend on cluster0.fa
-        sources = [c['partition']['partition-file'], c['partition']['cluster-annotations-file']]
-        if c.get('seed'):
+        sources = [c['partition']['partition-file'], c['partition']['cluster-annotation-file']]
+        if not c.get('seed'):
             sources.append(c['unique_ids_file'])
         return env.Command(
                 [path.join(outdir, x) for x in ['partis_metadata.json', 'cluster0.fa', 'partis_seqmeta.csv']],
@@ -342,6 +350,8 @@ def add_cluster_analysis(w):
                 'process_partis.py -F' +
                     ' --partition ${SOURCES[0]}' +
                     ' --annotations ${SOURCES[1]}' +
+                    ' --parameter-dir ' + c['sample']['parameter-dir'] +
+                    ' --locus ' + c['sample']['meta']['locus'] +
                     #' --param_dir ' + parameter_dir(c) +
                     ' --remove-frameshifts' +
                     ' --cluster-base cluster' +
@@ -408,7 +418,7 @@ def add_cluster_analysis(w):
                 + ((" --always-include " + ','.join(c['sample']['seeds'])) if c['sample'].get('seeds') else '')
                 + " --strategy " + recon['prune_strategy']
                 + " --naive naive0"
-                + (" --seed " + c['seed'] if 'seed' in c else '')
+                + (" --seed " + c['seed']['id'] if 'seed' in c else '')
                 + " $SOURCE $TARGET")
 
 
@@ -444,12 +454,13 @@ def add_cluster_analysis(w):
         # orig/new names, joined on sequence from the other file
         sources = {'--partis-seqmeta': c['partis_seqmeta'],
                    '--cluster-mapping': c['cluster_mapping'] if c['reconstruction']['prune_strategy'] == 'min_adcl' else None,
-                   '--upstream-seqmeta': c['sample'].get('per-sequence-meta-file')}
+                   '--upstream-seqmeta': c['sample'].get('per-sequence-meta-file')
+                   }
         sources = {k: v for k, v in sources.items() if v}
         base_call = 'merge_timepoints_and_multiplicity.py '
         for i, (k, v) in enumerate(sources.items()):
-            base_call += k + '${SOURCES[' + str(i) + ']} '
-        return env.Command(path.join(outdir, 'seqmeta.csv'), sources.values(), base_call + '$SOURCES $TARGET')
+            base_call += k + ' ${SOURCES[' + str(i) + ']} '
+        return env.Command(path.join(outdir, 'seqmeta.csv'), sources.values(), base_call + '$TARGET')
 
     @w.add_target()
     def _phy(outdir, c):
@@ -498,7 +509,7 @@ def add_cluster_analysis(w):
                     # Note that adding `-` at the beginning of this command string can keep things running if
                     # there's an error trying to build a tree from 2 sequences; should be filtered prior now...
                     "xvfb-run -a bin/process_asr.py"
-                        + (" --seed " + c['seed'] if 'seed' in c else '')
+                        + (" --seed " + c['seed']['id'] if 'seed' in c else '')
                         + " --outdir " + outdir
                         + " --basename " + basename
                         + " --seqname-mapping $SOURCES")
@@ -619,8 +630,8 @@ def add_unseeded_analysis(w):
         for actual analysis."""
         def meta(part):
             cp = clusterpath.ClusterPath()
-            cp.readfile(part)
-            return partition_metadata(cp, cp.i_best, other_id=part['other_id'])
+            cp.readfile(part['partition-file'])
+            return partition_metadata(part, cp, cp.i_best, other_id=part.get('other_id'))
         return [meta(part)
                 for part in with_other_partitions(c['sample'])]
 

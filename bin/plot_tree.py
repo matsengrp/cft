@@ -104,7 +104,7 @@ def leaf_style(node, seqmeta, tp_colors, highlight_node=None):
         nstyle['size'] = 14
         node.set_style(nstyle)
     timepoints = filter(lambda x: x, seqmeta.get('cluster_timepoints', seqmeta['timepoints']).split(':'))
-    duplicities = [int(n) for n in seqmeta.get('cluster_timepoint_duplicities', seqmeta['timepoint_duplicities']).split(':') if n]
+    duplicities = [int(n) for n in seqmeta.get('cluster_timepoint_multiplicities', seqmeta['timepoint_multiplicities']).split(':') if n]
     multiplicity = int(seqmeta.get('cluster_multiplicity', seqmeta['multiplicity']))
     percents = [d * 100 / multiplicity for d in duplicities]
     colors = [tp_colors[t] for t in timepoints]
