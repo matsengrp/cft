@@ -273,7 +273,7 @@ def partition_metadata(part, cp, i, seed=None, other_id=None):
     meta = {'id': (other_id + "-" + str(i)) if other_id else i,
             'clusters': clusters,
             # Should cluster step be partition step?
-            'cluster_step': i,
+            'step': i,
             'n_clusters': len(clusters),
             'largest_cluster_size': max(map(len, clusters)),
             'logprob': cp.logprobs[i],
