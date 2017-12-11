@@ -9,7 +9,9 @@ import collections
 # The core merge/processing logic here
 
 def get_upstream_row(args, seqid):
-    return args.upstream_seqmeta.get(seqid, {'sequence': seqid, 'timepoint': '', 'multiplicity': 1})
+    row = args.upstream_seqmeta.get(seqid, {'timepoint': '', 'multiplicity': 1})
+    row['sequence'] = seqid
+    return row
 
 def merge(args):
     """"Initial merge of upstream (pre-partis) metadata, including timepoint and multiplicity info coded in orig
@@ -22,7 +24,6 @@ def merge(args):
         seqids = [seqid] + duplicates
         timepoints_dict = collections.defaultdict(lambda: 0)
         for dup_seqid in seqids:
-            # this was seqid instead of dup_seqid, which doesn't seem right...
             dup_upstream_row = get_upstream_row(args, seqid)
             # pre-partis filtering multiplicity
             dup_multiplicity = int(dup_upstream_row.get('multiplicity', 1))
@@ -105,7 +106,7 @@ def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cluster-mapping', type=cluster_reader)
     parser.add_argument('--partis-seqmeta', type=csv_reader('unique_ids'))
-    parser.add_argument('--upstream-seqmeta', type=csv_reader('sequence'))
+    parser.add_argument('--upstream-seqmeta', type=csv_reader('unique_id'))
     parser.add_argument('output', type=argparse.FileType('w'))
     args = parser.parse_args()
     args.upstream_seqmeta = args.upstream_seqmeta or {}
