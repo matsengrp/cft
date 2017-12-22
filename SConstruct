@@ -347,11 +347,11 @@ def add_cluster_analysis(w):
                 [path.join(outdir, x) for x in ['partis_metadata.json', 'cluster_seqs.fa', 'partis_seqmeta.csv']],
                 sources,
                 'process_partis.py' +
+                    ' --remove-stops --remove-frameshifts --remove-mutated-invariants' +
                     ' --partition-file ${SOURCES[0]}' +
                     ' --cluster-annotation-file ${SOURCES[1]}' +
                     ' --parameter-dir ' + c['sample']['parameter-dir'] +
                     ' --locus ' + c['sample']['meta']['locus'] +
-                    ' --remove-frameshifts' +
                     ' --cluster-meta-out ${TARGETS[0]}' +
                     ' --seqs-out ${TARGETS[1]}' +
                     ' --seqmeta-out ${TARGETS[2]}' +

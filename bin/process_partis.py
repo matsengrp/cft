@@ -74,6 +74,18 @@ def as_dict_rows(column_dict, columns=None):
     return [{c: column_dict[c][i] for c in columns}
             for i in range(max(column_lengths))]
 
+def apply_filters(args, sequences):
+    def filter_fn(sequence):
+        if args.remove_frameshifts and sequence['frameshifted']:
+            return False
+        elif args.remove_stops and sequence['stops']:
+            return False
+        elif args.remove_mutated_invariants and sequence['mutated_invariants']:
+            return False
+        else:
+            return True
+    return filter(filter_fn, sequences)
+
 
 def process_cluster(args, cluster_line, seed_id):
     utils.process_input_line(cluster_line)
@@ -84,7 +96,9 @@ def process_cluster(args, cluster_line, seed_id):
             'seq': cluster_line['seqs'] + [cluster_line['naive_seq']],
             'is_seed': [(unique_id == seed_id) for unique_id in cluster_line['unique_ids']] + [False],
             'duplicates': [':'.join(x) for x in cluster_line['duplicates']] + [None],
-            'frameshifted': infer_frameshifts(cluster_line) + [False],
+            'frameshifted': [not x for x in cluster_line['in_frames']] + [False],
+            'mutated_invariants': cluster_line['mutated_invariants'] + [False],
+            'stops': cluster_line['stops'] + [False],
             'mut_freq': cluster_line['mut_freqs'] + [0.0]}
 
     for gene in 'vdj':
@@ -94,6 +108,8 @@ def process_cluster(args, cluster_line, seed_id):
     cluster_cols = ['v_gene', 'd_gene', 'j_gene', 'cdr3_length']
 
     sequences = as_dict_rows(cluster_sequences)
+    if args.remove_frameshifts or args.remove_stops or args.remove_mutated_invariants:
+        sequences = apply_filters(args, sequences)
     cluster = {'sequences': sequences,
                'cdr3_start': cluster_line['codon_positions']['v'],
                'has_seed': seed_id in cluster_line['unique_ids'],
@@ -168,7 +184,7 @@ def write_cluster_meta(args, cluster_data):
         json.dump(doc, outfile, sort_keys=True, indent=4)
 
 def write_seq_meta(args, cluster_data):
-    to_keep = ['unique_id', 'is_seed', 'frameshifted', 'duplicates', 'mut_freq']
+    to_keep = ['unique_id', 'is_seed', 'frameshifted', 'stops', 'mutated_invariants', 'duplicates', 'mut_freq']
     with open(args.seqmeta_out, 'w') as outfile:
         writer = csv.DictWriter(outfile, fieldnames=to_keep, extrasaction='ignore')
         writer.writeheader()
@@ -249,7 +265,19 @@ def parse_args():
     other_args = parser.add_argument_group(title="Other options")
     other_args.add_argument(
         '--remove-frameshifts',
-        help='if set, tries to remove seqs with frameshifted indels from the output',
+        help='if set, removes seqs with frameshifted indels from output',
+        action="store_true")
+    other_args.add_argument(
+        '--remove-stops',
+        help='if set, removes seqs with stop codons from output',
+        action="store_true")
+    other_args.add_argument(
+        '--remove-mutated-invariants',
+        help='if set, removes seqs with mutated "invariant" regions from output',
+        action="store_true")
+    other_args.add_argument(
+        '--indel-reversed-seqs',
+        help='if set, uses the "indel_reversed_seqs" output of partis instead of "seqs"',
         action="store_true")
     other_args.add_argument(
         '--paths-relative-to',
