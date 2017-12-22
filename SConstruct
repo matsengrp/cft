@@ -308,7 +308,8 @@ def partition(c):
     for part in with_other_partitions(c['seed']):
         cp = clusterpath.ClusterPath()
         cp.readfile(part['partition-file'])
-        for i in range(len(cp.partitions)):
+        # important to start from i_best
+        for i in range(cp.i_best, len(cp.partitions) - cp.i_best):
             meta = partition_metadata(part, cp, i, seed=c['seed']['id'], other_id=part.get('other_id'))
             # We only add clusters bigger than two, since we can only make trees if we have hits
             if meta['seed_cluster_size'] > 2:
@@ -342,24 +343,22 @@ def add_cluster_analysis(w):
     def _process_partis(outdir, c):
         # Should get this to explicitly depend on cluster0.fa
         sources = [c['partition']['partition-file'], c['partition']['cluster-annotation-file']]
-        if not c.get('seed'):
-            sources.append(c['unique_ids_file'])
         return env.Command(
-                [path.join(outdir, x) for x in ['partis_metadata.json', 'cluster0.fa', 'partis_seqmeta.csv']],
+                [path.join(outdir, x) for x in ['partis_metadata.json', 'cluster_seqs.fa', 'partis_seqmeta.csv']],
                 sources,
-                'process_partis.py -F' +
-                    ' --partition ${SOURCES[0]}' +
-                    ' --annotations ${SOURCES[1]}' +
+                'process_partis.py' +
+                    ' --partition-file ${SOURCES[0]}' +
+                    ' --cluster-annotation-file ${SOURCES[1]}' +
                     ' --parameter-dir ' + c['sample']['parameter-dir'] +
                     ' --locus ' + c['sample']['meta']['locus'] +
-                    #' --param_dir ' + parameter_dir(c) +
                     ' --remove-frameshifts' +
-                    ' --cluster-base cluster' +
-                    ' --melted-base partis_seqmeta' +
-                    ' --output-dir ' + outdir +
+                    ' --cluster-meta-out ${TARGETS[0]}' +
+                    ' --seqs-out ${TARGETS[1]}' +
+                    ' --seqmeta-out ${TARGETS[2]}' +
                     ' --paths-relative-to ' + dataset_outdir(c) +
-                    #('' if c.get('seed') else ' --unique-ids ' + ':'.join(c['cluster']['unique_ids'])))
-                    ('' if c.get('seed') else ' --unique-ids-file ${SOURCES[2]}'))
+                    ' --namespace cft.cluster' +
+                    (' --partition {}'.format(c['partition']['step']) if c.get('seed') else '') +
+                    ('' if c.get('seed') else ' --cluster {}'.format(c['cluster']['sorted_index'])))
 
     @w.add_target(ingest=True)
     def partis_metadata(outdir, c):
@@ -605,14 +604,6 @@ w.pop('seed')
 # Unseeded cluster analysis
 # -------------------------
 
-# First a build action for writing out the cluster ids
-
-def write_unique_ids_file(target, source, env):
-    unique_ids = env['unique_ids']
-    target = str(target[0])
-    with open(target, 'w') as fp:
-        fp.write(':'.join(unique_ids))
-
 
 # Now we define a function that builds the cluster analysis defined above for the unseeded
 # partitions/clusters. We do this so that the functions names we use for building things with nestly don't
@@ -647,6 +638,7 @@ def add_unseeded_analysis(w):
     @w.add_nest(label_func=lambda d: d['id'])
     def cluster(c):
         return [{'id': 'cluster' + str(i),
+                 'sorted_index': i,
                  'unique_ids': clust,
                  'size': len(clust)}
                 for i, clust
@@ -654,16 +646,6 @@ def add_unseeded_analysis(w):
                 in enumerate(sorted(c['partition']['clusters'], key=len, reverse=True))
                 # Select top 5 or any matching seeds of interest
                 if i < 5 or has_seeds(clust, c)]
-
-    @w.add_target()
-    def unique_ids_file(outdir, c):
-        tgt = env.Command(
-            path.join(outdir, 'unique_ids.txt'),
-            [],
-            write_unique_ids_file,
-            unique_ids=c['cluster']['unique_ids'])
-        env.Depends(tgt, c['partition']['partition-file'])
-        return tgt
 
 
     # Finally call out to the separate cluster analyses as defined above
