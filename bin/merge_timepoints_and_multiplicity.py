@@ -34,8 +34,8 @@ def merge(args):
                 'sequence': seqid,
                 'timepoint': upstream_row.get('timepoint'),
                 'duplicates': seqids,
-                'mut_freqs': row['mut_freqs'],
-                'is_seed': row.get('has_seed'),
+                'mut_freq': row['mut_freq'],
+                'is_seed': row.get('is_seed'),
                 'multiplicity': multiplicity,
                 'timepoints': [tp[0] or '' for tp in timepoints],
                 'timepoint_multiplicities': [tp[1] for tp in timepoints]}
@@ -105,7 +105,7 @@ def cluster_reader(filename):
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cluster-mapping', type=cluster_reader)
-    parser.add_argument('--partis-seqmeta', type=csv_reader('unique_ids'))
+    parser.add_argument('--partis-seqmeta', type=csv_reader('unique_id'))
     parser.add_argument('--upstream-seqmeta', type=csv_reader('unique_id'))
     parser.add_argument('output', type=argparse.FileType('w'))
     args = parser.parse_args()
@@ -114,7 +114,7 @@ def get_args():
 
 def main():
     args = get_args()
-    fieldnames = ['sequence', 'orig_seqid', 'timepoint', 'mut_freqs', 'is_seed', 'multiplicity', 'timepoints',
+    fieldnames = ['sequence', 'orig_seqid', 'timepoint', 'mut_freq', 'is_seed', 'multiplicity', 'timepoints',
             'timepoint_multiplicities', 'duplicates']
             #'timepoint_multiplicities']
     if args.cluster_mapping:

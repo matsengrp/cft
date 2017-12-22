@@ -328,8 +328,8 @@ def partition(c):
 
 
 # This is a little silly, but gives us the right semantics for partitions > clusters
-#w.add('cluster', ['cluster0'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
-w.add('cluster', ['cluster0'])
+#w.add('cluster', ['cluster'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
+w.add('cluster', ['seed-cluster'])
 
 
 # This one we're not using anymore; should delete, but for now.
@@ -416,7 +416,7 @@ def add_cluster_analysis(w):
             "prune.py -n " + str(recon['prune_count'])
                 + ((" --always-include " + ','.join(c['sample']['seeds'])) if c['sample'].get('seeds') else '')
                 + " --strategy " + recon['prune_strategy']
-                + " --naive naive0"
+                + " --naive naive"
                 + (" --seed " + c['seed']['id'] if 'seed' in c else '')
                 + " $SOURCE $TARGET")
 
@@ -467,7 +467,7 @@ def add_cluster_analysis(w):
         return env.Command(
             [path.join(outdir, x) for x in ('pruned.phy', 'seqname_mapping.csv')],
             c['pruned_seqs'],
-            'make_phylip.py $SOURCE $TARGETS --dont-rename naive0')
+            'make_phylip.py $SOURCE $TARGETS --dont-rename naive')
 
 
     @w.add_target()
@@ -523,7 +523,7 @@ def add_cluster_analysis(w):
                 c['pruned_seqs'],
                 # Question should use -T for threads? how many?
                 # Don't know if the reroot will really do what we want here
-                'raxml.py --rapid-bootstrap 30 -x 3243 -o naive0 $SOURCE $TARGET')
+                'raxml.py --rapid-bootstrap 30 -x 3243 -o naive $SOURCE $TARGET')
             asr_tree_svg = env.Command(
                 path.join(outdir, 'asr.svg'),
                 [asr_supports_tree, c['seqmeta']],

@@ -106,9 +106,9 @@ def parse_outfile(outfile, seqmeta, seqname_mapping=None):
             else:
                 raise RuntimeError("unrecognized phylip setion = {}".format(sect))
 
-    if 'naive0' in bads:
-        warn("Uh... naive0 in bad sequences?")
-        bads.remove('naive0')
+    if 'naive' in bads:
+        warn("Uh... naive in bad sequences?")
+        bads.remove('naive')
     if bads:
         print("good sequences:", sorted(goods))
         print("bad sequences:", sorted(bads))
@@ -166,8 +166,8 @@ def find_node(tree, pattern):
 
 
 # reroot the tree on node matching regex pattern.
-# Usually this is used to root on the naive germline sequence with a name matching '.*naive.*'
-def reroot_tree(tree, pattern='.*naive.*'):
+# Usually this is used to root on the naive germline sequence with name 'naive'
+def reroot_tree(tree, pattern='naive'):
     # find all nodes matching pattern
     node = find_node(tree, pattern)
     if tree != node:
@@ -241,7 +241,7 @@ def main():
         SeqIO.write(sequences, fh, "fasta")
 
     tree = build_tree(sequences, parents)
-    tree = reroot_tree(tree, 'naive.*')
+    tree = reroot_tree(tree, 'naive')
 
     # write newick file
     fname = outbase + '.nwk'

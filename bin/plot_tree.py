@@ -21,8 +21,8 @@ def find_node(tree, pattern):
 
 
 # reroot the tree on node matching regex pattern.
-# Usually this is used to root on the naive germline sequence with a name matching '.*naive.*'
-def reroot_tree(tree, pattern='.*naive.*'):
+# Usually this is used to root on the naive germline sequence with a name matching 'naive'
+def reroot_tree(tree, pattern='naive'):
     # find all nodes matching pattern
     node = find_node(tree, pattern)
     if tree != node:
@@ -83,7 +83,7 @@ def multiplicity_legend(ts):
 
 
 def leaf_style(node, seqmeta, tp_colors, highlight_node=None):
-    name = node.name + " (mf={}) ".format(round(float(seqmeta['mut_freqs']), 3))
+    name = node.name + " (mf={}) ".format(round(float(seqmeta['mut_freq']), 3))
     F = ete3.faces.TextFace(name, fsize=9)
     ete3.add_face_to_node(F, node, column=1, position='branch-right')
     ## Style the node with color corresponding to timepoint
@@ -124,7 +124,7 @@ def render_tree(fname, tree, annotations, highlight_node, supports=False, suppor
     def my_layout(node):
         seqmeta = annotations.get(node.name)
         # handle leaves
-        if seqmeta and not re.compile(".*naive.*").match(node.name):
+        if seqmeta and not re.compile("naive").match(node.name):
             leaf_style(node, seqmeta, tp_colors, highlight_node)
         # Deal with naive and true internal nodes
         else:
@@ -149,7 +149,7 @@ def render_tree(fname, tree, annotations, highlight_node, supports=False, suppor
     multiplicity_legend(ts)
     # whether or not we had rerooted on naive before, we want to do so for the SVG tree
     if 'naive' not in tree.name:
-        tree = reroot_tree(tree, '.*naive.*')
+        tree = reroot_tree(tree, 'naive')
     ts.scale = 2300
     tree.render(fname, tree_style=ts)
 
@@ -192,7 +192,7 @@ def main():
     with open(args.tree) as fh:
         tree = ete3.Tree(fh.read(), format=(0 if args.supports else 1))
 
-    tree = reroot_tree(tree, 'naive.*')
+    tree = reroot_tree(tree, 'naive')
 
     # write newick file
     render_tree(args.svg_out, tree, args.seqmeta, args.seed, supports=args.supports)

@@ -16,7 +16,7 @@ import sys
 def seed_lineage_selection(args):
     """
     Take the closest taxa on subtrees branching off the root (naive) to seed lineage.
-    E.g. given (((seed:1,(l3:1,l4:2)s2:1,(l5:3,l6:4)s3:1)b:1,(l1:1,l2:2)s1:1),naive0:1);
+    E.g. given (((seed:1,(l3:1,l4:2)s2:1,(l5:3,l6:4)s3:1)b:1,(l1:1,l2:2)s1:1),naive:1);
 
 	     /-seed
 	    |
@@ -32,7 +32,7 @@ def seed_lineage_selection(args):
       |   \-|
       |      \-l2
       |
-       \-naive0
+       \-naive
 
     return (naive0, l3, l1, l5, seed)
 
@@ -142,7 +142,7 @@ def get_args():
     parser.add_argument(
         '--strategy', choices=["min_adcl", "seed_lineage"], default="seed_lineage")
     parser.add_argument(
-        '--naive', help='id of root [default \'naive0\']', default='naive0')
+        '--naive', help='id of root [default \'naive\']', default='naive')
     parser.add_argument(
         '--seed', help='id of leaf [default \'seed\']')
     parser.add_argument(
