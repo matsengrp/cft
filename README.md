@@ -54,6 +54,9 @@ Some notes about this:
 
 A more fleshed out example, as well as json examples, and python snippets can be seen [on the wiki](https://github.com/matsengrp/cft/wiki).
 
+You may also wish to take a look at `bin/dataset_utils.py`, a little utility script for filtering and merging dataset files.
+You can get a comprehensive help menu by running `bin/dataset_utils.py -h`.
+
 
 ## Running the pipeline
 
