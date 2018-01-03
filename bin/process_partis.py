@@ -87,13 +87,22 @@ def apply_filters(args, sequences):
     return filter(filter_fn, sequences)
 
 
+def seqs(args, cluster_line):
+    non_reversed_seqs = cluster_line['seqs']
+    if args.indel_reversed_seqs:
+        return [reversed_seq or non_reversed_seqs[i]
+                for i, reversed_seq in enumerate(cluster_line['indel_reversed_seqs'])]
+    else:
+        return non_reversed_seqs
+
+
 def process_cluster(args, cluster_line, seed_id):
     utils.process_input_line(cluster_line)
     utils.add_implicit_info(args.glfo, cluster_line)
 
     cluster_sequences = {
             'unique_id': cluster_line['unique_ids'] + ['naive'],
-            'seq': cluster_line['seqs'] + [cluster_line['naive_seq']],
+            'seq': seqs(args, cluster_line) + [cluster_line['naive_seq']],
             'is_seed': [(unique_id == seed_id) for unique_id in cluster_line['unique_ids']] + [False],
             'duplicates': [':'.join(x) for x in cluster_line['duplicates']] + [None],
             'frameshifted': [not x for x in cluster_line['in_frames']] + [False],
