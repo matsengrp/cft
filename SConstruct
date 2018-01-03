@@ -227,6 +227,11 @@ def sample(c):
             for sample_id, sample in c['dataset']['samples'].items()
             if utils.get_in(sample, ['meta', 'subject']) == c['subject']]
 
+def locus(c):
+    sample = c['sample']
+    locus = sample.get('locus') or sample.get('meta').get('locus')
+    return locus
+
 
 
 # Initialize seed nest
@@ -387,7 +392,7 @@ def add_cluster_analysis(w):
                     ' --partition-file ${SOURCES[0]}' +
                     ' --cluster-annotation-file ${SOURCES[1]}' +
                     ' --parameter-dir ' + c['sample']['parameter-dir'] +
-                    ' --locus ' + c['sample']['meta']['locus'] +
+                    ' --locus ' + locus(c) +
                     ' --cluster-meta-out ${TARGETS[0]}' +
                     ' --seqs-out ${TARGETS[1]}' +
                     ' --seqmeta-out ${TARGETS[2]}' +
