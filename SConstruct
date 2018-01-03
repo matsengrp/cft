@@ -36,7 +36,7 @@ import json
 import re
 
 from os import path
-#from warnings import warn
+from warnings import warn
 
 
 # Nestly things
@@ -266,27 +266,30 @@ def is_unmerged(c):
 # going through partitions until we find a seeded cluster that does.
 # In general though, we'll end up with one partition per seed; the "best" according to the logprob.
 
-def seed_cluster(cp, i, seed_id):
+def seed_cluster(cp, best_plus_i, seed_id):
+    i = cp.i_best + best_plus_i
     for cluster in cp.partitions[i]:
         if seed_id in cluster:
             return cluster
+    warn("unable to find seed cluster in partition")
 
-def seed_cluster_size(cp, i, seed_id):
-    return len(seed_cluster(cp, i, seed_id))
+def seed_cluster_size(cp, best_plus_i, seed_id):
+    return len(seed_cluster(cp, best_plus_i, seed_id))
 
-def partition_metadata(part, cp, i, seed=None, other_id=None):
+def partition_metadata(part, cp, best_plus_i, seed=None, other_id=None):
+    i = cp.i_best + best_plus_i
     clusters = cp.partitions[i]
-    meta = {'id': (other_id + "-" + str(i)) if other_id else i,
+    meta = {'id': ('seed-' if seed else 'unseeded-') + (other_id + '-' if other_id else '') + 'part-' + str(best_plus_i),
             'clusters': clusters,
             # Should cluster step be partition step?
-            'step': i,
+            'step': best_plus_i,
             'n_clusters': len(clusters),
             'largest_cluster_size': max(map(len, clusters)),
             'logprob': cp.logprobs[i],
             'partition-file': part['partition-file'],
             'cluster-annotation-file': part['cluster-annotation-file']}
     if seed:
-        meta['seed_cluster_size'] = seed_cluster_size(cp, i, seed)
+        meta['seed_cluster_size'] = seed_cluster_size(cp, best_plus_i, seed)
     return utils.merge_dicts(meta, part.get('meta') or {})
 
 # Whenever we iterate over partitions, we always want to assume there could be an `other-partitions` mapping,
@@ -300,6 +303,25 @@ def with_other_partitions(node):
                   for other_id, part in node['other-partitions'].items()
                   if part.get('partition-file') and part.get('cluster-annotation-file')]
     return parts
+
+
+def valid_cluster(cp, part, clust):
+    """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
+    we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
+    clust_sig = ':'.join(clust)
+    with open(part['cluster-annotation-file']) as fh:
+        for cluster_row in csv.DictReader(fh):
+            if cluster_row['unique_ids'] == clust_sig:
+                n_good_seqs = sum(map(lambda x: x[0] and not (x[1] or x[2]),
+                    zip(*(map(lambda col: [x == 'True' for x in cluster_row[col].split(':')],
+                              ['in_frames', 'stops', 'mutated_invariants'])))))
+                return n_good_seqs > 2
+
+def valid_seed_partition(cp, part, best_plus_i, seed_id):
+    """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
+    we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
+    clust = seed_cluster(cp, best_plus_i, seed_id)
+    return valid_cluster(cp, part, clust)
 
 # The actual nest construction for this
 
@@ -315,14 +337,22 @@ def partition(c):
         cp = clusterpath.ClusterPath()
         cp.readfile(part['partition-file'])
         # important to start from i_best
-        for i in range(cp.i_best, len(cp.partitions) - cp.i_best):
-            meta = partition_metadata(part, cp, i, seed=c['seed']['id'], other_id=part.get('other_id'))
+        for best_plus_i in range(len(cp.partitions) - cp.i_best):
+            meta = partition_metadata(part, cp, best_plus_i, seed=c['seed']['id'], other_id=part.get('other_id'))
             # We only add clusters bigger than two, since we can only make trees if we have hits
-            if meta['seed_cluster_size'] > 2:
+            if meta['seed_cluster_size'] > 10:
+                # if we have 10 sequences, assume enough of them will be good
+                keep_partitions.append(meta)
+            elif meta['seed_cluster_size'] > 2 and valid_seed_partition(cp, part, best_plus_i, c['seed']['id']):
+                # if less than 10 sequences, make sure we still have enough sequences after health filters
                 keep_partitions.append(meta)
             # Once we get a cluster of size 50, we don't need later cluster steps
-            if meta['seed_cluster_size'] >= 50:
-                break
+            #if meta['seed_cluster_size'] >= 50:
+                #break
+            # Ignore the break above... For now, we break as soon as we get a single
+            # cluster until psathyrella is able to fix partis to export cluster annotations for all
+            # partition steps to the same file.
+            break
     return keep_partitions
 
 
@@ -364,7 +394,7 @@ def add_cluster_analysis(w):
                     ' --paths-relative-to ' + dataset_outdir(c) +
                     ' --namespace cft.cluster' +
                     (' --partition {}'.format(c['partition']['step']) if c.get('seed') else '') +
-                    ('' if c.get('seed') else ' --cluster {}'.format(c['cluster']['sorted_index'])))
+                    (' --cluster {}'.format(c['cluster']['sorted_index']) if not c.get('seed') else ''))
 
     @w.add_target(ingest=True)
     def partis_metadata(outdir, c):
@@ -620,7 +650,7 @@ def add_unseeded_analysis(w):
     # Setting up the partition nest level
 
     # Each c["partition"] value actually points to the annotations for that partition... a little weird but...
-    @w.add_nest(metadata=lambda c, d: {'clusters': 'elided'})
+    @w.add_nest(metadata=lambda c, d: {'clusters': 'elided', 'cp': 'elided'})
     @wrap_test_run()
     def partition(c):
         """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
@@ -628,10 +658,10 @@ def add_unseeded_analysis(w):
         def meta(part):
             cp = clusterpath.ClusterPath()
             cp.readfile(part['partition-file'])
-            return partition_metadata(part, cp, cp.i_best, other_id=part.get('other_id'))
+            return utils.merge_dicts(partition_metadata(part, cp, 0, other_id=part.get('other_id')),
+                                     {'cp': cp})
         return [meta(part)
                 for part in with_other_partitions(c['sample'])]
-
 
     def has_seeds(cluster, c):
         """Manual selection of seeds to check for from Laura; If this becomes generally useful can put in a
@@ -643,7 +673,9 @@ def add_unseeded_analysis(w):
 
     @w.add_nest(label_func=lambda d: d['id'])
     def cluster(c):
-        return [{'id': 'cluster' + str(i),
+        part = c['partition']
+        cp = part['cp']
+        return [{'id': 'clust-' + str(i),
                  'sorted_index': i,
                  'unique_ids': clust,
                  'size': len(clust)}
@@ -651,7 +683,7 @@ def add_unseeded_analysis(w):
                 # Sort by len (dec) and apply index i
                 in enumerate(sorted(c['partition']['clusters'], key=len, reverse=True))
                 # Select top 5 or any matching seeds of interest
-                if i < 5 or has_seeds(clust, c)]
+                if (len(clust) > 5) and (i < 5 or has_seeds(clust, c)) and valid_cluster(cp, part, clust)]
 
 
     # Finally call out to the separate cluster analyses as defined above
