@@ -32,8 +32,6 @@ software_versions = {
     'biopython': lambda: Bio.__version__,
     'scons': 'scons -v',
     'dendropy': lambda: dendropy.__version__,
-    # For some reason pandas won't load here... so no version tracking for now
-    #'pandas': lambda: pandas.__version__,
     # For minadcl
     'rppr': 'rppr --version'
     }

@@ -176,10 +176,6 @@ def dataset_outdir(c):
 def dataset_id(c):
     return c['dataset']['id']
 
-def datapath(c):
-    "Returns the input realpath datapath value of the dataset"
-    return c['dataset']['datapath']
-
 
 # Helper for running test runs on a subset of the data, togglable via the `--test` cli flag
 
@@ -371,12 +367,6 @@ def partition(c):
 # This is a little silly, but gives us the right semantics for partitions > clusters
 #w.add('cluster', ['cluster'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
 w.add('cluster', ['seed-cluster'])
-
-
-# This one we're not using anymore; should delete, but for now.
-#def parameter_dir(c):
-    #"The input parameter directory (as in input to partis); see --parameter-dir flag to various partis cli calls."
-    #return path.join(datapath(c), c['sample'])
 
 
 def add_cluster_analysis(w):
