@@ -525,7 +525,7 @@ def add_cluster_analysis(w):
     # Run dnapars/dnaml by passing in the "config file" as stdin hoping the menues all stay sane
     # (Aside: If gets any messier can look at Expect; https://en.wikipedia.org/wiki/Expect)
     @w.add_target()
-    def _asr_tree(outdir, c):
+    def _asr(outdir, c):
         "run dnapars/dnaml (from phylip package) to create tree with inferred sequences at internal nodes"
         asr_prog = c['reconstruction']['asr_prog']
         if asr_prog in {'dnapars', 'dnaml'}:
@@ -542,7 +542,7 @@ def add_cluster_analysis(w):
             # only get rerun if one of the targets are removed or if the iput asr_config file is changed). IMPORTANT!
             env.Depends(phylip_out, c['phy'])
             # Now process the phylip output into something that isn't shit
-            basename = 'asr_input'
+            basename = 'asr'
             tgt = env.Command(
                     [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg', 'fa']],
                     [c['seqname_mapping'], phylip_out, c['seqmeta']],
@@ -581,17 +581,17 @@ def add_cluster_analysis(w):
 
     #@w.add_target(ingest=True)
     #def asr_input_tree(outdir, c):
-        #return c['_asr_tree'][0]
+        #return c['_asr'][0]
 
     @w.add_target(ingest=True)
     def asr_tree_svg(outdir, c):
-        return c['_asr_tree'][1]
+        return c['_asr'][1]
 
     #@w.add_target()
     #def asr_supports_tree(outdir, c):
-        #vals = c['_asr_tree']
+        #vals = c['_asr']
         #if len(vals) > 2:
-            #return c['_asr_tree'][2]
+            #return c['_asr'][2]
 
     #@w.add_target(ingest=True)
     #def _asr(outdir, c):
@@ -610,11 +610,11 @@ def add_cluster_analysis(w):
 
     @w.add_target(ingest=True)
     def asr_tree(outdir, c):
-        return c['_asr_tree'][0]
+        return c['_asr'][0]
 
     @w.add_target(ingest=True)
     def asr_seqs(outdir, c):
-        return c['_asr_tree'][2]
+        return c['_asr'][2]
 
 
     @w.add_target(ingest=True)
