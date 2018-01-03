@@ -56,6 +56,7 @@ A more fleshed out example, as well as json examples, and python snippets can be
 
 You may also wish to take a look at `bin/dataset_utils.py`, a little utility script for filtering and merging dataset files.
 You can get a comprehensive help menu by running `bin/dataset_utils.py -h`.
+You may also wish to directory use the script which does the initial extraction of data from partis, `bin/process_partis.py`.
 
 
 ## Running the pipeline
