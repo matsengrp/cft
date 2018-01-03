@@ -129,6 +129,7 @@ w = nestly_tripl.NestWrap(w,
                   # This will be really cool :-)
                   'diff': git('diff'),
                   'status': git('status', '--porcelain')},
+        always_build_metadata=options['always_build_metadata'],
         base_namespace='cft',
         id_attrs=['cft.dataset:id', 'cft.build:id'])
 

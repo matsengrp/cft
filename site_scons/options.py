@@ -44,6 +44,15 @@ Script.AddOption('--outdir',
         default='output',
         help="Directory in which to output results; defaults to `output`")
 
+Script.AddOption('--lazy-metadata',
+        dest='lazy_metadata',
+        action='store_true',
+        default=False,
+        help="""Turns off the default `AlwaysBuild` setting on the various json metadata targets. Without `AlwaysBuild`, metadata
+        files may not update properly if any of the SConstruct code changed. However, this can be useful for improving build
+        time when debugging, or when only code in scripts has changed. If `--lazy-metadata` is used, it's best to run again
+        before using any of the output metadata.json files.""")
+
 
 def get_options(env):
     # prefer realpath so that running latest vs explicit vN doesn't require rerun; also need for defaults below
@@ -54,6 +63,7 @@ def get_options(env):
         asr_progs = env.GetOption('asr_progs').split(':'),
         prune_strategies = env.GetOption('prune_strategies').split(':'),
         dataset_tag = env.GetOption('dataset_tag') or ('test' if test_run else None),
+        always_build_metadata = not env.GetOption('lazy_metadata'),
         outdir_base = env.GetOption('outdir'))
 
 
