@@ -32,6 +32,8 @@ import datetime
 import getpass
 import itertools
 import yaml
+import json
+import re
 
 from os import path
 #from warnings import warn
@@ -149,7 +151,10 @@ software_versions.add_software_versions(w)
 
 def dataset_metadata(infile):
     with open(infile) as fp:
-        d = yaml.load(fp)
+        if re.match('.*\.json$', infile):
+            d = json.load(fp)
+        else:
+            d = yaml.load(fp)
     label = (options['dataset_tag'] + '-' if options['dataset_tag'] else '') + d['id']
     outdir = path.join(options['outdir_base'], label)
     return utils.merge_dicts(d, {'id': d['id'] + '-' + time.strftime('%Y.%m.%d'), 'label': label, 'outdir': outdir})
