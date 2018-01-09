@@ -2,56 +2,43 @@
 
 import argparse
 import csv
-import re
 import collections
 #import itertools
 
 
 # The core merge/processing logic here
 
-duplicate_seqid_regex = re.compile('\d+-(\d+)')
-
-def upstream_seqmeta(args, seqid):
-    default = {'original': seqid, 'timepoint': args.timepoint} if args.timepoint else {}
-    return args.upstream_seqmeta.get(seqid, default)
-    
+def get_upstream_row(args, seqid):
+    row = args.upstream_seqmeta.get(seqid, {'timepoint': '', 'multiplicity': 1})
+    row['sequence'] = seqid
+    return row
 
 def merge(args):
     """"Initial merge of upstream (pre-partis) metadata, including timepoint and multiplicity info coded in orig
     seqids, with the metadata output of process_partis (partis_seqmeta)."""
     # For each row of our partis sequence metadata (as output from process_partis)
     for seqid, row in args.partis_seqmeta.items():
-        # We get the corresponding row of the upstream metadata (which contains our full lenght sequence duplicities...)
-        upstream_row = upstream_seqmeta(args, seqid)
+        # We get the corresponding row of the upstream metadata (which contains our full lenght sequence multiplicities...)
+        upstream_row = get_upstream_row(args, seqid)
         duplicates = filter(lambda x: x, row['duplicates'].split(':'))
         seqids = [seqid] + duplicates
         timepoints_dict = collections.defaultdict(lambda: 0)
         for dup_seqid in seqids:
-            dup_upstream_row = upstream_seqmeta(args, seqid)
-            # The original seqid and orig multiplicity are the duplicites from vlad's pre-partis processing
-            orig_seqid = dup_upstream_row.get('original')
-            orig_seqid_match = duplicate_seqid_regex.match(orig_seqid) if isinstance(orig_seqid, str) else False
-            if orig_seqid_match:
-                orig_multiplicity = int(orig_seqid_match.groups()[0])
-                #print "  multiplicity ", orig_multiplicity
-            else:
-                # TODO For seeds this is good but not for naive...
-                #print "no multiplicity for", orig_seqid
-                orig_multiplicity = 1
-            timepoints_dict[dup_upstream_row.get('timepoint')] += orig_multiplicity
+            dup_upstream_row = get_upstream_row(args, seqid)
+            # pre-partis filtering multiplicity
+            dup_multiplicity = int(dup_upstream_row.get('multiplicity', 1))
+            timepoints_dict[dup_upstream_row.get('timepoint')] += dup_multiplicity
         timepoints = sorted(timepoints_dict.items())
         multiplicity = sum(t[1] for t in timepoints)
         result_row = {
                 'sequence': seqid,
                 'timepoint': upstream_row.get('timepoint'),
                 'duplicates': seqids,
-                'mut_freqs': row['mut_freqs'],
-                'is_seed': not duplicate_seqid_regex.match(seqid),
-                'orig_seqid': upstream_row.get('original'),
+                'mut_freq': row['mut_freq'],
+                'is_seed': row.get('is_seed'),
                 'multiplicity': multiplicity,
                 'timepoints': [tp[0] or '' for tp in timepoints],
-                'timepoint_duplicities': [tp[1] for tp in timepoints]
-                }
+                'timepoint_multiplicities': [tp[1] for tp in timepoints]}
         yield result_row
 
 
@@ -61,16 +48,16 @@ def aggregate_clusters(merge_results, cluster_mapping):
         centroid_data = merge_results[centroid_id]
         sequences = [merge_results[sequence_id] for sequence_id in sequence_ids]
         cluster_duplicates = reduce(set.union, (seq['duplicates'] for seq in sequences), set())
-        timepoint_duplicities = collections.defaultdict(lambda: 0)
-        # Aggregate our timepoint duplicities
+        timepoint_multiplicities = collections.defaultdict(lambda: 0)
+        # Aggregate our timepoint multiplicities
         for seq in sequences:
-            for timepoint, timepoint_multiplicity in zip(seq['timepoints'], seq['timepoint_duplicities']):
-                timepoint_duplicities[timepoint] += timepoint_multiplicity
+            for timepoint, timepoint_multiplicity in zip(seq['timepoints'], seq['timepoint_multiplicities']):
+                timepoint_multiplicities[timepoint] += timepoint_multiplicity
         centroid_data.update({
             'cluster_duplicates': cluster_duplicates,
             'cluster_multiplicity': sum(seq['multiplicity'] for seq in sequences),
-            'cluster_timepoints': timepoint_duplicities.keys(),
-            'cluster_timepoint_duplicities': timepoint_duplicities.values(),
+            'cluster_timepoints': timepoint_multiplicities.keys(),
+            'cluster_timepoint_multiplicities': timepoint_multiplicities.values(),
             })
         yield centroid_data
 
@@ -83,11 +70,11 @@ def format_list(row, key):
 def format_results(results):
     for row in results:
         format_list(row, 'timepoints')
-        format_list(row, 'timepoint_duplicities')
+        format_list(row, 'timepoint_multiplicities')
         format_list(row, 'duplicates')
         format_list(row, 'cluster_duplicates')
         format_list(row, 'cluster_timepoints')
-        format_list(row, 'cluster_timepoint_duplicities')
+        format_list(row, 'cluster_timepoint_multiplicities')
         yield row
 
 
@@ -115,39 +102,24 @@ def cluster_reader(filename):
     return result
 
 
-def timepoint_filter(args):
-    mappings = []
-    def f(x):
-        mappings.append(x)
-        return x['timepoint'] == args.timepoint
-    if args.timepoint:
-        return f
-
-
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--timepoint', help="optionally specify a specific timepoint on which to restrict")
     parser.add_argument('--cluster-mapping', type=cluster_reader)
-    parser.add_argument('partis_seqmeta', type=csv_reader('unique_ids'))
-    parser.add_argument('upstream_seqmeta')
+    parser.add_argument('--partis-seqmeta', type=csv_reader('unique_id'))
+    parser.add_argument('--upstream-seqmeta', type=csv_reader('unique_id'))
     parser.add_argument('output', type=argparse.FileType('w'))
     args = parser.parse_args()
-    index_by = 'original' if args.timepoint else 'new'
-    args.upstream_seqmeta = \
-            csv_reader(index=index_by,
-                       filter_by=timepoint_filter(args))(
-                               args.upstream_seqmeta
-                               )
+    args.upstream_seqmeta = args.upstream_seqmeta or {}
     return args
 
 def main():
     args = get_args()
-    fieldnames = ['sequence', 'orig_seqid', 'timepoint', 'mut_freqs', 'is_seed', 'multiplicity', 'timepoints',
-            'timepoint_duplicities', 'duplicates']
-            #'timepoint_duplicities']
+    fieldnames = ['sequence', 'orig_seqid', 'timepoint', 'mut_freq', 'is_seed', 'multiplicity', 'timepoints',
+            'timepoint_multiplicities', 'duplicates']
+            #'timepoint_multiplicities']
     if args.cluster_mapping:
-        fieldnames += ['cluster_multiplicity', 'cluster_timepoints', 'cluster_timepoint_duplicities', 'cluster_duplicates']
-        #fieldnames += ['cluster_multiplicity', 'cluster_timepoints', 'cluster_timepoint_duplicities']
+        fieldnames += ['cluster_multiplicity', 'cluster_timepoints', 'cluster_timepoint_multiplicities', 'cluster_duplicates']
+        #fieldnames += ['cluster_multiplicity', 'cluster_timepoints', 'cluster_timepoint_multiplicities']
 
     out_writer = csv.DictWriter(args.output, fieldnames=fieldnames)
     out_writer.writeheader()
