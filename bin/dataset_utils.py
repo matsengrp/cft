@@ -42,7 +42,7 @@ def dataset_infile(filename):
 def get_args():
     parser = argparse.ArgumentParser(description="Swiss army knife for cft datasets. Filter and merge cft dataset files.")
     parser.add_argument('-i', '--input', type=set_input_of(dataset_infile), help="':'-separated set of yaml or json dataset input files")
-    parser.add_argument('-o', '--output', help="dataset output yaml or json file (defaults to stdout)")
+    parser.add_argument('-o', '--output', help="dataset output yaml or json file (defaults to stdout as yaml)")
     parser.add_argument('--id', help="output dataset id")
     parser.add_argument('--samples', type=set_input, help="':'-separated set of sample ids to filter to")
     parser.add_argument('--subjects', type=set_input, help="':'-separated set of subject ids to filter to")
@@ -102,7 +102,7 @@ def merge_datasets(args, datasets):
     dataset = reduce(merged, datasets)
     samples = reduce(merged, [d['samples'] for d in datasets])
     dataset['samples'] = samples
-    dataset['subjects'] = reduce(merged, [d['subjects'] for d in datasets])
+    dataset['subjects'] = reduce(merged, [d.get('subjects', {}) for d in datasets])
     dataset['id'] = args.id
     return dataset
 
