@@ -38,7 +38,7 @@ import clusterpath
 csv.field_size_limit(sys.maxsize)
 
 
-default_germline_sets = os.path.join(partis_path, '/data/germlines/human')
+default_germline_sets = os.path.join(partis_path, 'data/germlines/human')
 
 
 
