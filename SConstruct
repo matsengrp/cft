@@ -432,9 +432,9 @@ def add_cluster_analysis(w):
                  for prune_strategy, asr_prog
                  in itertools.product(
                      ['min_adcl', 'seed_lineage'] if 'seed' in c else ['min_adcl'],
-                     #['dnaml', 'ecgtheow']]
+                     #['iqtree', 'ecgtheow']]
                      # ^ in the future?
-                     ['dnaml'])]
+                     ['iqtree'])]
 
     # calculate list of sequences to be pruned
     @w.add_target()
@@ -492,6 +492,7 @@ def add_cluster_analysis(w):
             base_call += k + ' ${SOURCES[' + str(i) + ']} '
         return env.Command(path.join(outdir, 'seqmeta.csv'), sources.values(), base_call + '$TARGET')
 
+    # To remove once we remove dnaml!
     @w.add_target()
     def _phy(outdir, c):
         "Save seqs in phylip format for dnaml, renaming sequences as necessary to avoid seqname limits"
@@ -499,12 +500,9 @@ def add_cluster_analysis(w):
             [path.join(outdir, x) for x in ('pruned.phy', 'seqname_mapping.csv')],
             c['pruned_seqs'],
             'make_phylip.py $SOURCE $TARGETS --dont-rename naive')
-
-
     @w.add_target()
     def phy(outdir, c):
         return c['_phy'][0]
-
     @w.add_target()
     def seqname_mapping(outdir, c):
         """Seqname translations for reinterpretting dnaml output in terms of original seqnames, due to phylip name
@@ -543,60 +541,25 @@ def add_cluster_analysis(w):
                         + " --outdir " + outdir
                         + " --basename " + basename
                         + " --seqname-mapping $SOURCES")
-            asr_tree, asr_tree_svg, asr_seqs = tgt
+            asr_tree, asr_seqs, asr_tree_svg = tgt
             # manually depnd on this because the script isn't in first position
             env.Depends(tgt, 'bin/process_asr.py')
             env.Depends(tgt, 'bin/plot_tree.py')
-            return [asr_tree, asr_tree_svg, asr_seqs]
-        elif asr_prog == 'raxml':
-            asr_supports_tree = env.SRun(
-                path.join(outdir, 'asr.sup.nwk'),
+            return [asr_tree, asr_seqs, asr_tree_svg]
+        elif asr_prog == 'iqtree':
+            output_base = path.join(outdir, 'asr')
+            asr_tree, asr_seqs  = env.SRun(
+                [output_base + '.' + suffix for suffix in ('treefile', 'state')],
                 c['pruned_seqs'],
-                # Question should use -T for threads? how many?
-                # Don't know if the reroot will really do what we want here
-                'raxml.py --rapid-bootstrap 30 -x 3243 -o naive $SOURCE $TARGET')
-            asr_tree_svg = env.Command(
+                'iqtree -s $SOURCE -nt AUTO -bb 1000 -wbtl -asr -redo -pre {}'.format(output_base))
+            asr_tree_svg  = env.Command(
                 path.join(outdir, 'asr.svg'),
-                [asr_supports_tree, c['seqmeta']],
-                'xvfb-run -a bin/plot_tree.py $SOURCES $TARGET --supports'
-                    + (' --seed ' + c['seed'] if 'seed' in c else ''))
-            asr_tree = env.Command(
-                path.join(outdir, 'asr.nwk'),
-                asr_supports_tree,
-                'name_internal_nodes.py $SOURCE $TARGET')
-            return [asr_tree, asr_tree_svg, asr_supports_tree]
+                [asr_tree, c['seqmeta']],
+                'xvfb-run -a bin/plot_tree.py $SOURCES $TARGET')
+            env.Depends(asr_tree_svg, 'bin/plot_tree.py')
+            return [asr_tree, asr_seqs, asr_tree_svg]
         else:
-            print("something has gone terribly wrong")
-
-
-    #@w.add_target(ingest=True)
-    #def asr_input_tree(outdir, c):
-        #return c['_asr'][0]
-
-    @w.add_target(ingest=True)
-    def asr_tree_svg(outdir, c):
-        return c['_asr'][1]
-
-    #@w.add_target()
-    #def asr_supports_tree(outdir, c):
-        #vals = c['_asr']
-        #if len(vals) > 2:
-            #return c['_asr'][2]
-
-    #@w.add_target(ingest=True)
-    #def _asr(outdir, c):
-        #return env.Command(
-            #[path.join(outdir, 'asr_tree.nwk'), path.join(outdir, 'asr_seqs.fa')],
-            #[c['asr_input_tree'], c['pruned_seqs']],
-            #'joker.py ' + ('--no-reroot ' if asr_prog(c) == 'raxml' else '') + '-t $SOURCES $TARGETS')
-
-    #@w.add_target(ingest=True)
-    #def asr_tree(outdir, c):
-        #return c['_asr'][0]
-
-    #@w.add_target(ingest=True)
-    #def asr_seqs(outdir, c):
-        #return c['_asr'][1]
+            warn("unknown asr_prog: {}".format(asr_prog))
 
     @w.add_target(ingest=True)
     def asr_tree(outdir, c):
@@ -604,6 +567,10 @@ def add_cluster_analysis(w):
 
     @w.add_target(ingest=True)
     def asr_seqs(outdir, c):
+        return c['_asr'][1]
+
+    @w.add_target(ingest=True)
+    def asr_tree_svg(outdir, c):
         return c['_asr'][2]
 
 
