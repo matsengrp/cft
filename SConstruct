@@ -326,6 +326,22 @@ def valid_seed_partition(cp, part, best_plus_i, seed_id):
 
 # The actual nest construction for this
 
+# Try to read partition file; If fails, it is possibly because it's empty. Catch that case and warn
+def read_partition_file(filename):
+    cp = clusterpath.ClusterPath()
+    try:
+        cp.readfile(filename)
+    except Exception as e:
+        with open(filename) as fh:
+            contents = fh.read()
+            print("contents:", contents)
+            if contents == '':
+                warn("Empty partition file found at: {}. Omitting from results.".format(filename))
+                return []
+            else:
+                raise e
+    return cp
+
 # note we elide the nested partitions > clusters lists so as not to kill tripl when it tries to load them as a
 # value and can't hash
 @w.add_nest(metadata=lambda c, d: {'clusters': 'elided'})
@@ -335,25 +351,25 @@ def partition(c):
     for actual analysis."""
     keep_partitions = []
     for part in with_other_partitions(c['seed']):
-        cp = clusterpath.ClusterPath()
-        cp.readfile(part['partition-file'])
-        # important to start from i_best
-        for best_plus_i in range(len(cp.partitions) - cp.i_best):
-            meta = partition_metadata(part, cp, best_plus_i, seed=c['seed']['id'], other_id=part.get('other_id'))
-            # We only add clusters bigger than two, since we can only make trees if we have hits
-            if meta['seed_cluster_size'] > 10:
-                # if we have 10 sequences, assume enough of them will be good
-                keep_partitions.append(meta)
-            elif meta['seed_cluster_size'] > 2 and valid_seed_partition(cp, part, best_plus_i, c['seed']['id']):
-                # if less than 10 sequences, make sure we still have enough sequences after health filters
-                keep_partitions.append(meta)
-            # Once we get a cluster of size 50, we don't need later cluster steps
-            #if meta['seed_cluster_size'] >= 50:
-                #break
-            # Ignore the break above... For now, we break as soon as we get a single
-            # cluster until psathyrella is able to fix partis to export cluster annotations for all
-            # partition steps to the same file.
-            break
+        cp = read_partition_file(part['partition-file'])
+        if cp:
+            # important to start from i_best
+            for best_plus_i in range(len(cp.partitions) - cp.i_best):
+                meta = partition_metadata(part, cp, best_plus_i, seed=c['seed']['id'], other_id=part.get('other_id'))
+                # We only add clusters bigger than two, since we can only make trees if we have hits
+                if meta['seed_cluster_size'] > 10:
+                    # if we have 10 sequences, assume enough of them will be good
+                    keep_partitions.append(meta)
+                elif meta['seed_cluster_size'] > 2 and valid_seed_partition(cp, part, best_plus_i, c['seed']['id']):
+                    # if less than 10 sequences, make sure we still have enough sequences after health filters
+                    keep_partitions.append(meta)
+                # Once we get a cluster of size 50, we don't need later cluster steps
+                #if meta['seed_cluster_size'] >= 50:
+                    #break
+                # Ignore the break above... For now, we break as soon as we get a single
+                # cluster until psathyrella is able to fix partis to export cluster annotations for all
+                # partition steps to the same file.
+                break
     return keep_partitions
 
 
@@ -651,10 +667,10 @@ def add_unseeded_analysis(w):
         """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
         for actual analysis."""
         def meta(part):
-            cp = clusterpath.ClusterPath()
-            cp.readfile(part['partition-file'])
-            return utils.merge_dicts(partition_metadata(part, cp, 0, other_id=part.get('other_id')),
-                                     {'cp': cp})
+            cp = read_partition_file(part['partition-file'])
+            if cp:
+                return utils.merge_dicts(partition_metadata(part, cp, 0, other_id=part.get('other_id')),
+                                         {'cp': cp})
         return [meta(part)
                 for part in with_other_partitions(c['sample'])]
 
