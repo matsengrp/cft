@@ -542,8 +542,7 @@ def add_cluster_analysis(w):
             phylip_out = env.SRun(
                 path.join(outdir, "outfile"),
                 config,
-                'cd ' + outdir + ' && rm -f outtree && ' + asr_prog + ' < $SOURCE.file > ' + asr_prog + '.log',
-                ignore_errors=True)
+                'cd ' + outdir + ' && rm -f outtree && ' + asr_prog + ' < $SOURCE.file > ' + asr_prog + '.log')
             # Manually depend on phy so that we rerun dnapars/dnaml if the input sequences change (without this, dnapars/dnaml will
             # only get rerun if one of the targets are removed or if the iput asr_config file is changed). IMPORTANT!
             env.Depends(phylip_out, c['phy'])
