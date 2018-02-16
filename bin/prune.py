@@ -127,7 +127,10 @@ def min_adcl_selection(args):
             sys.stderr.write("rppr stderr:\n")
             sys.stderr.write(stderr + "\n")
         cut_names = [n for n in output.split("\n")]
-        return [x for x in tipnames if x not in cut_names]
+        keep_names = [x for x in tipnames if x not in cut_names]
+        if len(keep_names) > args.n_keep and len(cut_names) == 0:
+            raise Exception("cut names list empty and shouldn't be; perhaps the rppr subprocess failed?")
+        return keep_names
 
 
 def tree_arg(tree_arg_value):
