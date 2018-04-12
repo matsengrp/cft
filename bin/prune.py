@@ -128,8 +128,8 @@ def min_adcl_selection(args):
             sys.stderr.write(stderr + "\n")
         cut_names = [n for n in output.split("\n")]
         keep_names = [x for x in tipnames if x not in cut_names]
-        if len(keep_names) > args.n_keep and len(cut_names) == 0:
-            raise Exception("cut names list empty and shouldn't be; perhaps the rppr subprocess failed?")
+        if len(keep_names) > args.n_keep:
+            raise Exception("keeping too many sequences; perhaps the rppr subprocess failed?")
         return keep_names
 
 
