@@ -34,6 +34,7 @@ import itertools
 import yaml
 import json
 import re
+import functools as fun
 
 from os import path
 from warnings import warn
@@ -332,14 +333,15 @@ def read_partition_file(filename):
     try:
         cp.readfile(filename)
     except Exception as e:
-        with open(filename) as fh:
-            contents = fh.read()
-            print("contents:", contents)
-            if contents == '':
-                warn("Empty partition file found at: {}. Omitting from results.".format(filename))
-                return []
-            else:
-                raise e
+        warn("Unable to parse partition file (ommitting from results): {}".format(filename))
+        try:
+            with open(filename) as fh:
+                contents = fh.read()
+                if contents == '':
+                    warn("  Explanation: Empty partition file")
+        except Exception as e2:
+            warn("  Explanation: Can't open file; missing file? Poorly formatted?")
+        return []
     return cp
 
 # note we elide the nested partitions > clusters lists so as not to kill tripl when it tries to load them as a
@@ -390,6 +392,9 @@ def add_cluster_analysis(w):
     def _process_partis(outdir, c):
         # Should get this to explicitly depend on cluster0.fa
         sources = [c['partition']['partition-file'], c['partition']['cluster-annotation-file']]
+        perseq_metafile = c['sample'].get('per-sequence-meta-file')
+        if perseq_metafile:
+            sources.append(perseq_metafile)
         return env.Command(
                 [path.join(outdir, x) for x in ['partis_metadata.json', 'cluster_seqs.fa', 'partis_seqmeta.csv']],
                 sources,
@@ -399,11 +404,13 @@ def add_cluster_analysis(w):
                     ' --cluster-annotation-file ${SOURCES[1]}' +
                     ' --parameter-dir ' + c['sample']['parameter-dir'] +
                     ' --locus ' + locus(c) +
+                    ' --max-sequences 10000' +
                     ' --cluster-meta-out ${TARGETS[0]}' +
                     ' --seqs-out ${TARGETS[1]}' +
                     ' --seqmeta-out ${TARGETS[2]}' +
                     ' --paths-relative-to ' + dataset_outdir(c) +
                     ' --namespace cft.cluster' +
+                    (' --upstream-seqmeta ${SOURCES[2]}' if perseq_metafile else '') +
                     (' --partition {}'.format(c['partition']['step']) if c.get('seed') else '') +
                     (' --cluster {}'.format(c['cluster']['sorted_index']) if not c.get('seed') else ''))
 
@@ -456,7 +463,9 @@ def add_cluster_analysis(w):
     @w.add_target()
     def pruned_ids(outdir, c):
         recon = c['reconstruction']
-        builder = env.SRun if recon['prune_strategy'] == 'min_adcl' else env.Command
+        builder = fun.partial(env.SRun, srun_args='`minadcl_srun_args.py $SOURCE`') \
+                if recon['prune_strategy'] == 'min_adcl' \
+                else env.Command
         return builder(
             path.join(outdir, "pruned_ids.txt"),
             c['fasttree'],
@@ -500,10 +509,9 @@ def add_cluster_analysis(w):
         # orig/new names, joined on sequence from the other file
         sources = {'--partis-seqmeta': c['partis_seqmeta'],
                    '--cluster-mapping': c['cluster_mapping'] if c['reconstruction']['prune_strategy'] == 'min_adcl' else None,
-                   '--upstream-seqmeta': c['sample'].get('per-sequence-meta-file')
                    }
         sources = {k: v for k, v in sources.items() if v}
-        base_call = 'merge_timepoints_and_multiplicity.py '
+        base_call = 'aggregate_minadcl_cluster_multiplicities.py '
         for i, (k, v) in enumerate(sources.items()):
             base_call += k + ' ${SOURCES[' + str(i) + ']} '
         return env.Command(path.join(outdir, 'seqmeta.csv'), sources.values(), base_call + '$TARGET')
@@ -543,6 +551,7 @@ def add_cluster_analysis(w):
                 path.join(outdir, "outfile"),
                 config,
                 'cd ' + outdir + ' && rm -f outtree && ' + asr_prog + ' < $SOURCE.file > ' + asr_prog + '.log')
+                #ignore_errors=True) # before; dropping
             # Manually depend on phy so that we rerun dnapars/dnaml if the input sequences change (without this, dnapars/dnaml will
             # only get rerun if one of the targets are removed or if the iput asr_config file is changed). IMPORTANT!
             env.Depends(phylip_out, c['phy'])
@@ -670,8 +679,7 @@ def add_unseeded_analysis(w):
             if cp:
                 return utils.merge_dicts(partition_metadata(part, cp, 0, other_id=part.get('other_id')),
                                          {'cp': cp})
-        return [meta(part)
-                for part in with_other_partitions(c['sample'])]
+        return filter(None, map(meta, with_other_partitions(c['sample'])))
 
     def has_seeds(cluster, c):
         """Manual selection of seeds to check for from Laura; If this becomes generally useful can put in a

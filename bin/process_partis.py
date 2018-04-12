@@ -9,6 +9,8 @@ import json
 import sys
 import textwrap
 import time
+import itertools as it
+import collections
 #import warnings
 
 from Bio import SeqIO
@@ -36,6 +38,23 @@ import clusterpath
 
 # Make sure we can read the really big fields frequently found in partis output
 csv.field_size_limit(sys.maxsize)
+
+
+# Util for reading csv files from command line arguments
+def csv_reader(index=None, filter_by=None):
+    "Returns a function which reads csv data from a filename; constructor closes"
+    def f(filename):
+        with open(filename) as fh:
+            reader = csv.DictReader(fh)
+            if filter_by:
+                reader = filter(filter_by, reader)
+            reader = list(reader)
+            if index:
+                return {r[index]: r for r in reader}
+            else:
+                return list(reader)
+    return f
+
 
 
 default_germline_sets = os.path.join(partis_path, 'data/germlines/human')
@@ -96,19 +115,68 @@ def seqs(args, cluster_line):
         return non_reversed_seqs
 
 
+def get_upstream_row(upstream_seqmeta, seqid):
+    row = upstream_seqmeta.get(seqid, {'timepoint': '', 'multiplicity': 1})
+    row['sequence'] = seqid
+    return row
+
+
+def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta):
+    """"Merge upstream (pre-partis) metadata, indexed in a dict by unique_id, (potentially)
+    including timepoint and multiplicity info, with the metadata output of process_partis (partis_seqmeta)."""
+    # For each row of our partis sequence metadata (as output from process_partis)
+    for row in partis_seqmeta:
+        seqid = row['unique_id']
+        # We get the corresponding row of the upstream metadata (which contains our full lenght sequence multiplicities...)
+        upstream_row = get_upstream_row(upstream_seqmeta, seqid)
+        duplicates = filter(None, (row.get('duplicates') or '').split(':'))
+        seqids = [seqid] + duplicates
+        timepoints_dict = collections.defaultdict(lambda: 0)
+        for dup_seqid in seqids:
+            dup_upstream_row = get_upstream_row(upstream_seqmeta, seqid)
+            # pre-partis filtering multiplicity
+            dup_multiplicity = int(dup_upstream_row.get('multiplicity', 1))
+            timepoints_dict[dup_upstream_row.get('timepoint')] += dup_multiplicity
+        timepoints = sorted(timepoints_dict.items())
+        multiplicity = sum(t[1] for t in timepoints)
+        result_row = {
+                'unique_id': row['unique_id'],
+                'sequence': seqid,
+                'timepoint': upstream_row.get('timepoint'),
+                'duplicates': seqids,
+                'mut_freq': row['mut_freq'],
+                'is_seed': row.get('is_seed'),
+                'seq': row['seq'],
+                'multiplicity': multiplicity,
+                'timepoints': [tp[0] or '' for tp in timepoints],
+                'timepoint_multiplicities': [tp[1] for tp in timepoints]}
+        # Currently arbitrary other upstream seqmeta isn't being merged in here, but could easily be
+        yield result_row
+
+
+def downsample_sequences(args, sequences):
+    # Sort by negative so we take the highest multiplicity (lowest neg value) first 
+    sequences = list(sequences)
+    return list(it.chain([sequences[0]],
+                         sorted(sequences[1:],
+                                key=lambda seqmeta: - seqmeta['multiplicity'])[0:args.max_sequences])) \
+           if args.max_sequences \
+           else sequences
+
+
 def process_cluster(args, cluster_line, seed_id):
     utils.process_input_line(cluster_line)
     utils.add_implicit_info(args.glfo, cluster_line)
 
     cluster_sequences = {
-            'unique_id': cluster_line['unique_ids'] + ['naive'],
-            'seq': seqs(args, cluster_line) + [cluster_line['naive_seq']],
-            'is_seed': [(unique_id == seed_id) for unique_id in cluster_line['unique_ids']] + [False],
-            'duplicates': [':'.join(x) for x in cluster_line['duplicates']] + [None],
-            'frameshifted': [not x for x in cluster_line['in_frames']] + [False],
-            'mutated_invariants': cluster_line['mutated_invariants'] + [False],
-            'stops': cluster_line['stops'] + [False],
-            'mut_freq': cluster_line['mut_freqs'] + [0.0]}
+            'unique_id':             ['naive'] + cluster_line['unique_ids'],
+            'seq': [cluster_line['naive_seq']] + seqs(args, cluster_line),
+            'is_seed':               ['False'] + [(unique_id == seed_id) for unique_id in cluster_line['unique_ids']],
+            'duplicates':               [None] + [':'.join(x) for x in cluster_line['duplicates']],
+            'frameshifted':            [False] + [not x for x in cluster_line['in_frames']],
+            'mutated_invariants':      [False] + cluster_line['mutated_invariants'],
+            'stops':                   [False] + cluster_line['stops'],
+            'mut_freq':                  [0.0] + cluster_line['mut_freqs']}
 
     for gene in 'vdj':
         for pos in ['start', 'end']:
@@ -119,10 +187,22 @@ def process_cluster(args, cluster_line, seed_id):
     sequences = as_dict_rows(cluster_sequences)
     if args.remove_frameshifts or args.remove_stops or args.remove_mutated_invariants:
         sequences = apply_filters(args, sequences)
+
+    n_seqs = len(sequences)
+
+    # apply merging of multiplicity info here (or flesh out with default values otherwise)
+    sequences = merge_upstream_seqmeta(sequences, args.upstream_seqmeta)
+
+    # apply sequence downsampling here
+    sequences = downsample_sequences(args, sequences)
+
     cluster = {'sequences': sequences,
                'cdr3_start': cluster_line['codon_positions']['v'],
                'has_seed': seed_id in cluster_line['unique_ids'],
-               'n_seqs' : len(sequences),
+               # total in cluster output from partis
+               'n_seqs' : n_seqs,
+               # Should be equal unless downsampled
+               'n_sampled_seqs': len(sequences),
                'seed_id': seed_id}
     for k in cluster_cols:
         cluster[k] = cluster_line[k]
@@ -192,17 +272,34 @@ def write_cluster_meta(args, cluster_data):
     with open(args.cluster_meta_out, 'w') as outfile:
         json.dump(doc, outfile, sort_keys=True, indent=4)
 
+
+def format_list(row, key):
+    if key in row:
+        row[key] = ':'.join(map(str, row[key]))
+
+
+def format_results(results):
+    for row in results:
+        format_list(row, 'timepoints')
+        format_list(row, 'timepoint_multiplicities')
+        format_list(row, 'duplicates')
+        format_list(row, 'cluster_duplicates')
+        format_list(row, 'cluster_timepoints')
+        format_list(row, 'cluster_timepoint_multiplicities')
+        yield row
+
 def write_seq_meta(args, cluster_data):
-    to_keep = ['unique_id', 'is_seed', 'frameshifted', 'stops', 'mutated_invariants', 'duplicates', 'mut_freq']
+    to_keep = ['unique_id', 'sequence', 'is_seed', 'frameshifted', 'stops', 'mutated_invariants',
+            'mut_freq', 'timepoint', 'multiplicity', 'timepoints', 'timepoint_multiplicities', 'duplicates']
     with open(args.seqmeta_out, 'w') as outfile:
         writer = csv.DictWriter(outfile, fieldnames=to_keep, extrasaction='ignore')
         writer.writeheader()
-        writer.writerows(cluster_data['sequences'])
+        writer.writerows(format_results(cluster_data['sequences']))
 
 def write_seqs(args, cluster_data):
     with open(args.seqs_out, 'w') as outfile:
         SeqIO.write(
-                (SeqRecord(Seq(sequence['seq']), id=sequence['unique_id'], description='')
+                (SeqRecord(Seq(sequence.get('seq', '')), id=sequence['unique_id'], description='')
                     for sequence in cluster_data['sequences']),
                 outfile,
                 'fasta')
@@ -224,6 +321,11 @@ def parse_args():
         '--partition-file',
         help='partitions file as output by partis',
         type=existing_file, required=True)
+    inputs.add_argument(
+        '--upstream-seqmeta',
+        help='optionally, specify upstream seqmeta as a csv with cols: unique_id,timepoint,multiplicity',
+        # Index rows by unique id
+        type=csv_reader('unique_id'))
 
     outputs = parser.add_argument_group(title="Output files", description="(optional)")
     outputs.add_argument(
@@ -289,6 +391,11 @@ def parse_args():
         help='if set, uses the "indel_reversed_seqs" output of partis instead of "seqs"',
         action="store_true")
     other_args.add_argument(
+        '--max-sequences',
+        help="""if set, downsamples semi-randomly, with preference towards sequences with higher multiplicity
+        and order output by partis""",
+        type=int)
+    other_args.add_argument(
         '--paths-relative-to',
         default='.',
         help='files pointed to from metadata.json file will be specified relative to this path')
@@ -316,6 +423,10 @@ def main():
     args = parse_args()
 
     cluster_data = processed_data(args)
+
+    for seq in cluster_data['sequences']:
+        if not seq.get('seq'):
+            print seq
 
     if args.seqmeta_out:
         write_seq_meta(args, cluster_data)
