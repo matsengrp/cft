@@ -41,7 +41,8 @@ def add(env, w):
             c['translated_inseqs'],
             # Replace stop codons with X, or muscle inserts gaps, which messed up seqmagick backtrans-align below
             # Note that things will break down at backtrans-align if any seq ids have * in them...
-            'sed \'s/\*/X/g\' $SOURCE | muscle -in /dev/stdin -out $TARGET 2> $TARGET-.log')
+            'sed \'s/\*/X/g\' $SOURCE | muscle -in /dev/stdin -out $TARGET 2> $TARGET-.log',
+            srun_args='`alignment_srun_args.py $SOURCE`')
 
     # Not sure why we're not using this any more; I think we want to be, but it must have been causing some
     # issue... need to look at this XXX
