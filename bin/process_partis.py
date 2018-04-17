@@ -116,6 +116,7 @@ def seqs(args, cluster_line):
 
 
 def get_upstream_row(upstream_seqmeta, seqid):
+    upstream_seqmeta = upstream_seqmeta or {}
     row = upstream_seqmeta.get(seqid, {'timepoint': '', 'multiplicity': 1})
     row['sequence'] = seqid
     return row
