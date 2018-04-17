@@ -156,13 +156,18 @@ def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta):
 
 
 def downsample_sequences(args, sequences):
-    # Sort by negative so we take the highest multiplicity (lowest neg value) first 
     sequences = list(sequences)
-    return list(it.chain([sequences[0]],
-                         sorted(sequences[1:],
-                                key=lambda seqmeta: - seqmeta['multiplicity'])[0:args.max_sequences])) \
-           if args.max_sequences \
-           else sequences
+    if args.max_sequences:
+        always_include = set(args.always_include + ['naive'])
+        always_include_seqs = filter(lambda x: x.get('unique_id') in always_include, sequences)
+        rest_seqs = filter(lambda x: x.get('unique_id') not in always_include, sequences)
+        # first take the always keep, then take as many as you can of the remaining seqs, in order of highest multiplicity
+        return always_include_seqs + \
+               sorted(rest_seqs,
+                      # Sort by negative so we take the highest multiplicity (lowest neg value) first 
+                      key=lambda seqmeta: - seqmeta['multiplicity'])[0:args.max_sequences - len(always_include_seqs)]
+    else:
+        return sequences
 
 
 def process_cluster(args, cluster_line, seed_id):
@@ -396,6 +401,9 @@ def parse_args():
         help="""if set, downsamples semi-randomly, with preference towards sequences with higher multiplicity
         and order output by partis""",
         type=int)
+    other_args.add_argument(
+        '--always-include',
+        type=lambda x: x.split(','), help='comma separated list of ids to keep if --max-sequences is set', default=[])
     other_args.add_argument(
         '--paths-relative-to',
         default='.',
