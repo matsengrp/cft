@@ -402,17 +402,18 @@ def add_cluster_analysis(w):
                     ' --remove-stops --remove-frameshifts --remove-mutated-invariants' +
                     ' --partition-file ${SOURCES[0]}' +
                     ' --cluster-annotation-file ${SOURCES[1]}' +
+                   (' --upstream-seqmeta ${SOURCES[2]}' if perseq_metafile else '') +
                     ' --parameter-dir ' + c['sample']['parameter-dir'] +
                     ' --locus ' + locus(c) +
                     ' --max-sequences 10000' +
-                    ' --cluster-meta-out ${TARGETS[0]}' +
-                    ' --seqs-out ${TARGETS[1]}' +
-                    ' --seqmeta-out ${TARGETS[2]}' +
                     ' --paths-relative-to ' + dataset_outdir(c) +
                     ' --namespace cft.cluster' +
-                    (' --upstream-seqmeta ${SOURCES[2]}' if perseq_metafile else '') +
-                    (' --partition {}'.format(c['partition']['step']) if c.get('seed') else '') +
-                    (' --cluster {}'.format(c['cluster']['sorted_index']) if not c.get('seed') else ''))
+                  ((" --always-include " + ','.join(c['sample']['seeds'])) if c['sample'].get('seeds') else '') +
+                   (' --partition {}'.format(c['partition']['step']) if c.get('seed') else '') +
+                   (' --cluster {}'.format(c['cluster']['sorted_index']) if not c.get('seed') else '') +
+                    ' --cluster-meta-out ${TARGETS[0]}' +
+                    ' --seqs-out ${TARGETS[1]}' +
+                    ' --seqmeta-out ${TARGETS[2]}')
 
     @w.add_target(ingest=True)
     def partis_metadata(outdir, c):
