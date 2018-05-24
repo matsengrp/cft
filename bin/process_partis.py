@@ -9,8 +9,9 @@ import json
 import sys
 import textwrap
 import time
-import itertools as it
 import collections
+import numpy
+#import itertools as it
 #import warnings
 
 from Bio import SeqIO
@@ -59,23 +60,6 @@ def csv_reader(index=None, filter_by=None):
 
 default_germline_sets = os.path.join(partis_path, 'data/germlines/human')
 
-
-
-def indel_offset(indelfo):
-    return sum(map(lambda indel: indel['len'] * (1 if indel['type'] == 'insertion' else -1),
-                   indelfo['indels']))
-
-def infer_frameshifts(line):
-    "Infer frameshifts based on `in_frame` attr in partis output, or if more than one stop codon."
-    attrs = ['in_frames', 'input_seqs']
-    def infer_(args):
-        in_frame, input_seq = args
-        # Trim to multiple of 3 to avoid biopython warning
-        input_seq = input_seq[0:((len(input_seq) / 3) * 3)]
-        aa = Seq(input_seq).translate()
-        stop_count = aa.count("*")
-        return (not in_frame) or stop_count > 0
-    return map(infer_, zip(*map(lambda x: line[x], attrs)))
 
 def get_cluster_annotation(filename, unique_ids):
     unique_ids_string = ":".join(unique_ids)
@@ -170,6 +154,14 @@ def downsample_sequences(args, sequences):
         return sequences
 
 
+def subset_dict(d, keys):
+    return {k: d[k] for k in keys if k in d}
+
+def merge(d1, d2):
+    d = d1.copy()
+    d.update(d2)
+    return d
+
 def process_cluster(args, cluster_line, seed_id):
     utils.process_input_line(cluster_line)
     utils.add_implicit_info(args.glfo, cluster_line)
@@ -202,14 +194,18 @@ def process_cluster(args, cluster_line, seed_id):
     # apply sequence downsampling here
     sequences = downsample_sequences(args, sequences)
 
-    cluster = {'sequences': sequences,
-               'cdr3_start': cluster_line['codon_positions']['v'],
-               'has_seed': seed_id in cluster_line['unique_ids'],
-               # total in cluster output from partis
-               'n_seqs' : n_seqs,
-               # Should be equal unless downsampled
-               'n_sampled_seqs': len(sequences),
-               'seed_id': seed_id}
+    cluster = merge(
+            subset_dict(cluster_line, ['naive_seq', 'v_per_gene_support', 'd_per_gene_support', 'j_per_gene_support']),
+            {'sequences': sequences,
+             'cdr3_start': cluster_line['codon_positions']['v'],
+             'has_seed': seed_id in cluster_line['unique_ids'],
+             # total in cluster output from partis
+             'n_seqs' : n_seqs,
+             # Should also add mean_mut_freq etc here
+             'mean_mut_freq': numpy.mean(cluster_line['mut_freqs']),
+             # Should be equal unless downsampled
+             'n_sampled_seqs': len(sequences),
+             'seed_id': seed_id})
     for k in cluster_cols:
         cluster[k] = cluster_line[k]
     for gene in 'vdj':
@@ -267,12 +263,19 @@ def processed_data(args):
     return data
 
 
+
 def write_cluster_meta(args, cluster_data):
     def attrs(base):
-        return [base + '_' + k for k in ['gene', 'start', 'end']]
-    to_keep = ['has_seed', 'seqs_file', 'n_seqs', 'last_modified', 'annotation_file', 'partition_file',
-        'cdr3_start', 'cdr3_length'] + attrs('v') + attrs('d') + attrs('j')
-    doc = {k: cluster_data[k] for k in to_keep}
+        return [base + '_' + k for k in ['gene', 'start', 'end', 'per_gene_support']]
+    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'n_seqs', 'last_modified', 'annotation_file', 'partition_file',
+        'cdr3_start', 'cdr3_length', 'mean_mut_freq'] + attrs('v') + attrs('d') + attrs('j')
+    doc = subset_dict(cluster_data, to_keep)
+    for gene in 'vdj':
+        attr = gene + '_per_gene_support'
+        base = 'cft.gene_support:' if args.namespace else ''
+        doc[attr] = [{base + 'gene': k,
+                      base + 'prob': v}
+                     for k, v in doc[attr].items()]
     if args.namespace:
         doc = {args.namespace + ':' + k: v for k, v in doc.items()}
     with open(args.cluster_meta_out, 'w') as outfile:
