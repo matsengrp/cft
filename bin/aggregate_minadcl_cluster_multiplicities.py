@@ -45,32 +45,35 @@ def format_results(results):
 
 # Wrapping together the CLI
 
-def csv_reader(index=None, filter_by=None):
-    def f(filename):
-        with open(filename) as fh:
-            reader = csv.DictReader(fh)
-            if filter_by:
-                reader = filter(filter_by, reader)
-            reader = list(reader)
-            if index:
-                return {r[index]: r for r in reader}
-            else:
-                return list(reader)
-    return f
+def csv_reader(filename):
+    with open(filename) as fh:
+        return list(csv.DictReader(fh))
 
 def cluster_reader(filename):
-    data = csv_reader()(filename)
+    data = csv_reader(filename)
     #return {k: [v['sequence'] for v in vs] for k, vs in itertools.groupby(data, lambda d: d['centroid'])}
     result = collections.defaultdict(set)
     for d in data:
         result[d['centroid']].add(d['sequence'])
     return result
 
+def merge(d1, d2):
+    d1 = d1.copy()
+    d1.update(d2)
+    return d1
+
+def seqmeta_reader(filename):
+    data = csv_reader(filename)
+    return [merge(d, {'timepoints': d['timepoints'].split(':'),
+                      'timepoint_multiplicities': d['timepoint_multiplicities'].split(':'),
+                      'duplicates': d['duplicates'].split(':')})
+            for d in data]
+
 
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cluster-mapping', type=cluster_reader)
-    parser.add_argument('--partis-seqmeta', type=csv_reader())
+    parser.add_argument('--partis-seqmeta', type=seqmeta_reader)
     parser.add_argument('output', type=argparse.FileType('w'))
     args = parser.parse_args()
     return args
