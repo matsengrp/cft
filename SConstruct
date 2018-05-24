@@ -339,8 +339,9 @@ def read_partition_file(filename):
                 contents = fh.read()
                 if contents == '':
                     warn("  Explanation: Empty partition file")
-        except Exception as e2:
+        except Exception:
             warn("  Explanation: Can't open file; missing file? Poorly formatted?")
+            warn("  Exception: " + str(e))
         return []
     return cp
 
