@@ -717,12 +717,20 @@ def add_unseeded_analysis(w):
 add_unseeded_analysis(w)
 
 
-# Popping off metadata
+# Write metadata
 # --------------------
 
-# Go back to the base (build) nest level, forcing a metadata write
+# could also do this by a final w.pop('dataset'), but we want a little more control here for snapshots
+
+w.pop('subject')
+
+@w.add_target()
+def metadata_snapshot(outdir, c):
+    return env.Command(
+            path.join(outdir, time.strftime('%Y-%m-%d') + '-metadata.json'),
+            path.join(outdir, 'metadata.json'),
+            'cp $SOURCE $TARGET')
 
 w.pop('dataset')
-
 
 
