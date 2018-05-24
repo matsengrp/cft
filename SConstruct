@@ -197,7 +197,7 @@ def wrap_test_run(take_n=2):
 # We don't really do much here other than nest through the subjects in the input file for the sake of
 # establishing the metadata heirarchy
 
-@w.add_nest()
+@w.add_nest(label_func=str)
 @wrap_test_run(take_n=2)
 def subject(c):
     return list(set(utils.get_in(sample, ['meta', 'subject'])
