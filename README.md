@@ -58,6 +58,10 @@ You may also wish to take a look at `bin/dataset_utils.py`, a little utility scr
 You can get a comprehensive help menu by running `bin/dataset_utils.py -h`.
 You may also wish to directory use the script which does the initial extraction of data from partis, `bin/process_partis.py`.
 
+Note that in order for the data to process correctly, the following must be true of the naming scheme for sequences:
+
+* must not include any of the characters: `:`, `;`, `,`
+
 
 ## Running the pipeline
 
@@ -85,26 +89,35 @@ Below are the most frequently used options:
   Defaults to `/fh/fast/matsen_e/processed-data/partis/`.
 * `--test`: Run on a small subset of all the seeds, as defined in the `SConstruct`, rather than the whole dataset; Useful for testing new code.
 
+A separate "dataset" directory and corresponding `metadata.json` file will be created for each `infile` and placed within the `output` directory, organized by the `id` attribute of the dataset infile.
 For the most complete and up to date reference on these, look at the tail `Local Options` section of `scons -h`.
 
-You may also wish to take note of the following basic `scons` options:
+You may also wish to take note of the following basic `scons` build options options:
 
-* `-j`: Specify the number of jobs (parallelism) for the build
-* `-k`: keep building as much as possible if there is an error
+* `-j`: specify the number of jobs (parallelism) for the build
+* `-k`: if there is an error, stop building targets downstream of failure, but continue to build all targets not downstream of such errors
+* `-i`: if there is an error, continue running all jobs, including those downstream of failure
 * `-n`: perform a "dry run" of the pipeline, only printing out the commands that would be run without actually running any
+* `--debug explain`: scons print out why it's building each target (e.g. hasn't been built yet, updated command, changed upstream target, updated executable/script, etc.), useful to have in the logs for debugging 
 
-A separate "dataset" directory and corresponding `metadata.json` file will be created for each `infile` and placed within the `output` directory, organized by the `id` attribute of the dataset infile.
+In general, it's good to run with `-k` so that on a first pass, you end up building as much of the data as you can properly build.
+If there are errors, try rerunning to make sure the problem isn't just an errant memory issue on your cluster, then look back at the logs and see if you can't debug the issue.
+If it's just a few clusters failing to build properly and you don't want to hold out on getting the rest of the built data into `cftweb`, you can rerun the build with `-i`, which will take a little longer to run through all of the failed build branches with missing files etc, but which should successfully compile the final output `metadata.json` files necessary for passing along to `cftweb`.
+
 
 ### Typical example usage
 
 ```
-# If you're using conda, as above, first activate the environment
+# If you're using conda, as below, first activate the environment
 source activate cft
 
-# Next build the 
-scons --infiles=info1.yaml:info2.yaml -j 12
+# Build the data, running 12 jobs at a time (parallelism) and appending all stdout/stderr to a log file
+scons --infiles=info1.yaml:info2.yaml -k -j 12 --debug explain &>> 2018-05-24.info1-build.log
 
-# Check out output
+# You can watch a live tail of the log file from another terminal window or tmux pane with
+tail -f 2018-05-24.info1-build.log
+
+# Once its done running, you can take a look at the output
 tree output
 # or if you don't have tree
 find output
