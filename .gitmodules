@@ -1,9 +1,6 @@
 [submodule "partis"]
 	path = partis
 	url = git@github.com:psathyrella/partis.git
-[submodule "datascripts"]
-	path = datascripts
-	url = git@github.com:psathyrella/datascripts.git
 [submodule "deps/tripl"]
 	path = deps/tripl
 	url = git@github.com:metasoarous/tripl.git
