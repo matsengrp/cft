@@ -169,8 +169,7 @@ Now install the python packages.
 These are mostly installed via the `conda` command; `pip` is only used for packages not yet available via conda.
 
 ```
-conda install biopython nestly pyqt
-pip install ete3 scons
+conda install biopython nestly pyqt ete3 scons
 ```
 
 Your mileage may vary, but Chris Warth found it necessary to reactivate the environment and rehash the path, especially after installing `scons` and `nestly`.
