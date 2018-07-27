@@ -137,6 +137,7 @@ First, you'll need a number bioinformatics executables installed in order to run
 * `rppr` (from the `pplacer` suite)
 * `xvfb-run`
 * `R` (and `Rscript`)
+* `prank`
 
 If you are running on Fredhutch's compute nodes, you can use scicomp's module system to gain access to these dependencies:
 

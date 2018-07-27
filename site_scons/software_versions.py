@@ -37,11 +37,17 @@ software_versions = {
     }
 
 
+def call_check_command(version_command):
+    try:
+        subprocess.check_output(version_command.split())
+    except OSError as e:
+        raise Exception('version command \'%s\' failed with \'%s\'' % (version_command, e))
+
 def software_info(prog):
     version_command = software_versions[prog]
     return {'cft.software:name': prog,
             'cft.software:version': version_command() if callable(version_command) else (
-                 subprocess.check_output(version_command.split()) if version_command else None),
+                 call_check_command(version_command) if version_command else None),
             'cft.software:which': subprocess.check_output(['which', prog]) if not callable(version_command) else None}
 
 
