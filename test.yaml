@@ -1,0 +1,27 @@
+# The dataset-id identifies the collection of samples in downstream organization
+id: test-input
+samples:
+  # each sample must be keyed by a per-dataset unique identifier
+  simulation-test:
+    locus: igh
+    parameter-dir: partis/test/reference-results/test/parameters/simu
+    per-sequence-meta-file: 
+
+    # Unseeded partitions go here
+    # partition-file: tests/partition-ref-simu.yaml  # new partition + annotation + glfo format (SConstruct can't handle this yet)
+    partition-file: tests/partition-ref-simu.csv
+    cluster-annotation-file: tests/partition-ref-simu-cluster-annotations.csv
+
+    # # seed partition runs should be organized under a `seeds` key as follows
+    # seeds:
+    #   # seed sequence id
+    #   BF520.1-igh:
+    #     partition-file: /path/to/Hs-LN-D-5RACE-IgG/partition.csv
+    #     cluster-annotation-file: /path/to/Hs-LN-D-5RACE-IgG/partition-cluster-annotations.csv
+    #   # other seeds, as applicable...
+
+  # another sample in our dataset...
+  # Hs-LN-D-5RACE-IgK:
+  #   # etc.
+
+  # etc.
