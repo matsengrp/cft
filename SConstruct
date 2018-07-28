@@ -61,6 +61,7 @@ default_partis_path = path.join(os.getcwd(), 'partis')
 partis_path = os.environ.get('PARTIS', default_partis_path)
 sys.path.append(path.join(partis_path, 'python'))
 import clusterpath
+import utils
 
 # Scons requirements
 from SCons.Script import Environment
@@ -293,16 +294,25 @@ def partition_metadata(part, cp, best_plus_i, seed=None, other_id=None):
         meta['seed_cluster_size'] = seed_cluster_size(cp, best_plus_i, seed)
     return sconsutils.merge_dicts(meta, part.get('meta') or {})
 
+# make sure we have both partition and annotation information in the specified files
+def is_valid_partition_output(dct):
+    if not dct.get('partition-file'):  # has to at least be a partition file
+        return False
+    if utils.getsuffix(dct.get('partition-file')) == '.yaml':  # new way: only need a yaml file
+        return True
+    else:
+        return dct.get('cluster-annotation-file')  # old way: annotations are in separate file
+
 # Whenever we iterate over partitions, we always want to assume there could be an `other-partitions` mapping,
 # and iterate over all these things, while tracking their other_id keys in the `other-partitions` dict.
 def with_other_partitions(node):
     parts = []
-    if node.get('partition-file') and node.get('cluster-annotation-file'):
+    if is_valid_partition_output(node):
         parts.append(node)
     if node.get('other-partitions'):
         parts += [sconsutils.merge_dicts(part, {'other_id': other_id})
                   for other_id, part in node['other-partitions'].items()
-                  if part.get('partition-file') and part.get('cluster-annotation-file')]
+                  if is_valid_partition_output(part)]
     return parts
 
 
