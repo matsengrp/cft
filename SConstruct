@@ -68,7 +68,6 @@ from SCons.Script import Environment
 
 # Build modules (in site_scons):
 import sconsutils
-import utils
 import backtrans_align
 import options
 import software_versions
@@ -158,7 +157,7 @@ def dataset_metadata(infile):
             d = yaml.load(fp)
     label = (options['dataset_tag'] + '-' if options['dataset_tag'] else '') + d['id']
     outdir = path.join(options['outdir_base'], label)
-    return utils.merge_dicts(d, {'id': d['id'] + '-' + time.strftime('%Y.%m.%d'), 'label': label, 'outdir': outdir})
+    return sconsutils.merge_dicts(d, {'id': d['id'] + '-' + time.strftime('%Y.%m.%d'), 'label': label, 'outdir': outdir})
 
 @w.add_nest(full_dump= True,
         label_func= lambda d: d['label'],
@@ -200,7 +199,7 @@ def wrap_test_run(take_n=2):
 @w.add_nest(label_func=str)
 @wrap_test_run(take_n=2)
 def subject(c):
-    return list(set(utils.get_in(sample, ['meta', 'subject'])
+    return list(set(sconsutils.get_in(sample, ['meta', 'subject'])
                     for sample_id, sample in c['dataset']['samples'].items()))
 
 
@@ -215,14 +214,14 @@ def subject(c):
 # These are handled in separate nest loops below, with a pop in between.
 
 # There may eventually be some required arguments here as this is where we get our locus and isotype and such
-@w.add_nest(metadata=lambda c, d: utils.merge_dicts(d.get('meta', {}),
+@w.add_nest(metadata=lambda c, d: sconsutils.merge_dicts(d.get('meta', {}),
                                                     {'id': d['id'], 'seeds': None, 'meta': None}))
 @wrap_test_run(take_n=2)
 def sample(c):
     # Make sure to add timepoints here as necessary
-    return [utils.merge_dicts(sample, {'id': sample_id})
+    return [sconsutils.merge_dicts(sample, {'id': sample_id})
             for sample_id, sample in c['dataset']['samples'].items()
-            if utils.get_in(sample, ['meta', 'subject']) == c['subject']]
+            if sconsutils.get_in(sample, ['meta', 'subject']) == c['subject']]
 
 def locus(c):
     sample = c['sample']
@@ -239,18 +238,18 @@ def locus(c):
 # Eventually, we'll pop off this seed nest level so we can renest these partitions and clusters directly from the sample nest level.
 
 # Initialize our first sub dataset nest level
-@w.add_nest(metadata=lambda c, d: utils.merge_dicts(d.get('meta', {}), {'id': d['id']}))
+@w.add_nest(metadata=lambda c, d: sconsutils.merge_dicts(d.get('meta', {}), {'id': d['id']}))
 # would like to have a lower number here but sometimes we get no good clusters for the first two seeds?
 # (on laura-mb for example).
 @wrap_test_run(take_n=4)
 def seed(c):
-    return [utils.merge_dicts(seed, {'id': seed_id})
+    return [sconsutils.merge_dicts(seed, {'id': seed_id})
             for seed_id, seed in c['dataset']['samples'][c['sample']['id']].get('seeds', {}).items()]
 
 # Some accessor helpers
 
 def timepoint(c):
-    return utils.get_in(c, ['sample', 'meta', 'timepoint'])
+    return sconsutils.get_in(c, ['sample', 'meta', 'timepoint'])
 
 def is_merged(c):
     return timepoint(c) == 'merged'
@@ -292,7 +291,7 @@ def partition_metadata(part, cp, best_plus_i, seed=None, other_id=None):
             'cluster-annotation-file': part['cluster-annotation-file']}
     if seed:
         meta['seed_cluster_size'] = seed_cluster_size(cp, best_plus_i, seed)
-    return utils.merge_dicts(meta, part.get('meta') or {})
+    return sconsutils.merge_dicts(meta, part.get('meta') or {})
 
 # Whenever we iterate over partitions, we always want to assume there could be an `other-partitions` mapping,
 # and iterate over all these things, while tracking their other_id keys in the `other-partitions` dict.
@@ -301,7 +300,7 @@ def with_other_partitions(node):
     if node.get('partition-file') and node.get('cluster-annotation-file'):
         parts.append(node)
     if node.get('other-partitions'):
-        parts += [utils.merge_dicts(part, {'other_id': other_id})
+        parts += [sconsutils.merge_dicts(part, {'other_id': other_id})
                   for other_id, part in node['other-partitions'].items()
                   if part.get('partition-file') and part.get('cluster-annotation-file')]
     return parts
@@ -681,7 +680,7 @@ def add_unseeded_analysis(w):
         def meta(part):
             cp = read_partition_file(part['partition-file'])
             if cp:
-                return utils.merge_dicts(partition_metadata(part, cp, 0, other_id=part.get('other_id')),
+                return sconsutils.merge_dicts(partition_metadata(part, cp, 0, other_id=part.get('other_id')),
                                          {'cp': cp})
         return filter(None, map(meta, with_other_partitions(c['sample'])))
 
