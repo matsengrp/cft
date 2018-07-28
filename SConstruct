@@ -319,14 +319,13 @@ def with_other_partitions(node):
 def valid_cluster(cp, part, clust):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
     we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
-    clust_sig = ':'.join(clust)
-    with open(part['cluster-annotation-file']) as fh:
-        for cluster_row in csv.DictReader(fh):
-            if cluster_row['unique_ids'] == clust_sig:
-                n_good_seqs = sum(map(lambda x: x[0] and not (x[1] or x[2]),
-                    zip(*(map(lambda col: [x == 'True' for x in cluster_row[col].split(':')],
-                              ['in_frames', 'stops', 'mutated_invariants'])))))
-                return n_good_seqs > 2
+    _, annotation_list, _ = utils.read_output(part['partition-file'], dont_add_implicit_info=True)
+    for line in annotation_list:
+        if line['unique_ids'] == clust:
+            func_list = [utils.is_functional(line, iseq) for iseq in range(len(line['unique_ids']))]
+            n_good_seqs = func_list.count(True)
+            return n_good_seqs > 2
+    raise Exception('couldn\'t find requested uids %s in %s' (clust, par['partition-file']))
 
 def valid_seed_partition(cp, part, best_plus_i, seed_id):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
