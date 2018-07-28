@@ -9,6 +9,7 @@ samples:
 
     # Unseeded partitions go here
     # partition-file: tests/partition-ref-simu.yaml  # new partition + annotation + glfo format (SConstruct can't handle this yet)
+    # cluster-annotation-file: n/a
     partition-file: tests/partition-ref-simu.csv
     cluster-annotation-file: tests/partition-ref-simu-cluster-annotations.csv
 

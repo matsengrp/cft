@@ -153,8 +153,6 @@ def merge(d1, d2):
     return d
 
 def process_cluster(args, cluster_line, seed_id):
-    if utils.getsuffix(args.partition_file) == '.csv':
-        utils.process_input_line(cluster_line)
     utils.add_implicit_info(args.glfo, cluster_line)
 
     cluster_sequences = {
@@ -204,29 +202,13 @@ def process_cluster(args, cluster_line, seed_id):
             cluster[gene+'_'+pos] = cluster_line['regional_bounds'][gene][pos.startswith('e')]
     return cluster
 
-
-def nth(sequence, n):
-    for i, v in enumerate(sequence):
-        if i == n:
-            return  v
-
-def nth_csv_row(filename, n):
-    with open(filename) as handle:
-        reader = csv.DictReader(handle)
-        return nth(reader, n)
-
-
 def processed_data(args):
     """Uses args to find the correct partition, cluster pair and all associated information. Cluster
     information is returned as by process_cluster."""
 
-    if utils.getsuffix(args.partition_file) == '.csv':  # old way
-        cpath = clusterpath.ClusterPath(fname=args.partition_file)
-        csvfile = open(args.cluster_annotation_file)
-        annotations = {l['unique_ids'] : l for l in csv.DictReader(csvfile)}
-    elif utils.getsuffix(args.partition_file) == '.yaml':  # new way
-        args.glfo, annotation_lines, cpath = utils.read_yaml_output(args.partition_file, dont_add_implicit_info=True)  # NOTE replaces args.glfo
-        annotations = {':'.join(l['unique_ids']) : l for l in annotation_lines}  # this is ugly, but it's the cleanest way I can figure to handle both csv and yaml files
+    file_glfo, annotation_list, cpath = utils.read_output(args.partition_file, dont_add_implicit_info=True)
+    if file_glfo:  # will only be set if we're reading a yaml file
+        args.glfo = file_glfo
 
     # select partition, relative to best partition
     ipart = cpath.i_best + args.partition
@@ -235,16 +217,20 @@ def processed_data(args):
     if args.unique_ids:
         cluster_unique_ids = args.unique_ids
     # default to seed, when possibile
-    elif cpath.seed_unique_id is not None and not args.cluster:
+    elif cpath.seed_unique_id and not args.cluster:
         cluster_unique_ids = next(cluster for cluster in cpath.partitions[ipart] if cpath.seed_unique_id in cluster)
     # otherwise, assume we have args.cluster or default it to 0
     else:
-        clusters = sorted((cluster for cluster in cpath.partitions[ipart]), key=len, reverse=True)
+        clusters = sorted(cpath.partitions[ipart], key=len, reverse=True)
         cluster_unique_ids = clusters[args.cluster or 0]
 
-
     # Get cluster annotation and put together into
-    cluster_annotation = annotations[":".join(cluster_unique_ids)]
+    annotations = [l for l in annotation_list if l['unique_ids'] == cluster_unique_ids]
+    if len(annotations) == 0:
+        raise ValueError('requested uids %s not found in %s' % (cluster_unique_ids, args.partition_file))  # it was a value error before, so I'm leaving it at that
+    elif len(annotations) > 1:
+        print '%s more than one annotation with requested uids %s found in %s' % (utils.color('red', 'warning'), cluster_unique_ids, args.partition_file)  # shouldn't be possible
+    cluster_annotation = annotations[0]
     data = {'n_clusters': len(cpath.partitions[ipart]),
             'logprob': cpath.logprobs[ipart],
             'partition_file': args.partition_file,
