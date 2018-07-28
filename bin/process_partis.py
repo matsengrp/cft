@@ -60,16 +60,6 @@ def csv_reader(index=None, filter_by=None):
 
 default_germline_sets = os.path.join(partis_path, 'data/germlines/human')
 
-
-def get_cluster_annotation(filename, unique_ids):
-    unique_ids_string = ":".join(unique_ids)
-    with open(filename) as handle:
-        reader = csv.DictReader(handle)
-        for row in reader:
-            if row['unique_ids'] == unique_ids_string:
-                return row
-        raise ValueError("Cluster not found for unique_ids set {}".format(repr(unique_ids)))
-
 def as_dict_rows(column_dict, columns=None):
     columns = columns or column_dict.keys()
     column_lengths = [len(column_dict[c]) for c in columns]
@@ -163,7 +153,8 @@ def merge(d1, d2):
     return d
 
 def process_cluster(args, cluster_line, seed_id):
-    utils.process_input_line(cluster_line)
+    if utils.getsuffix(args.partition_file) == '.csv':
+        utils.process_input_line(cluster_line)
     utils.add_implicit_info(args.glfo, cluster_line)
 
     cluster_sequences = {
@@ -229,37 +220,40 @@ def processed_data(args):
     """Uses args to find the correct partition, cluster pair and all associated information. Cluster
     information is returned as by process_cluster."""
 
-    cp = clusterpath.ClusterPath()
-    cp.readfile(args.partition_file)
+    if utils.getsuffix(args.partition_file) == '.csv':  # old way
+        cpath = clusterpath.ClusterPath(fname=args.partition_file)
+        csvfile = open(args.cluster_annotation_file)
+        annotations = {l['unique_ids'] : l for l in csv.DictReader(csvfile)}
+    elif utils.getsuffix(args.partition_file) == '.yaml':  # new way
+        args.glfo, annotation_lines, cpath = utils.read_yaml_output(args.partition_file, dont_add_implicit_info=True)  # NOTE replaces args.glfo
+        annotations = {':'.join(l['unique_ids']) : l for l in annotation_lines}  # this is ugly, but it's the cleanest way I can figure to handle both csv and yaml files
 
     # select partition, relative to best partition
-    partition_index = cp.i_best + args.partition
-    part = nth_csv_row(args.partition_file, partition_index)
-    seed_id = cp.seed_unique_id
+    ipart = cpath.i_best + args.partition
 
     # select cluster; unique_ids takes highest precedence
     if args.unique_ids:
         cluster_unique_ids = args.unique_ids
     # default to seed, when possibile
-    elif cp.seed_unique_id and not args.cluster:
-        cluster_unique_ids = next(cluster.split(':') for cluster in part['partition'].split(';')
-                if seed_id in cluster.split(':'))
+    elif cpath.seed_unique_id is not None and not args.cluster:
+        cluster_unique_ids = next(cluster for cluster in cpath.partitions[ipart] if cpath.seed_unique_id in cluster)
     # otherwise, assume we have args.cluster or default it to 0
     else:
-        clusters = sorted((cluster.split(':') for cluster in part['partition'].split(';')), key=len, reverse=True)
+        clusters = sorted((cluster for cluster in cpath.partitions[ipart]), key=len, reverse=True)
         cluster_unique_ids = clusters[args.cluster or 0]
 
-    # Get cluster annotation and put together into 
-    cluster_annotation = get_cluster_annotation(args.cluster_annotation_file, cluster_unique_ids)
-    data = {'n_clusters': part['n_clusters'],
-            'logprob': part['logprob'],
+
+    # Get cluster annotation and put together into
+    cluster_annotation = annotations[":".join(cluster_unique_ids)]
+    data = {'n_clusters': len(cpath.partitions[ipart]),
+            'logprob': cpath.logprobs[ipart],
             'partition_file': args.partition_file,
-            'last_modified': time.ctime(os.path.getmtime(args.cluster_annotation_file)),
+            'last_modified': time.ctime(os.path.getmtime(args.partition_file)),
             'annotation_file': args.cluster_annotation_file}
     if args.seqs_out:
         data['seqs_file'] = os.path.relpath(args.seqs_out, args.paths_relative_to)
     # Process the annotation file specific details/data
-    data.update(process_cluster(args, cluster_annotation, seed_id))
+    data.update(process_cluster(args, cluster_annotation, cpath.seed_unique_id))
     return data
 
 
