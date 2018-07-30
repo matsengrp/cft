@@ -288,31 +288,21 @@ def partition_metadata(part, cp, best_plus_i, seed=None, other_id=None):
             'n_clusters': len(clusters),
             'largest_cluster_size': max(map(len, clusters)),
             'logprob': cp.logprobs[i],
-            'partition-file': part['partition-file'],
-            'cluster-annotation-file': part['cluster-annotation-file']}
+            'partition-file': part['partition-file']}
     if seed:
         meta['seed_cluster_size'] = seed_cluster_size(cp, best_plus_i, seed)
     return sconsutils.merge_dicts(meta, part.get('meta') or {})
-
-# make sure we have both partition and annotation information in the specified files
-def is_valid_partition_output(dct):
-    if not dct.get('partition-file'):  # has to at least be a partition file
-        return False
-    if utils.getsuffix(dct.get('partition-file')) == '.yaml':  # new way: only need a yaml file
-        return True
-    else:
-        return dct.get('cluster-annotation-file')  # old way: annotations are in separate file
 
 # Whenever we iterate over partitions, we always want to assume there could be an `other-partitions` mapping,
 # and iterate over all these things, while tracking their other_id keys in the `other-partitions` dict.
 def with_other_partitions(node):
     parts = []
-    if is_valid_partition_output(node):
+    if node.get('partition-file'):
         parts.append(node)
     if node.get('other-partitions'):
         parts += [sconsutils.merge_dicts(part, {'other_id': other_id})
                   for other_id, part in node['other-partitions'].items()
-                  if is_valid_partition_output(part)]
+                  if part.get('partition-file')]
     return parts
 
 
@@ -402,7 +392,7 @@ def add_cluster_analysis(w):
     @w.add_metadata()
     def _process_partis(outdir, c):
         # Should get this to explicitly depend on cluster0.fa
-        sources = [c['partition']['partition-file'], c['partition']['cluster-annotation-file']]
+        sources = [c['partition']['partition-file']]
         perseq_metafile = c['sample'].get('per-sequence-meta-file')
         if perseq_metafile:
             sources.append(perseq_metafile)
@@ -412,7 +402,6 @@ def add_cluster_analysis(w):
                 'process_partis.py' +
                     ' --remove-stops --remove-frameshifts --remove-mutated-invariants' +
                     ' --partition-file ${SOURCES[0]}' +
-                    ' --cluster-annotation-file ${SOURCES[1]}' +
                    (' --upstream-seqmeta ${SOURCES[2]}' if perseq_metafile else '') +
                     ' --parameter-dir ' + c['sample']['parameter-dir'] +
                     ' --locus ' + locus(c) +

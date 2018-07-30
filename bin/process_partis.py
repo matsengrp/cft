@@ -234,8 +234,7 @@ def processed_data(args):
     data = {'n_clusters': len(cpath.partitions[ipart]),
             'logprob': cpath.logprobs[ipart],
             'partition_file': args.partition_file,
-            'last_modified': time.ctime(os.path.getmtime(args.partition_file)),
-            'annotation_file': args.cluster_annotation_file}
+            'last_modified': time.ctime(os.path.getmtime(args.partition_file))}
     if args.seqs_out:
         data['seqs_file'] = os.path.relpath(args.seqs_out, args.paths_relative_to)
     # Process the annotation file specific details/data
@@ -247,7 +246,7 @@ def processed_data(args):
 def write_cluster_meta(args, cluster_data):
     def attrs(base):
         return [base + '_' + k for k in ['gene', 'start', 'end', 'per_gene_support']]
-    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'n_seqs', 'last_modified', 'annotation_file', 'partition_file',
+    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'n_seqs', 'last_modified', 'partition_file',
         'cdr3_start', 'cdr3_length', 'mean_mut_freq'] + attrs('v') + attrs('d') + attrs('j')
     doc = subset_dict(cluster_data, to_keep)
     for gene in 'vdj':
@@ -302,10 +301,6 @@ def parse_args():
 
     parser = argparse.ArgumentParser(description=__doc__)
     inputs = parser.add_argument_group(title="Input files", description="(required)")
-    inputs.add_argument(
-        '--cluster-annotation-file',
-        help='cluster annotations file as output by partis',
-        type=existing_file, required=True)
     inputs.add_argument(
         '--partition-file',
         help='partitions file as output by partis',

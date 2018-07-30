@@ -9,18 +9,14 @@ samples:
 
     # Unseeded partitions go here
     # partition-file: tests/partition-ref-simu.yaml  # new partition + annotation + glfo format (SConstruct can't handle this yet)
-    # cluster-annotation-file: n/a
     partition-file: tests/partition.csv
-    cluster-annotation-file: tests/partition-cluster-annotations.csv
 
     # seed partition runs should be organized under a `seeds` key as follows
     seeds:
       # seed sequence id
       '-1118600317502690934':
         # partition-file: tests/partition-ref-simu.yaml  # new partition + annotation + glfo format (SConstruct can't handle this yet)
-        # cluster-annotation-file: n/a
         partition-file: tests/seed-partition.csv
-        cluster-annotation-file: tests/seed-partition-cluster-annotations.csv
       # other seeds, as applicable...
 
   # another sample in our dataset...
