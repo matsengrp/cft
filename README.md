@@ -29,14 +29,12 @@ samples:
 
     # Unseeded partitions go here
     partition-file: /path/to/Hs-LN-D-5RACE-IgG/partition.csv
-    cluster-annotation-file: /path/to/Hs-LN-D-5RACE-IgG/partition-cluster-annotations.csv
 
     # seed partition runs should be organized under a `seeds` key as follows
     seeds:
       # seed sequence id
       BF520.1-igh:
         partition-file: /path/to/Hs-LN-D-5RACE-IgG/partition.csv
-        cluster-annotation-file: /path/to/Hs-LN-D-5RACE-IgG/partition-cluster-annotations.csv
       # other seeds, as applicable...
 
   # another sample in our dataset...
@@ -51,6 +49,7 @@ Some notes about this:
 * This file can either be in `.yaml` format (shown above), or `.json`.
 * You may specify a `meta` attribute within a particular sample with keys from `[isotype, locus, shorthand, species, subject, timepoint]`.
 * If a sample has multiple unseeded partis runs, these can be nested within an `other-partitions` key, much as `seeds` are specified
+* A functional example is found in `test.yaml`, which is run by default by scons if --infiles is not set
 
 A more fleshed out example, as well as json examples, and python snippets can be seen [on the wiki](https://github.com/matsengrp/cft/wiki).
 
