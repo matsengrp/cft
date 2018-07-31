@@ -8,14 +8,14 @@ samples:
     per-sequence-meta-file: 
 
     # Unseeded partitions go here
-    # partition-file: tests/partition-ref-simu.yaml  # new partition + annotation + glfo format (SConstruct can't handle this yet)
+    # partition-file: tests/partition.yaml  # new partition + annotation + glfo format
     partition-file: tests/partition.csv
 
     # seed partition runs should be organized under a `seeds` key as follows
     seeds:
       # seed sequence id
       '-1118600317502690934':
-        # partition-file: tests/partition-ref-simu.yaml  # new partition + annotation + glfo format (SConstruct can't handle this yet)
+        # partition-file: tests/seed-partition.yaml  # new partition + annotation + glfo format
         partition-file: tests/seed-partition.csv
       # other seeds, as applicable...
 

@@ -35,6 +35,7 @@ import yaml
 import json
 import re
 import functools as fun
+import traceback
 
 from os import path
 from warnings import warn
@@ -327,23 +328,15 @@ def valid_seed_partition(cp, part, best_plus_i, seed_id):
 
 # Try to read partition file; If fails, it is possibly because it's empty. Catch that case and warn
 def read_partition_file(filename):
-    cp = clusterpath.ClusterPath()
     try:
-        cp.readfile(filename)
-    except Exception as e:
-        warn("Unable to parse partition file (ommitting from results): {}".format(filename))
-        try:
-            with open(filename) as fh:
-                contents = fh.read()
-                if contents == '':
-                    warn("  Explanation: Empty partition file")
-                else:
-                    warn("  Nonempty partition file failed to parse")
-        except Exception:
-            warn("  Explanation: Can't open file; missing file? Poorly formatted?")
-            warn("  Exception: " + str(e))
+        _, _, cpath = utils.read_output(filename, skip_annotations=True)
+    except:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+        print(utils.pad_lines(''.join(lines)))
+        warn("Unable to parse partition file (see error above, ommitting from results): {}".format(filename))
         return []
-    return cp
+    return cpath
 
 # note we elide the nested partitions > clusters lists so as not to kill tripl when it tries to load them as a
 # value and can't hash
