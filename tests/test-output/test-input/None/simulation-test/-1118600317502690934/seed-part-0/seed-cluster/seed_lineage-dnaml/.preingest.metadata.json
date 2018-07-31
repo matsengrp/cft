@@ -1,0 +1,179 @@
+[
+    {
+        "cft.reconstruction.db:ident": [
+            "aae48285-957c-3cd6-82e5-dc97e60d2225"
+        ], 
+        "cft.reconstruction:pruned_seqs": [
+            {
+                "tripl.file:sources": [
+                    {
+                        "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/pruned_ids.txt"
+                    }, 
+                    {
+                        "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/aligned_inseqs.fa"
+                    }
+                ], 
+                "db:ident": [
+                    "1049d721-248e-30b1-890f-1b74fcc5ded8"
+                ], 
+                "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/pruned.fa"
+            }
+        ], 
+        "cft.reconstruction:asr_prog": "dnaml", 
+        "cft.reconstruction:asr_tree_svg": {
+            "tripl.file:sources": [
+                {
+                    "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/seqname_mapping.csv"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/outfile"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/seqmeta.csv"
+                }
+            ], 
+            "db:ident": [
+                "ce511a89-0cf4-39de-9f82-a16b5f85a248"
+            ], 
+            "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/asr.svg"
+        }, 
+        "cft.reconstruction:asr_seqs": {
+            "tripl.file:sources": [
+                {
+                    "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/seqname_mapping.csv"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/outfile"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/seqmeta.csv"
+                }
+            ], 
+            "db:ident": [
+                "949b37c4-0493-3d4e-915a-97b865517551"
+            ], 
+            "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/asr.fa"
+        }, 
+        "cft.reconstruction:seqmeta": [
+            {
+                "tripl.file:sources": [
+                    {
+                        "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/partis_seqmeta.csv"
+                    }
+                ], 
+                "db:ident": [
+                    "572ea5c2-7fa6-342f-a3e8-c69cd6209294"
+                ], 
+                "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/seqmeta.csv"
+            }
+        ], 
+        "cft.reconstruction:build": {
+            "db:ident": [
+                "498ed22e-945d-11e8-b0c0-abaeb67820c1"
+            ]
+        }, 
+        "cft.reconstruction:pruned_ids": [
+            {
+                "tripl.file:sources": [
+                    {
+                        "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/fasttree.nwk"
+                    }
+                ], 
+                "db:ident": [
+                    "f1886884-e265-3390-995c-b199d372f9b4"
+                ], 
+                "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/pruned_ids.txt"
+            }
+        ], 
+        "cft.reconstruction:prune_count": 100, 
+        "cft.reconstruction:id": "seed_lineage-dnaml", 
+        "cft.reconstruction:seqname_mapping": {
+            "tripl.file:sources": [
+                {
+                    "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/pruned.fa"
+                }
+            ], 
+            "db:ident": [
+                "3ab6e127-f375-37ed-a12d-5b7b203e8390"
+            ], 
+            "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/seqname_mapping.csv"
+        }, 
+        "cft.reconstruction:prune_strategy": "seed_lineage", 
+        "cft.reconstruction:asr_tree": {
+            "tripl.file:sources": [
+                {
+                    "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/seqname_mapping.csv"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/outfile"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/seqmeta.csv"
+                }
+            ], 
+            "db:ident": [
+                "08b77c96-c7da-3421-a8d3-3e0552fae0f2"
+            ], 
+            "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/asr.nwk"
+        }, 
+        "cft.reconstruction:phy": {
+            "tripl.file:sources": [
+                {
+                    "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/pruned.fa"
+                }
+            ], 
+            "db:ident": [
+                "937c798f-8edd-3f50-956a-253d5d3d5a0c"
+            ], 
+            "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/pruned.phy"
+        }, 
+        "cft.reconstruction:cluster": {
+            "db:ident": [
+                "727abc08-cb86-3555-b9f1-22b2dd0a8c61"
+            ]
+        }, 
+        "cft.reconstruction:dataset": {
+            "db:ident": [
+                "221174ed-37cc-3c53-9744-0c19ed565b28"
+            ]
+        }, 
+        "cft.reconstruction:sample": {
+            "db:ident": [
+                "70d15c9e-81a7-3050-96bf-a2bd3e9d563b"
+            ]
+        }, 
+        "cft.reconstruction:cluster_mapping": null, 
+        "tripl:type": "cft.reconstruction", 
+        "cft.reconstruction:cluster_aa": [
+            {
+                "tripl.file:sources": [
+                    {
+                        "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/asr.fa"
+                    }
+                ], 
+                "db:ident": [
+                    "6484e189-f9c6-3f04-b950-e8a9bf4bb87e"
+                ], 
+                "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/seed_lineage-dnaml/cluster_aa.fa"
+            }
+        ], 
+        "cft.reconstruction:seed": {
+            "db:ident": [
+                "276754d7-9f68-3360-8a56-8f172c5b122d"
+            ]
+        }, 
+        "cft.reconstruction:subject": {
+            "db:ident": [
+                "d27091b1-8c90-3db4-bc4e-3bd14067d87c"
+            ]
+        }, 
+        "cft.reconstruction:partition": {
+            "db:ident": [
+                "6584423d-748b-3510-ae23-902e18526fdf"
+            ]
+        }, 
+        "db:ident": [
+            "aae48285-957c-3cd6-82e5-dc97e60d2225"
+        ]
+    }
+]

@@ -1,0 +1,40 @@
+[
+    {
+        "cft.partition:build": {
+            "db:ident": [
+                "498ed22e-945d-11e8-b0c0-abaeb67820c1"
+            ]
+        }, 
+        "cft.partition.db:ident": [
+            "654db55f-154c-3d56-b413-0ba29fed9df1"
+        ], 
+        "cft.partition:id": "unseeded-part-0", 
+        "tripl:type": "cft.partition", 
+        "cft.partition:clusters": "elided", 
+        "cft.partition:largest_cluster_size": 48, 
+        "tripl.nestly:aggregate": [], 
+        "cft.partition:step": 0, 
+        "cft.partition:logprob": -52983.23623605333, 
+        "cft.partition:cp": "elided", 
+        "cft.partition:n_clusters": 16, 
+        "cft.partition:partition-file": "tests/partition.yaml", 
+        "cft.partition:subject": {
+            "db:ident": [
+                "d27091b1-8c90-3db4-bc4e-3bd14067d87c"
+            ]
+        }, 
+        "cft.partition:dataset": {
+            "db:ident": [
+                "221174ed-37cc-3c53-9744-0c19ed565b28"
+            ]
+        }, 
+        "cft.partition:sample": {
+            "db:ident": [
+                "70d15c9e-81a7-3050-96bf-a2bd3e9d563b"
+            ]
+        }, 
+        "db:ident": [
+            "654db55f-154c-3d56-b413-0ba29fed9df1"
+        ]
+    }
+]

@@ -1,0 +1,33 @@
+[
+    {
+        "cft.seed:subject": {
+            "db:ident": [
+                "d27091b1-8c90-3db4-bc4e-3bd14067d87c"
+            ]
+        }, 
+        "cft.seed:build": {
+            "db:ident": [
+                "498ed22e-945d-11e8-b0c0-abaeb67820c1"
+            ]
+        }, 
+        "cft.seed:dataset": {
+            "db:ident": [
+                "221174ed-37cc-3c53-9744-0c19ed565b28"
+            ]
+        }, 
+        "cft.seed:sample": {
+            "db:ident": [
+                "70d15c9e-81a7-3050-96bf-a2bd3e9d563b"
+            ]
+        }, 
+        "cft.seed:partition-file": "tests/seed-partition.yaml", 
+        "cft.seed.db:ident": [
+            "276754d7-9f68-3360-8a56-8f172c5b122d"
+        ], 
+        "cft.seed:id": "-1118600317502690934", 
+        "tripl:type": "cft.seed", 
+        "db:ident": [
+            "276754d7-9f68-3360-8a56-8f172c5b122d"
+        ]
+    }
+]

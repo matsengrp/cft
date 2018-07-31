@@ -1,0 +1,1028 @@
+[
+    {
+        "cft.reconstruction.db:ident": [
+            "237f32aa-21f1-3129-9965-1ceecc07f2f3"
+        ], 
+        "cft.reconstruction:pruned_seqs": [
+            {
+                "tripl.file:sources": [
+                    {
+                        "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/pruned_ids.txt"
+                    }, 
+                    {
+                        "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/aligned_inseqs.fa"
+                    }
+                ], 
+                "db:ident": [
+                    "3c33d44b-0111-3c52-8a9b-75f0d68b832c"
+                ], 
+                "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/pruned.fa"
+            }
+        ], 
+        "cft.reconstruction:asr_prog": "dnaml", 
+        "cft.reconstruction:partition": {
+            "db:ident": [
+                "654db55f-154c-3d56-b413-0ba29fed9df1"
+            ]
+        }, 
+        "cft.reconstruction:asr_tree_svg": {
+            "tripl.file:sources": [
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/seqname_mapping.csv"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/outfile"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/seqmeta.csv"
+                }
+            ], 
+            "db:ident": [
+                "e69a495e-c1e0-3675-a1b8-9d5354397491"
+            ], 
+            "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/asr.svg"
+        }, 
+        "cft.reconstruction:asr_seqs": {
+            "tripl.file:sources": [
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/seqname_mapping.csv"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/outfile"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/seqmeta.csv"
+                }
+            ], 
+            "db:ident": [
+                "0382bd1a-45ad-379f-928c-3fdc1a34dadc"
+            ], 
+            "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/asr.fa"
+        }, 
+        "cft.reconstruction:seqmeta": [
+            {
+                "tripl.file:sources": [
+                    {
+                        "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/cluster_mapping.csv"
+                    }, 
+                    {
+                        "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/partis_seqmeta.csv"
+                    }
+                ], 
+                "db:ident": [
+                    "5afce2ea-c1cf-3f2f-bb88-9609eaee2609"
+                ], 
+                "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/seqmeta.csv"
+            }
+        ], 
+        "cft.reconstruction:build": {
+            "db:ident": [
+                "498ed22e-945d-11e8-b0c0-abaeb67820c1"
+            ]
+        }, 
+        "tripl.nestly:aggregate": [
+            {
+                "tripl.file:contents": ">6781912366379460200\nXQVQLQKSGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>69112245678080837\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPARKGLEWIGRIYTSGSTNY\nNPSLESRVTTSVDTSKNQFSLKLTSVTAADTAVYYCARVWGGVHYFAVWGQGTLVTVSS\n>498868599685566870\nXQVQLQESGPGLVKPSETLSLTCSVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSLTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS\n>5103394480507203060\nXQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYWSWIRQPAGKRLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>3154074660796815229\nXQVQLQESGPGLVKPSETLSLTCTVSGASISSYYWSWIRQPAGKGLEWIGRIYTSGCTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS\n>3891436471428234299\nXQLQLQESGLGLVKPSETLSLTCAVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGRTKY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVLGGVHFFDYWGQGTLVTVSS\n>661447437546333259\nXQVQLQESGPRLVKPSETLSLTCTVSGASISSYYWSWIRQPAGKGLEWIGRIYTSGCTNY\nNPSLKSRVTMSVDTSKIQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS\n>661771413836974371\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGRINY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARFWGGEHSFDYWGLGTLVTVSS\n>5714724992356502650\nXQVQLQESGPGLVKPSETLSLTCTVSAGSISSYYWSWIRQPAAKGLEWIRRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>6252651170681198456\nXQVQLQESGPGLVKPSETLSLTCTVSGASISSYYWSWIRQPAGKGLEWIGRIYTSGCTNY\nNPSLKSRVTMSVDTSKIQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS\n>-2641479543742971175\nXQVQLQESGPGLVKPSETLSLTCTVSAGSISSYYWSWIPQPAGKGLEWIGRIYTSGSTNY\nNPSLKCRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTASS\n>-2162985053507577924\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWVGRIYTSGSTNY\nNPFLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>-2115465799435260542\nXQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYWNWIRQPAGKRLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>-1985719799150284835\nXQVQLQESGPGLVKPSETLFLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVGTSKNQFSLKPSSVTAADTAVYYCARVWGGVHYSDFWGQGTLVTVSS\n>-3452169391608478344\nXQVQLQESSPGLLKPSETLSLTCTVSGGSISSYYWSWIRQPAGKRLEWIGRIHTSGSTNY\nNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>-312250287988849536\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWTWIRQPAAKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLRLSSVTAANTAVYYCARAWGCVHYFDFWGQGTLVTVSS\n>-278540666204363442\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDPSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFAFWGQGTLVTVSS\n>-2746764293277221955\nXQVQLQESGPGLVKPSETLSLTCAVSAGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVGTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYSDFWGQGTLVTVSS\n>-4938647755478705488\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIPQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGAHYFDYWGQGTLVTASS\n>5\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>24\nXQVQLQESGPGLVKPSETLSLTCTVSGASISSYYWSWIRQPAGKGLEWIGRIYTSGCTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS\n>-5866657220723833750\nXQVHLQELGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIRRIYTSGSTNY\nNPSLKSRVTMSVDASKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>26\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGRTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARFWGGEHYFDYWGQGTLVTVSS\n>-4412752510375659549\nXQVQVQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGHIYTSGSTNY\nNPSLKSRVTMSVGTSKNQFSLKLSSVTAADTAVYYCARVWGVVHYSVFWGQGTLVTVSS\n>20\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS\n>21\nXQVQLQESGPGLVKPSETLSLTCSVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS\n>22\nXQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYWSWIRQPAGKRLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>23\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIRRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>-560418663708898891\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNASLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>28\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>29\nXQVQLQESGPGLVKPSETLSLTCSVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS\n>1\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>-5690928713305203894\nXQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYSSWIRQPAGKRLEWIGRIYTSGRTNY\nNPSLKSRVTMSVDTYKSQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>3\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVGTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYSDFWGQGTLVTVSS\n>2\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>-8875811442384071124\nXQVQLQESGPGLVKPSETLSLTCTVSGASISSYYWSWIPQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDSWGQGTLVTASS\n>-8359942997582621880\nXQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYSCWIRQPAGKRLEWIGRIYTSGRTNY\nNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGALVTVSS\n>-7227028326967419145\nXQVQLQESGPGLLKPLETLSLTCTVSGGSISSYYWSWIRQPAGKRLECIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>6\nXQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYWSWIRQPAGKRLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>9\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS\n>8\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIPQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTASS\n>1077744743780598405\nXQVQLQESGPGLLEPSETLSLTCTVSGGSISSYYWSWIRQPAGKRLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQLSLKLSSLTAPDTAVYYCARVWGGVHYFDFWGQGTLVIVSS\n>-9178724588440944842\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>naive\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS\n>4\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>-6429411446326240216\nXQVQLQESRPGLVKPSETLSLTCTVSGGSISNYYWNWIRQPAGRGLEWIARIYTGGRTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSLTAANTAVYYCARFWGGEHYFDYWGQGTLVTVSS\n>7\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVGTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYSDFWGQGTLVTVSS\n>25\nXQVQLQESGPGLVKPSETLSLTCTVSGASISSYYWSWIRQPAGKGLEWIGRIYTSGCTNY\nNPSLKSRVTMSVDTSKIQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS\n>7804767524563364364\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGRTKY\nNPSLKSRVTMSVNTSKIQSSLKLSSVTAADTAVYYCARFWGGEHYFDHWGQGTLVTVSS\n>7325255995665593159\nXQVQLQESRPGLVKPSETLSLTCSVSGGSISSYYWSWIRQPAGKELEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQLSLKLSSATAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>8317482350639815266\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>791301143986403403\nXLVQLQESGPGLVKPSETLSPTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVSAADTAVYYCARVWGGMHYFDNWGQGTLVTVSS\n>871707995148832933\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGGTNY\nNPSLKSRVTMSVDTSKNQFSLKLSPVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>8679407335435156651\nXQVQLQESGPRLVQPSETLSLTCTVSGGSISSYYWCWIRQPAGRGLEWIARIYTSGCTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAANTAVYYCARFWGGEHYLDCWGQGTLVSVSS\n>27\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>-5083016957234875316\nXQVQLQESGPGLVKPSETLSLTCSVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKCRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS\n>11\nXQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYWSWIRQPAGKRLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>10\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>13\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGRTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS\n>12\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>15\nXQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYSSWIRQPAGKRLEWIGRIYTSGRTNY\nNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>14\nXQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYWSWIRQPAGKRLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>17\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>16\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIPQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTASS\n>19\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGRTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS\n>18\nXQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYWSWIRQPAGKRLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>31\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS\n>30\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGRTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARFWGGEHYFDYWGQGTLVTVSS\n>35\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS\n>34\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n>33\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGRGLEWIARIYTSGRTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAANTAVYYCARFWGGEHYFDYWGQGTLVTVSS\n>32\nXQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNY\nNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS\n", 
+                "bio.seq:set": [
+                    {
+                        "bio.seq:seq": "XQVQLQKSGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "6781912366379460200"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPARKGLEWIGRIYTSGSTNYNPSLESRVTTSVDTSKNQFSLKLTSVTAADTAVYYCARVWGGVHYFAVWGQGTLVTVSS", 
+                        "bio.seq:id": "69112245678080837"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCSVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSLTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "498868599685566870"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYWSWIRQPAGKRLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "5103394480507203060"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGASISSYYWSWIRQPAGKGLEWIGRIYTSGCTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "3154074660796815229"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQLQLQESGLGLVKPSETLSLTCAVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGRTKYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVLGGVHFFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "3891436471428234299"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPRLVKPSETLSLTCTVSGASISSYYWSWIRQPAGKGLEWIGRIYTSGCTNYNPSLKSRVTMSVDTSKIQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "661447437546333259"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGRINYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARFWGGEHSFDYWGLGTLVTVSS", 
+                        "bio.seq:id": "661771413836974371"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSAGSISSYYWSWIRQPAAKGLEWIRRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "5714724992356502650"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGASISSYYWSWIRQPAGKGLEWIGRIYTSGCTNYNPSLKSRVTMSVDTSKIQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "6252651170681198456"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSAGSISSYYWSWIPQPAGKGLEWIGRIYTSGSTNYNPSLKCRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTASS", 
+                        "bio.seq:id": "-2641479543742971175"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWVGRIYTSGSTNYNPFLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "-2162985053507577924"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYWNWIRQPAGKRLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "-2115465799435260542"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLFLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVGTSKNQFSLKPSSVTAADTAVYYCARVWGGVHYSDFWGQGTLVTVSS", 
+                        "bio.seq:id": "-1985719799150284835"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESSPGLLKPSETLSLTCTVSGGSISSYYWSWIRQPAGKRLEWIGRIHTSGSTNYNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "-3452169391608478344"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWTWIRQPAAKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLRLSSVTAANTAVYYCARAWGCVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "-312250287988849536"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDPSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFAFWGQGTLVTVSS", 
+                        "bio.seq:id": "-278540666204363442"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCAVSAGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVGTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYSDFWGQGTLVTVSS", 
+                        "bio.seq:id": "-2746764293277221955"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIPQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGAHYFDYWGQGTLVTASS", 
+                        "bio.seq:id": "-4938647755478705488"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "5"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGASISSYYWSWIRQPAGKGLEWIGRIYTSGCTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "24"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVHLQELGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIRRIYTSGSTNYNPSLKSRVTMSVDASKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "-5866657220723833750"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGRTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARFWGGEHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "26"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQVQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGHIYTSGSTNYNPSLKSRVTMSVGTSKNQFSLKLSSVTAADTAVYYCARVWGVVHYSVFWGQGTLVTVSS", 
+                        "bio.seq:id": "-4412752510375659549"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "20"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCSVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "21"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYWSWIRQPAGKRLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "22"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIRRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "23"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNASLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "-560418663708898891"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "28"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCSVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "29"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "1"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYSSWIRQPAGKRLEWIGRIYTSGRTNYNPSLKSRVTMSVDTYKSQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "-5690928713305203894"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVGTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYSDFWGQGTLVTVSS", 
+                        "bio.seq:id": "3"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "2"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGASISSYYWSWIPQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDSWGQGTLVTASS", 
+                        "bio.seq:id": "-8875811442384071124"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYSCWIRQPAGKRLEWIGRIYTSGRTNYNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGALVTVSS", 
+                        "bio.seq:id": "-8359942997582621880"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLLKPLETLSLTCTVSGGSISSYYWSWIRQPAGKRLECIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "-7227028326967419145"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYWSWIRQPAGKRLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "6"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "9"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIPQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTASS", 
+                        "bio.seq:id": "8"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLLEPSETLSLTCTVSGGSISSYYWSWIRQPAGKRLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQLSLKLSSLTAPDTAVYYCARVWGGVHYFDFWGQGTLVIVSS", 
+                        "bio.seq:id": "1077744743780598405"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "-9178724588440944842"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "naive"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "4"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESRPGLVKPSETLSLTCTVSGGSISNYYWNWIRQPAGRGLEWIARIYTGGRTNYNPSLKSRVTMSVDTSKNQFSLKLSSLTAANTAVYYCARFWGGEHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "-6429411446326240216"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVGTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYSDFWGQGTLVTVSS", 
+                        "bio.seq:id": "7"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGASISSYYWSWIRQPAGKGLEWIGRIYTSGCTNYNPSLKSRVTMSVDTSKIQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "25"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGRTKYNPSLKSRVTMSVNTSKIQSSLKLSSVTAADTAVYYCARFWGGEHYFDHWGQGTLVTVSS", 
+                        "bio.seq:id": "7804767524563364364"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESRPGLVKPSETLSLTCSVSGGSISSYYWSWIRQPAGKELEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQLSLKLSSATAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "7325255995665593159"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "8317482350639815266"
+                    }, 
+                    {
+                        "bio.seq:seq": "XLVQLQESGPGLVKPSETLSPTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVSAADTAVYYCARVWGGMHYFDNWGQGTLVTVSS", 
+                        "bio.seq:id": "791301143986403403"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGGTNYNPSLKSRVTMSVDTSKNQFSLKLSPVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "871707995148832933"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPRLVQPSETLSLTCTVSGGSISSYYWCWIRQPAGRGLEWIARIYTSGCTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAANTAVYYCARFWGGEHYLDCWGQGTLVSVSS", 
+                        "bio.seq:id": "8679407335435156651"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "27"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCSVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKCRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "-5083016957234875316"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYWSWIRQPAGKRLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "11"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "10"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGRTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "13"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "12"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYSSWIRQPAGKRLEWIGRIYTSGRTNYNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "15"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYWSWIRQPAGKRLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "14"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "17"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIPQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTASS", 
+                        "bio.seq:id": "16"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGRTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "19"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLLKPSETLSLTCTVSGGSISSYYWSWIRQPAGKRLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQLSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "18"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "31"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGRTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARFWGGEHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "30"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "35"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "34"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGRGLEWIARIYTSGRTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAANTAVYYCARFWGGEHYFDYWGQGTLVTVSS", 
+                        "bio.seq:id": "33"
+                    }, 
+                    {
+                        "bio.seq:seq": "XQVQLQESGPGLVKPSETLSLTCTVSGGSISSYYWSWIRQPAGKGLEWIGRIYTSGSTNYNPSLKSRVTMSVDTSKNQFSLKLSSVTAADTAVYYCARVWGGVHYFDFWGQGTLVTVSS", 
+                        "bio.seq:id": "32"
+                    }
+                ], 
+                "db:ident": [
+                    "d780f3c3-6529-37cf-b453-a0173519cc8e"
+                ]
+            }, 
+            {
+                "tripl.file:contents": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?> <svg width=\"122.767mm\" height=\"242.711mm\"  viewBox=\"0 0 348.084 688\"  xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\"  version=\"1.2\" baseProfile=\"tiny\"> <title>Generated with ETE http://etetoolkit.org</title> <desc>Generated with ETE http://etetoolkit.org</desc> <defs> </defs> <g fill=\"none\" stroke=\"black\" stroke-width=\"1\" fill-rule=\"evenodd\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" >      <g fill=\"none\" stroke=\"none\" transform=\"matrix(1,0,0,1,0,96)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <rect x=\"0\" y=\"-96\" width=\"348.084\" height=\"688\"/> </g>      <g fill=\"none\" stroke=\"none\" transform=\"matrix(1,0,0,1,1,97)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <rect x=\"0\" y=\"0\" width=\"346.084\" height=\"540\"/> </g>                                                                                                                                                                                                                                                                                                                                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1,97)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0.138,226.904 0.138,506.25 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1,97)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,366.577 0.138,366.577 \" /> </g>                  <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1.138,97)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,93.8086 0,360 \" /> </g>                              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1.138,97)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"6.67,23.5547 6.67,164.062 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1.138,97)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,93.8086 6.67,93.8086 \" /> </g>                  <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,7.808,97)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 0,39.6094 \" /> </g>                                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,7.808,97)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 41.538,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,49.346,101.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,55.346,97)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >69112245678080837 (mf=0.02) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,7.808,112)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 0,41.7188 \" /> </g>                                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,7.808,112)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 48.438,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,56.246,116.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,62.246,112)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-312250287988849536 (mf=0.023) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,7.808,127)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"20.148,7.5 20.148,45.9375 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,7.808,127)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,26.7188 20.148,26.7188 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,27.956,127)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 20.056,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,48.012,131.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,54.012,127)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-7227028326967419145 (mf=0.02) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,27.956,142)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0.138,7.5 0.138,54.375 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,27.956,142)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,30.9375 0.138,30.9375 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,28.094,142)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 27.071,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,55.165,146.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,61.165,142)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >1077744743780598405 (mf=0.023) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,28.094,157)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"3.312,18.75 3.312,60 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,28.094,157)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,39.375 3.312,39.375 \" /> </g>                  <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,31.406,157)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"3.312,7.5 3.312,30 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,31.406,157)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,18.75 3.312,18.75 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,34.718,157)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 13.202,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,47.92,161.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,53.92,157)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-2115465799435260542 (mf=0.02) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,34.718,172)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 0,22.5 \" /> </g>                                              <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,34.718,176.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,40.718,172)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >5103394480507203060 (mf=0.014) </text> </g>                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,34.718,187)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 19.895,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,54.613,191.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,60.613,187)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-3452169391608478344 (mf=0.023) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,31.406,202)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"27.646,7.5 27.646,22.5 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,31.406,202)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,15 27.646,15 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,59.052,202)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 13.363,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,72.415,206.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,78.415,202)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-5690928713305203894 (mf=0.028) </text> </g>                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,59.052,217)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 27.416,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,86.468,221.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,92.468,217)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-8359942997582621880 (mf=0.034) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,7.808,232)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"6.647,7.5 6.647,50.625 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,7.808,232)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,29.0625 6.647,29.0625 \" /> </g>                                  <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,14.455,236.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,20.455,232)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-9178724588440944842 (mf=0.006) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,14.455,247)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 0,63.75 \" /> </g>                                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,14.455,247)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 13.294,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,27.749,251.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,33.749,247)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >871707995148832933 (mf=0.011) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,14.455,262)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 0,90 \" /> </g>                                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,14.455,262)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 6.624,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.079,265.807)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3.69315,3.69315 L7.38629,3.69315 C7.38629,1.65348 5.73282,0 3.69315,0 C1.65348,0 0,1.65348 0,3.69315 C0,5.73282 1.65348,7.38629 3.69315,7.38629 C5.73282,7.38629 7.38629,5.73282 7.38629,3.69315 L3.69315,3.69315\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,28.4653,262)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >8317482350639815266 (mf=0.008) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,14.455,277)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,41.25 0,108.75 \" /> </g>                              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,14.455,277)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0.069,18.75 0.069,63.75 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,14.455,277)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,41.25 0.069,41.25 \" /> </g>                  <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,14.524,277)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"13.501,7.5 13.501,30 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,14.524,277)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,18.75 13.501,18.75 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,28.025,277)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 20.516,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,48.541,281.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,54.541,277)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-2746764293277221955 (mf=0.02) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,28.025,292)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"13.202,7.5 13.202,22.5 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,28.025,292)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,15 13.202,15 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,41.227,292)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 13.455,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,54.682,296.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,60.682,292)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-1985719799150284835 (mf=0.023) </text> </g>                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,41.227,307)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 34.316,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,75.543,311.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,81.543,307)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-4412752510375659549 (mf=0.031) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,14.524,322)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"6.716,7.5 6.716,30 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,14.524,322)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,18.75 6.716,18.75 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.24,322)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 20.286,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,41.526,326.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,47.526,322)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-278540666204363442 (mf=0.017) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.24,337)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"6.509,7.5 6.509,22.5 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.24,337)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,15 6.509,15 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,27.749,337)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 13.478,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,41.227,341.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,47.227,337)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >5714724992356502650 (mf=0.017) </text> </g>                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,27.749,352)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 26.818,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,54.567,356.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,60.567,352)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-5866657220723833750 (mf=0.023) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,14.455,367)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"6.647,7.5 6.647,30 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,14.455,367)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,18.75 6.647,18.75 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.102,367)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 6.601,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,27.703,371.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,33.703,367)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >6781912366379460200 (mf=0.011) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.102,382)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0.138,7.5 0.138,22.5 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.102,382)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,15 0.138,15 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.24,382)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 13.294,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,34.534,386.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,40.534,382)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-2162985053507577924 (mf=0.014) </text> </g>                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.24,397)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 20.079,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,41.319,401.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,47.319,397)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-560418663708898891 (mf=0.017) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1.138,412)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"6.578,18.75 6.578,71.25 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1.138,412)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,45 6.578,45 \" /> </g>                  <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,7.716,412)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"12.351,7.5 12.351,30 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,7.716,412)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,18.75 12.351,18.75 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,20.067,412)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 0.138,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,20.205,416.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,26.205,412)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >3154074660796815229 (mf=0.006) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,20.067,427)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"6.67,7.5 6.67,22.5 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,20.067,427)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,15 6.67,15 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,26.737,427)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 6.647,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,33.384,431.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,39.384,427)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >661447437546333259 (mf=0.011) </text> </g>                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,26.737,442)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 0.138,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,26.875,445.807)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3.69315,3.69315 L7.38629,3.69315 C7.38629,1.65348 5.73282,0 3.69315,0 C1.65348,0 0,1.65348 0,3.69315 C0,5.73282 1.65348,7.38629 3.69315,7.38629 C5.73282,7.38629 7.38629,5.73282 7.38629,3.69315 L3.69315,3.69315\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,34.2613,442)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >6252651170681198456 (mf=0.008) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,7.716,457)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0.138,7.5 0.138,45 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,7.716,457)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,26.25 0.138,26.25 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,7.854,457)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 64.768,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,72.622,460.807)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3.69315,3.69315 L7.38629,3.69315 C7.38629,1.65348 5.73282,0 3.69315,0 C1.65348,0 0,1.65348 0,3.69315 C0,5.73282 1.65348,7.38629 3.69315,7.38629 C5.73282,7.38629 7.38629,5.73282 7.38629,3.69315 L3.69315,3.69315\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,80.0083,457)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >3891436471428234299 (mf=0.028) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,7.854,472)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"14.467,15 14.467,45 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,7.854,472)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,30 14.467,30 \" /> </g>                  <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,22.321,472)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0.138,7.5 0.138,22.5 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,22.321,472)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,15 0.138,15 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,22.459,472)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 20.355,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,42.814,476.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,48.814,472)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >661771413836974371 (mf=0.017) </text> </g>                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,22.459,487)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 34.408,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,56.867,491.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,62.867,487)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >7804767524563364364 (mf=0.023) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,22.321,502)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"20.378,7.5 20.378,22.5 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,22.321,502)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,15 20.378,15 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,42.699,502)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 34.822,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,77.521,506.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,83.521,502)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-6429411446326240216 (mf=0.031) </text> </g>                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,42.699,517)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 57.385,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,100.084,521.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,106.084,517)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >8679407335435156651 (mf=0.037) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1.138,532)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,45 0,97.5 \" /> </g>                              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1.138,532)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,26.25 0,63.75 \" /> </g>                              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1.138,532)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"20.424,15 20.424,37.5 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1.138,532)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,26.25 20.424,26.25 \" /> </g>                  <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.562,532)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"6.486,7.5 6.486,22.5 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.562,532)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,15 6.486,15 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,28.048,532)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 20.125,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,48.173,536.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,54.173,532)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >498868599685566870 (mf=0.02) </text> </g>                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,28.048,547)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 13.639,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,41.687,551.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,47.687,547)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-5083016957234875316 (mf=0.017) </text> </g>                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.562,562)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 34.638,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,56.2,566.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,62.2,562)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >7325255995665593159 (mf=0.023) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1.138,577)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"20.148,7.5 20.148,30 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1.138,577)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,18.75 20.148,18.75 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.286,577)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 13.478,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,34.764,581.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,40.764,577)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-2641479543742971175 (mf=0.014) </text> </g>              <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.286,592)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0.138,7.5 0.138,22.5 \" /> </g>            <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.286,592)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,15 0.138,15 \" /> </g>                        <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.424,592)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 27.048,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,48.472,596.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,54.472,592)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-4938647755478705488 (mf=0.02) </text> </g>                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,21.424,607)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 20.309,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,41.733,611.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,47.733,607)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >-8875811442384071124 (mf=0.017) </text> </g>                    <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"butt\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1.138,622)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"non-scaling-stroke\" points=\"0,7.5 56.028,7.5 \" /> </g>          <g fill=\"#a6cee3\" fill-opacity=\"1\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,57.166,626.5)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,63.166,622)\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Verdana\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >791301143986403403 (mf=0.023) </text> </g>                                                                                                                                                                                                                                                                                                                      <g fill=\"#a52a2a\" fill-opacity=\"1\" stroke=\"#a52a2a\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,247.084,16)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <circle cx=\"8\" cy=\"8\" r=\"8\"/> </g>          <g fill=\"#808080\" fill-opacity=\"1\" stroke=\"none\" transform=\"matrix(1,0,0,1,247.084,53)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M3,3 L6,3 C6,1.34315 4.65685,0 3,0 C1.34315,0 0,1.34315 0,3 C0,4.65685 1.34315,6 3,6 C4.65685,6 6,4.65685 6,3 L3,3\"/> </g>      <g fill=\"#808080\" fill-opacity=\"1\" stroke=\"none\" transform=\"matrix(1,0,0,1,247.084,66.6974)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M5.30259,5.30259 L10.6052,5.30259 C10.6052,2.37405 8.23112,0 5.30259,0 C2.37405,0 0,2.37405 0,5.30259 C0,8.23112 2.37405,10.6052 5.30259,10.6052 C8.23112,10.6052 10.6052,8.23112 10.6052,5.30259 L5.30259,5.30259\"/> </g>      <g fill=\"#808080\" fill-opacity=\"1\" stroke=\"none\" transform=\"matrix(1,0,0,1,247.084,80.3948)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <path vector-effect=\"none\" fill-rule=\"evenodd\" d=\"M7.60517,7.60517 L15.2103,7.60517 C15.2103,3.40495 11.8054,0 7.60517,0 C3.40495,0 0,3.40495 0,7.60517 C0,11.8054 3.40495,15.2103 7.60517,15.2103 C11.8054,15.2103 15.2103,11.8054 15.2103,7.60517 L7.60517,7.60517\"/> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,263.084,0)\" font-family=\"Verdana\" font-size=\"10pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"13\" font-family=\"Verdana\" font-size=\"10pt\" font-weight=\"400\" font-style=\"normal\"   >Timepoints</text> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,263.084,16)\" font-family=\"Verdana\" font-size=\"10pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"13\" font-family=\"Verdana\" font-size=\"10pt\" font-weight=\"400\" font-style=\"normal\"   >seedlineage</text> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,263.084,32)\" font-family=\"Verdana\" font-size=\"10pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"13\" font-family=\"Verdana\" font-size=\"10pt\" font-weight=\"400\" font-style=\"normal\"   >Multiplicity</text> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,263.084,48)\" font-family=\"Verdana\" font-size=\"10pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"13\" font-family=\"Verdana\" font-size=\"10pt\" font-weight=\"400\" font-style=\"normal\"   >1</text> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,263.084,64)\" font-family=\"Verdana\" font-size=\"10pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"13\" font-family=\"Verdana\" font-size=\"10pt\" font-weight=\"400\" font-style=\"normal\"   >10</text> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,263.084,80)\" font-family=\"Verdana\" font-size=\"10pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"13\" font-family=\"Verdana\" font-size=\"10pt\" font-weight=\"400\" font-style=\"normal\"   >100</text> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1,638)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"none\" points=\"0,5 50,5 \" /> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1,638)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"none\" points=\"0,0 0,10 \" /> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1,638)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <polyline fill=\"none\" vector-effect=\"none\" points=\"50,0 50,10 \" /> </g>      <g fill=\"none\" stroke=\"#000000\" stroke-opacity=\"1\" stroke-width=\"1\" stroke-linecap=\"square\" stroke-linejoin=\"bevel\" transform=\"matrix(1,0,0,1,1,648)\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"  > <text fill=\"#000000\" fill-opacity=\"1\" stroke=\"none\" xml:space=\"preserve\" x=\"0\" y=\"12\" font-family=\"Sans Serif\" font-size=\"9pt\" font-weight=\"400\" font-style=\"normal\"   >0.0217391</text> </g>     </g> </svg> ", 
+                "db:ident": [
+                    "e69a495e-c1e0-3675-a1b8-9d5354397491"
+                ]
+            }, 
+            {
+                "tripl.file:contents": "sequence,unique_id,orig_seqid,timepoint,mut_freq,is_seed,stops,mutated_invariants,frameshifted,multiplicity,timepoints,timepoint_multiplicities,duplicates,cluster_multiplicity,cluster_timepoints,cluster_timepoint_multiplicities,cluster_duplicates\r\n-9178724588440944842,-9178724588440944842,,,0.005633802816901409,False,,,,1,,1,-9178724588440944842,1,,1,-9178724588440944842\r\n3891436471428234299,3891436471428234299,,,0.028169014084507043,False,,,,2,,2,3891436471428234299:3891436471422235563,2,,2,3891436471428234299:3891436471422235563\r\n-4412752510375659549,-4412752510375659549,,,0.030985915492957747,False,,,,1,,1,-4412752510375659549,1,,1,-4412752510375659549\r\n5714724992356502650,5714724992356502650,,,0.016901408450704224,False,,,,1,,1,5714724992356502650,1,,1,5714724992356502650\r\n661771413836974371,661771413836974371,,,0.016901408450704224,False,,,,1,,1,661771413836974371,1,,1,661771413836974371\r\n-8875811442384071124,-8875811442384071124,,,0.016901408450704224,False,,,,1,,1,-8875811442384071124,1,,1,-8875811442384071124\r\n791301143986403403,791301143986403403,,,0.022535211267605635,False,,,,1,,1,791301143986403403,1,,1,791301143986403403\r\n-2162985053507577924,-2162985053507577924,,,0.014084507042253521,False,,,,1,,1,-2162985053507577924,1,,1,-2162985053507577924\r\n8679407335435156651,8679407335435156651,,,0.036619718309859155,False,,,,1,,1,8679407335435156651,1,,1,8679407335435156651\r\n-5083016957234875316,-5083016957234875316,,,0.016901408450704224,False,,,,1,,1,-5083016957234875316,1,,1,-5083016957234875316\r\n3154074660796815229,3154074660796815229,,,0.005633802816901409,False,,,,1,,1,3154074660796815229,1,,1,3154074660796815229\r\n661447437546333259,661447437546333259,,,0.011267605633802818,False,,,,1,,1,661447437546333259,1,,1,661447437546333259\r\n6252651170681198456,6252651170681198456,,,0.008450704225352112,False,,,,2,,2,6252651170681198456:-1549101732196062968,2,,2,6252651170681198456:-1549101732196062968\r\n-6429411446326240216,-6429411446326240216,,,0.030985915492957747,False,,,,1,,1,-6429411446326240216,1,,1,-6429411446326240216\r\n-560418663708898891,-560418663708898891,,,0.016901408450704224,False,,,,1,,1,-560418663708898891,1,,1,-560418663708898891\r\n1077744743780598405,1077744743780598405,,,0.022535211267605635,False,,,,1,,1,1077744743780598405,1,,1,1077744743780598405\r\n-8359942997582621880,-8359942997582621880,,,0.03380281690140845,False,,,,1,,1,-8359942997582621880,1,,1,-8359942997582621880\r\n6781912366379460200,6781912366379460200,,,0.011267605633802818,False,,,,1,,1,6781912366379460200,1,,1,6781912366379460200\r\n-2115465799435260542,-2115465799435260542,,,0.01971830985915493,False,,,,1,,1,-2115465799435260542,1,,1,-2115465799435260542\r\n5103394480507203060,5103394480507203060,,,0.014084507042253521,False,,,,1,,1,5103394480507203060,1,,1,5103394480507203060\r\n-4938647755478705488,-4938647755478705488,,,0.01971830985915493,False,,,,1,,1,-4938647755478705488,1,,1,-4938647755478705488\r\n-1985719799150284835,-1985719799150284835,,,0.022535211267605635,False,,,,1,,1,-1985719799150284835,1,,1,-1985719799150284835\r\nnaive,naive,,,0.0,False,,,,1,,1,naive,1,,1,naive\r\n-7227028326967419145,-7227028326967419145,,,0.01971830985915493,False,,,,1,,1,-7227028326967419145,1,,1,-7227028326967419145\r\n871707995148832933,871707995148832933,,,0.011267605633802818,False,,,,1,,1,871707995148832933,1,,1,871707995148832933\r\n-5866657220723833750,-5866657220723833750,,,0.022535211267605635,False,,,,1,,1,-5866657220723833750,1,,1,-5866657220723833750\r\n-312250287988849536,-312250287988849536,,,0.022535211267605635,False,,,,1,,1,-312250287988849536,1,,1,-312250287988849536\r\n7804767524563364364,7804767524563364364,,,0.022535211267605635,False,,,,1,,1,7804767524563364364,1,,1,7804767524563364364\r\n8317482350639815266,8317482350639815266,,,0.008450704225352112,False,,,,2,,2,8317482350639815266:-472540254126349225,2,,2,8317482350639815266:-472540254126349225\r\n-2746764293277221955,-2746764293277221955,,,0.01971830985915493,False,,,,1,,1,-2746764293277221955,1,,1,-2746764293277221955\r\n-3452169391608478344,-3452169391608478344,,,0.022535211267605635,False,,,,1,,1,-3452169391608478344,1,,1,-3452169391608478344\r\n498868599685566870,498868599685566870,,,0.01971830985915493,False,,,,1,,1,498868599685566870,1,,1,498868599685566870\r\n-2641479543742971175,-2641479543742971175,,,0.014084507042253521,False,,,,1,,1,-2641479543742971175,1,,1,-2641479543742971175\r\n69112245678080837,69112245678080837,,,0.01971830985915493,False,,,,1,,1,69112245678080837,1,,1,69112245678080837\r\n-278540666204363442,-278540666204363442,,,0.016901408450704224,False,,,,1,,1,-278540666204363442,1,,1,-278540666204363442\r\n7325255995665593159,7325255995665593159,,,0.022535211267605635,False,,,,1,,1,7325255995665593159,1,,1,7325255995665593159\r\n-5690928713305203894,-5690928713305203894,,,0.028169014084507043,False,,,,1,,1,-5690928713305203894,1,,1,-5690928713305203894\r\n", 
+                "db:ident": [
+                    "5afce2ea-c1cf-3f2f-bb88-9609eaee2609"
+                ], 
+                "tripl.csv:data": [
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-9178724588440944842", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "2", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "3891436471428234299", 
+                        "cft.seq:multiplicity": "2"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-4412752510375659549", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "5714724992356502650", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "661771413836974371", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-8875811442384071124", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "791301143986403403", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-2162985053507577924", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "8679407335435156651", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-5083016957234875316", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "3154074660796815229", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "661447437546333259", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "2", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "6252651170681198456", 
+                        "cft.seq:multiplicity": "2"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-6429411446326240216", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-560418663708898891", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "1077744743780598405", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-8359942997582621880", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "6781912366379460200", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-2115465799435260542", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "5103394480507203060", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-4938647755478705488", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-1985719799150284835", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "naive", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-7227028326967419145", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "871707995148832933", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-5866657220723833750", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-312250287988849536", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "7804767524563364364", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "2", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "8317482350639815266", 
+                        "cft.seq:multiplicity": "2"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-2746764293277221955", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-3452169391608478344", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "498868599685566870", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-2641479543742971175", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "69112245678080837", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-278540666204363442", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "7325255995665593159", 
+                        "cft.seq:multiplicity": "1"
+                    }, 
+                    {
+                        "cft.seq:cluster_multiplicity": "1", 
+                        "cft.timepoint:id": "", 
+                        "bio.seq:id": "-5690928713305203894", 
+                        "cft.seq:multiplicity": "1"
+                    }
+                ]
+            }, 
+            {
+                "tripl.file:contents": "(((((69112245678080837:0.01806,(-312250287988849536:0.02106,(-7227028326967419145:0.00872,(1077744743780598405:0.01177,((-2115465799435260542:0.00574,(5103394480507203060:0,-3452169391608478344:0.00865)6:0)22:0.00144,(-5690928713305203894:0.00581,-8359942997582621880:0.01192)15:0.01202)11:0.00144)18:6e-05)14:0.00876)5:0)28:0,(-9178724588440944842:0,(871707995148832933:0.00578,(8317482350639815266:0.00288,(((-2746764293277221955:0.00892,(-1985719799150284835:0.00585,-4412752510375659549:0.01492)7:0.00574)3:0.00587,(-278540666204363442:0.00882,(5714724992356502650:0.00586,-5866657220723833750:0.01166)23:0.00283)12:0.00292)4:3e-05,(6781912366379460200:0.00287,(-2162985053507577924:0.00578,-560418663708898891:0.00873)10:6e-05)27:0.00289)17:0)32:0)34:0)1:0.00289)2:0.0029,((3154074660796815229:6e-05,(661447437546333259:0.00289,6252651170681198456:6e-05)25:0.0029)24:0.00537,(3891436471428234299:0.02816,((661771413836974371:0.00885,7804767524563364364:0.01496)26:6e-05,(-6429411446326240216:0.01514,8679407335435156651:0.02495)33:0.00886)30:0.00629)19:6e-05)13:0.00286)9:0,((((498868599685566870:0.00875,-5083016957234875316:0.00593)21:0.00282,7325255995665593159:0.01506)29:0.00888,(-2641479543742971175:0.00586,(-4938647755478705488:0.01176,-8875811442384071124:0.00883)16:6e-05)8:0.00876)20:0,791301143986403403:0.02436)31:0)35:6e-05)naive:0;", 
+                "db:ident": [
+                    "dbb9d462-27c5-3c17-9b7c-4b35079cc3fd"
+                ]
+            }, 
+            {
+                "tripl.file:contents": ">6781912366379460200\nNNNCAGGTGCAGCTGCAGAAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGCACCCTGGTCACCGTCTCCTCA\n>69112245678080837\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCCGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCGAGAGTCGAGTCACCACGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGACCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGCCGTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>498868599685566870\nNNNCAGGTGCAGCTGCAGGAGTCAGGCCCAGGACTGGTGAAGCCTTCCGAGACCCTGTCC\nCTCACCTGCTCTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCTGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCTTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTCTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGGGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>5103394480507203060\nNNNCAGGTGCAGCTGCAGGAGTCAGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>3154074660796815229\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGCCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGTGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>3891436471428234299\nNNNCAGTTGCAGCTGCAGGAGTCAGGCCTAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCGCTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGCGCACCAAGTAC\nAACCCCTCCCTTAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTTG\nGGGGGCGTGCACTTCTTTGACTACTGGGGCCAGGGTACCCTGGTCACCGTCTCCTCA\n>661447437546333259\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCACGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGCCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGTGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGATCCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>661771413836974371\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGCGCATCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGATTTTGG\nGGGGGCGAGCACTCCTTTGACTACTGGGGCCTGGGAACCCTGGTCACCGTCTCCTCA\n>5714724992356502650\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCTGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGCTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGCGAAGGGACTGGAGTGGATTAGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>6252651170681198456\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGCCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGTGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGATCCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>-2641479543742971175\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGCTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCCGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGTGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCGGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGCCTCCTCA\n>-2162985053507577924\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGGTTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTTCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGCACCCTGGTCACCGTCTCCTCA\n>-2115465799435260542\nNNNCAGGTGCAGCTGCAGGAGTCAGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAACTGGATCCGGCAG\nCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCGGTAGACACGTCCAAGAACCAGTTGTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>-1985719799150284835\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTTC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGAAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGGCACGTCCAAGAACCAGTTCTCC\nCTGAAGCCGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTCTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCTTCA\n>-3452169391608478344\nNNNCAGGTGCAGCTGCAGGAGTCAAGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCCATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTGGACACGTCCAAGAACCAGTTGTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>-312250287988849536\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTCTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGACCTGGATCCGGCAG\nCCCGCCGCGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAGGCTGAGCTCTGTGACCGCCGCGAACACGGCCGTGTATTACTGTGCGAGAGCTTGG\nGGGTGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>-278540666204363442\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCTGAGACCCTGTCC\nCTCACTTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACCCGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGCCTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>-2746764293277221955\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCGCTGTCTCTGCTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGGCACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTCTGG\nGGGGGCGTGCACTACTCTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>-4938647755478705488\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCTATCAGTAGTTACTACTGGAGCTGGATCCCGCAG\nCCCGCCGGCAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACGAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCGGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGCGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGCCTCCTCA\n>5\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>24\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGCCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGTGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>-5866657220723833750\nNNNCAGGTGCACCTGCAGGAGTTGGGCCCAGGACTGGTGAAGCCTTCTGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTAGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACGCGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGTCAGGGAACCCTGGTCACCGTCTCCTCA\n>26\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGCGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGATTTTGG\nGGGGGCGAGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>-4412752510375659549\nNNNCAGGTGCAGGTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCAGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGAAAGGGACTGGAGTGGATTGGGCATATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGGCACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGTCGTGCACTACTCTGTCTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCTTCA\n>20\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>21\nsssCAGGTGCAGCTGCAGGAGTCAGGCCCAGGACTGGTGAAGCCTTCCGAGACCCTGTCC\nCTCACCTGCTCTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGGGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>22\nsssCAGGTGCAGCTGCAGGAGTCAGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>23\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCTGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTAGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>-560418663708898891\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCTGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACGCCTCCCTAAAGAGTCGAGTCACCATGTCAGTGGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGCACCCTGGTCACCGTCTCCTCA\n>28\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>29\nsssCAGGTGCAGCTGCAGGAGTCAGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCTCTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGGGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>1\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>-5690928713305203894\nNNNCAGGTGCAGCTGCAGGAGTCCGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTCGAGCTGGATCCGGCAG\nCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGCGCACCAATTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTACAAGAGCCAGTTGTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>3\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGGCACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTCTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>2\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>-8875811442384071124\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGCCTCCATCAGTAGTTACTACTGGAGCTGGATCCCGCAG\nCCCGCTGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCGGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTCCTGGGGCCAGGGAACCCTGGTCACCGCCTCCTCA\n>-8359942997582621880\nNNNCAGGTGCAGCTGCAGGAGTCCGGTCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTCGTGCTGGATCCGGCAG\nCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGCGCACCAATTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCC\nTTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAGCCCTGGTCACCGTCTCCTCA\n>-7227028326967419145\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGCTGAAGCCTTTGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGAGACTGGAGTGCATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCTTCA\n>6\nsssCAGGTGCAGCTGCAGGAGTCAGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>9\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>8\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCCGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCGGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGCCTCCTCA\n>1077744743780598405\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGCTGGAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCC\nCTGAAGCTGAGCTCTCTGACCGCCCCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCATCGTCTCCTCA\n>-9178724588440944842\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>naive\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>4\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>-6429411446326240216\nNNNCAGGTGCAGCTGCAGGAGTCGCGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAATTACTACTGGAACTGGATCCGGCAG\nCCCGCCGGGAGGGGACTGGAGTGGATTGCGCGTATCTATACCGGTGGGCGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTCTGACCGCCGCGAACACGGCCGTGTATTACTGTGCGAGATTTTGG\nGGGGGCGAGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>7\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGAAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGGCACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTCTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCTTCA\n>25\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGCCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGTGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGATCCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>7804767524563364364\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGCGCACCAAGTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAAACACGTCCAAGATCCAGTCCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGATTTTGG\nGGGGGCGAGCACTACTTTGACCACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>7325255995665593159\nNNNCAGGTGCAGCTGCAGGAGTCACGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCTCTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGAACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGCTCTCC\nCTGAAGCTGAGCTCTGCGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGGGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>8317482350639815266\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTCTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>791301143986403403\nNNNCTGGTGCAGCTCCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCCGAGACCCTGTCC\nCCCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGTCCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCATGCATTACTTTGACAACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>871707995148832933\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGGGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCCCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>8679407335435156651\nNNNCAGGTGCAGCTGCAGGAGTCGGGCCCACGACTGGTGCAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGTGCTGGATCCGGCAG\nCCCGCCGGGAGGGGACTGGAGTGGATTGCCCGTATCTATACCAGTGGGTGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGAACACGGCCGTGTATTACTGTGCGAGATTTTGG\nGGGGGCGAGCACTACCTTGACTGCTGGGGCCAGGGAACCCTGGTCAGCGTCTCCTCA\n>27\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGCACCCTGGTCACCGTCTCCTCA\n>-5083016957234875316\nNNNCAGGTGCAGCTGCAGGAGTCAGGCCCAGGACTGGTGAAGCCTTCCGAGACCCTGTCC\nCTCACCTGCTCTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGTGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGGGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGTACCCTGGTCACCGTCTCCTCA\n>11\nsssCAGGTGCAGCTGCAGGAGTCrGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>10\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGCACCCTGGTCACCGTCTCCTCA\n>13\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGcGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>12\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCTGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>15\nsssCAGGTGCAGCTGCAGGAGTCCGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTCGAGCTGGATCCGGCAG\nCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGCGCACCAATTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>14\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>17\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>16\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCCGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCGGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGCCTCCTCA\n>19\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGcGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>18\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>31\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>30\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGCGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGATTTTGG\nGGGGGCGAGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>35\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>34\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>33\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAGGGGACTGGAGTGGATTGCGCGTATCTATACCAGTGGGCGCACCAACTAC\nAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGaACACGGCCGTGTATTACTGTGCGAGATTTTGG\nGGGGGCGAGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n>32\nsssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCC\nCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAG\nCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTAC\nAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCC\nCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGG\nGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA\n", 
+                "bio.seq:set": [
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGAAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGCACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "6781912366379460200"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCCGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCGAGAGTCGAGTCACCACGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGACCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGCCGTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "69112245678080837"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCAGGCCCAGGACTGGTGAAGCCTTCCGAGACCCTGTCCCTCACCTGCTCTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCTGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCTTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTCTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGGGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "498868599685566870"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCAGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "5103394480507203060"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGCCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGTGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "3154074660796815229"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGTTGCAGCTGCAGGAGTCAGGCCTAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCGCTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGCGCACCAAGTACAACCCCTCCCTTAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTTGGGGGGCGTGCACTTCTTTGACTACTGGGGCCAGGGTACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "3891436471428234299"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCACGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGCCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGTGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGATCCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "661447437546333259"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGCGCATCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGATTTTGGGGGGGCGAGCACTCCTTTGACTACTGGGGCCTGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "661771413836974371"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCTGAGACCCTGTCCCTCACCTGCACTGTCTCTGCTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGCGAAGGGACTGGAGTGGATTAGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "5714724992356502650"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGCCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGTGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGATCCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "6252651170681198456"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGCTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCCGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGTGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCGGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGCCTCCTCA", 
+                        "bio.seq:id": "-2641479543742971175"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGGTTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTTCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGCACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "-2162985053507577924"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCAGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAACTGGATCCGGCAGCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCGGTAGACACGTCCAAGAACCAGTTGTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "-2115465799435260542"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTTCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGAAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGGCACGTCCAAGAACCAGTTCTCCCTGAAGCCGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTCTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCTTCA", 
+                        "bio.seq:id": "-1985719799150284835"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCAAGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCCATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTGGACACGTCCAAGAACCAGTTGTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "-3452169391608478344"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTCTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGACCTGGATCCGGCAGCCCGCCGCGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAGGCTGAGCTCTGTGACCGCCGCGAACACGGCCGTGTATTACTGTGCGAGAGCTTGGGGGTGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "-312250287988849536"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCTGAGACCCTGTCCCTCACTTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACCCGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGCCTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "-278540666204363442"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCGCTGTCTCTGCTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGGCACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTCTGGGGGGGCGTGCACTACTCTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "-2746764293277221955"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCTATCAGTAGTTACTACTGGAGCTGGATCCCGCAGCCCGCCGGCAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACGAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCGGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGCGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGCCTCCTCA", 
+                        "bio.seq:id": "-4938647755478705488"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "5"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGCCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGTGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "24"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCACCTGCAGGAGTTGGGCCCAGGACTGGTGAAGCCTTCTGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTAGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACGCGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGTCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "-5866657220723833750"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGCGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGATTTTGGGGGGGCGAGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "26"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGGTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCAGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGAAAGGGACTGGAGTGGATTGGGCATATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGGCACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGTCGTGCACTACTCTGTCTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCTTCA", 
+                        "bio.seq:id": "-4412752510375659549"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "20"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCAGGCCCAGGACTGGTGAAGCCTTCCGAGACCCTGTCCCTCACCTGCTCTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGGGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "21"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCAGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "22"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCTGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTAGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "23"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCTGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACGCCTCCCTAAAGAGTCGAGTCACCATGTCAGTGGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGCACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "-560418663708898891"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "28"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCAGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCTCTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGGGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "29"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "1"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCCGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTCGAGCTGGATCCGGCAGCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGCGCACCAATTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTACAAGAGCCAGTTGTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "-5690928713305203894"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGGCACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTCTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "3"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "2"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGCCTCCATCAGTAGTTACTACTGGAGCTGGATCCCGCAGCCCGCTGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCGGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTCCTGGGGCCAGGGAACCCTGGTCACCGCCTCCTCA", 
+                        "bio.seq:id": "-8875811442384071124"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCCGGTCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTCGTGCTGGATCCGGCAGCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGCGCACCAATTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCCTTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAGCCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "-8359942997582621880"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGCTGAAGCCTTTGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGAGACTGGAGTGCATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCTTCA", 
+                        "bio.seq:id": "-7227028326967419145"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCAGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "6"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "9"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCCGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCGGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGCCTCCTCA", 
+                        "bio.seq:id": "8"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGCTGGAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCCCTGAAGCTGAGCTCTCTGACCGCCCCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCATCGTCTCCTCA", 
+                        "bio.seq:id": "1077744743780598405"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "-9178724588440944842"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "naive"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "4"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGCGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAATTACTACTGGAACTGGATCCGGCAGCCCGCCGGGAGGGGACTGGAGTGGATTGCGCGTATCTATACCGGTGGGCGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTCTGACCGCCGCGAACACGGCCGTGTATTACTGTGCGAGATTTTGGGGGGGCGAGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "-6429411446326240216"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGAAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGGCACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTCTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCTTCA", 
+                        "bio.seq:id": "7"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGCCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGTGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGATCCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "25"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGCGCACCAAGTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAAACACGTCCAAGATCCAGTCCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGATTTTGGGGGGGCGAGCACTACTTTGACCACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "7804767524563364364"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCACGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCTCTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGAACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGCTCTCCCTGAAGCTGAGCTCTGCGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGGGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "7325255995665593159"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTCTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "8317482350639815266"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCTGGTGCAGCTCCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCCGAGACCCTGTCCCCCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGTCCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCATGCATTACTTTGACAACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "791301143986403403"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGGGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCCCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "871707995148832933"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCGGGCCCACGACTGGTGCAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGTGCTGGATCCGGCAGCCCGCCGGGAGGGGACTGGAGTGGATTGCCCGTATCTATACCAGTGGGTGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGAACACGGCCGTGTATTACTGTGCGAGATTTTGGGGGGGCGAGCACTACCTTGACTGCTGGGGCCAGGGAACCCTGGTCAGCGTCTCCTCA", 
+                        "bio.seq:id": "8679407335435156651"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGCACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "27"
+                    }, 
+                    {
+                        "bio.seq:seq": "NNNCAGGTGCAGCTGCAGGAGTCAGGCCCAGGACTGGTGAAGCCTTCCGAGACCCTGTCCCTCACCTGCTCTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGTGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGGGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGTACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "-5083016957234875316"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCrGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "11"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGCACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "10"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGcGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "13"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCTGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "12"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCCGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTCGAGCTGGATCCGGCAGCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGCGCACCAATTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "15"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "14"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "17"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCCGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCGGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGCCTCCTCA", 
+                        "bio.seq:id": "16"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGcGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "19"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGCTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGAGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTGTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "18"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "31"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGCGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGATTTTGGGGGGGCGAGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "30"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "35"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "34"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAGGGGACTGGAGTGGATTGCGCGTATCTATACCAGTGGGCGCACCAACTACAACCCCTCCCTCAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGaACACGGCCGTGTATTACTGTGCGAGATTTTGGGGGGGCGAGCACTACTTTGACTACTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "33"
+                    }, 
+                    {
+                        "bio.seq:seq": "sssCAGGTGCAGCTGCAGGAGTCGGGCCCAGGACTGGTGAAGCCTTCGGAGACCCTGTCCCTCACCTGCACTGTCTCTGGTGGCTCCATCAGTAGTTACTACTGGAGCTGGATCCGGCAGCCCGCCGGGAAGGGACTGGAGTGGATTGGGCGTATCTATACCAGTGGGAGCACCAACTACAACCCCTCCCTAAAGAGTCGAGTCACCATGTCAGTAGACACGTCCAAGAACCAGTTCTCCCTGAAGCTGAGCTCTGTGACCGCCGCGGACACGGCCGTGTATTACTGTGCGAGAGTTTGGGGGGGCGTGCACTACTTTGACTTCTGGGGCCAGGGAACCCTGGTCACCGTCTCCTCA", 
+                        "bio.seq:id": "32"
+                    }
+                ], 
+                "db:ident": [
+                    "0382bd1a-45ad-379f-928c-3fdc1a34dadc"
+                ]
+            }
+        ], 
+        "cft.reconstruction:pruned_ids": [
+            {
+                "tripl.file:sources": [
+                    {
+                        "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/fasttree.nwk"
+                    }
+                ], 
+                "db:ident": [
+                    "ee91d5eb-321a-3255-9555-def77dc358dc"
+                ], 
+                "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/pruned_ids.txt"
+            }
+        ], 
+        "cft.reconstruction:prune_count": 100, 
+        "cft.reconstruction:id": "min_adcl-dnaml", 
+        "cft.reconstruction:seqname_mapping": {
+            "tripl.file:sources": [
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/pruned.fa"
+                }
+            ], 
+            "db:ident": [
+                "9e1d5d78-858a-3c65-95b3-89a144378fda"
+            ], 
+            "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/seqname_mapping.csv"
+        }, 
+        "cft.reconstruction:prune_strategy": "min_adcl", 
+        "cft.reconstruction:asr_tree": {
+            "tripl.file:sources": [
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/seqname_mapping.csv"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/outfile"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/seqmeta.csv"
+                }
+            ], 
+            "db:ident": [
+                "dbb9d462-27c5-3c17-9b7c-4b35079cc3fd"
+            ], 
+            "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/asr.nwk"
+        }, 
+        "cft.reconstruction:phy": {
+            "tripl.file:sources": [
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/pruned.fa"
+                }
+            ], 
+            "db:ident": [
+                "f8232b90-c6d3-3274-9aac-6b687e1666e2"
+            ], 
+            "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/pruned.phy"
+        }, 
+        "cft.reconstruction:cluster": {
+            "db:ident": [
+                "56d1b874-ff45-3422-afb0-cad46b12762b"
+            ]
+        }, 
+        "cft.reconstruction:dataset": {
+            "db:ident": [
+                "221174ed-37cc-3c53-9744-0c19ed565b28"
+            ]
+        }, 
+        "cft.reconstruction:sample": {
+            "db:ident": [
+                "70d15c9e-81a7-3050-96bf-a2bd3e9d563b"
+            ]
+        }, 
+        "cft.reconstruction:cluster_mapping": [
+            {
+                "tripl.file:sources": [
+                    {
+                        "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/fasttree.nwk"
+                    }, 
+                    {
+                        "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/pruned_ids.txt"
+                    }
+                ], 
+                "db:ident": [
+                    "ce75ba06-99f2-31b6-81d4-73b16babd7b9"
+                ], 
+                "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/cluster_mapping.csv"
+            }
+        ], 
+        "tripl:type": "cft.reconstruction", 
+        "cft.reconstruction:cluster_aa": [
+            {
+                "tripl.file:sources": [
+                    {
+                        "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/asr.fa"
+                    }
+                ], 
+                "db:ident": [
+                    "d780f3c3-6529-37cf-b453-a0173519cc8e"
+                ], 
+                "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-2/min_adcl-dnaml/cluster_aa.fa"
+            }
+        ], 
+        "cft.reconstruction:subject": {
+            "db:ident": [
+                "d27091b1-8c90-3db4-bc4e-3bd14067d87c"
+            ]
+        }, 
+        "db:ident": [
+            "237f32aa-21f1-3129-9965-1ceecc07f2f3"
+        ]
+    }
+]

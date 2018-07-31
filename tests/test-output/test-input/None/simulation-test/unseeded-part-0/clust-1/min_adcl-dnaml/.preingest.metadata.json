@@ -1,0 +1,192 @@
+[
+    {
+        "cft.reconstruction.db:ident": [
+            "51af140a-d7bd-3d7a-9e70-4f68940b092d"
+        ], 
+        "cft.reconstruction:pruned_seqs": [
+            {
+                "tripl.file:sources": [
+                    {
+                        "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/pruned_ids.txt"
+                    }, 
+                    {
+                        "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/aligned_inseqs.fa"
+                    }
+                ], 
+                "db:ident": [
+                    "a5883c06-263d-3a21-bce4-75447671ebce"
+                ], 
+                "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/pruned.fa"
+            }
+        ], 
+        "cft.reconstruction:asr_prog": "dnaml", 
+        "cft.reconstruction:partition": {
+            "db:ident": [
+                "654db55f-154c-3d56-b413-0ba29fed9df1"
+            ]
+        }, 
+        "cft.reconstruction:asr_tree_svg": {
+            "tripl.file:sources": [
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/seqname_mapping.csv"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/outfile"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/seqmeta.csv"
+                }
+            ], 
+            "db:ident": [
+                "b95a1d70-e21c-30e5-be70-9346c8c12148"
+            ], 
+            "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/asr.svg"
+        }, 
+        "cft.reconstruction:asr_seqs": {
+            "tripl.file:sources": [
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/seqname_mapping.csv"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/outfile"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/seqmeta.csv"
+                }
+            ], 
+            "db:ident": [
+                "dc6ec72a-ddcf-30a4-9563-9ab52c003818"
+            ], 
+            "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/asr.fa"
+        }, 
+        "cft.reconstruction:seqmeta": [
+            {
+                "tripl.file:sources": [
+                    {
+                        "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/cluster_mapping.csv"
+                    }, 
+                    {
+                        "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/partis_seqmeta.csv"
+                    }
+                ], 
+                "db:ident": [
+                    "341d633d-c654-36ff-b33b-c50ca4f66818"
+                ], 
+                "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/seqmeta.csv"
+            }
+        ], 
+        "cft.reconstruction:build": {
+            "db:ident": [
+                "498ed22e-945d-11e8-b0c0-abaeb67820c1"
+            ]
+        }, 
+        "cft.reconstruction:pruned_ids": [
+            {
+                "tripl.file:sources": [
+                    {
+                        "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/fasttree.nwk"
+                    }
+                ], 
+                "db:ident": [
+                    "2d42bb43-7dd7-3649-9c6e-fe4042fb6cc7"
+                ], 
+                "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/pruned_ids.txt"
+            }
+        ], 
+        "cft.reconstruction:prune_count": 100, 
+        "cft.reconstruction:id": "min_adcl-dnaml", 
+        "cft.reconstruction:seqname_mapping": {
+            "tripl.file:sources": [
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/pruned.fa"
+                }
+            ], 
+            "db:ident": [
+                "7b03e127-8da7-3953-9056-79ff5e5c5875"
+            ], 
+            "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/seqname_mapping.csv"
+        }, 
+        "cft.reconstruction:prune_strategy": "min_adcl", 
+        "cft.reconstruction:asr_tree": {
+            "tripl.file:sources": [
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/seqname_mapping.csv"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/outfile"
+                }, 
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/seqmeta.csv"
+                }
+            ], 
+            "db:ident": [
+                "c438a5f4-75e7-3ff0-8476-8ceaf47d3e47"
+            ], 
+            "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/asr.nwk"
+        }, 
+        "cft.reconstruction:phy": {
+            "tripl.file:sources": [
+                {
+                    "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/pruned.fa"
+                }
+            ], 
+            "db:ident": [
+                "652888a5-5a7f-3ae7-ac00-c272f23d08ad"
+            ], 
+            "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/pruned.phy"
+        }, 
+        "cft.reconstruction:cluster": {
+            "db:ident": [
+                "27454769-c371-362a-881e-bda54edee8af"
+            ]
+        }, 
+        "cft.reconstruction:dataset": {
+            "db:ident": [
+                "221174ed-37cc-3c53-9744-0c19ed565b28"
+            ]
+        }, 
+        "cft.reconstruction:sample": {
+            "db:ident": [
+                "70d15c9e-81a7-3050-96bf-a2bd3e9d563b"
+            ]
+        }, 
+        "cft.reconstruction:cluster_mapping": [
+            {
+                "tripl.file:sources": [
+                    {
+                        "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/fasttree.nwk"
+                    }, 
+                    {
+                        "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/pruned_ids.txt"
+                    }
+                ], 
+                "db:ident": [
+                    "767cec7f-4d40-3f1a-b2b7-e1b4deb363b1"
+                ], 
+                "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/cluster_mapping.csv"
+            }
+        ], 
+        "tripl:type": "cft.reconstruction", 
+        "cft.reconstruction:cluster_aa": [
+            {
+                "tripl.file:sources": [
+                    {
+                        "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/asr.fa"
+                    }
+                ], 
+                "db:ident": [
+                    "879beb77-b5c0-3684-9b40-713e7f5e48c8"
+                ], 
+                "tripl.file:path": "None/simulation-test/unseeded-part-0/clust-1/min_adcl-dnaml/cluster_aa.fa"
+            }
+        ], 
+        "cft.reconstruction:subject": {
+            "db:ident": [
+                "d27091b1-8c90-3db4-bc4e-3bd14067d87c"
+            ]
+        }, 
+        "db:ident": [
+            "51af140a-d7bd-3d7a-9e70-4f68940b092d"
+        ]
+    }
+]
