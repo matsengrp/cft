@@ -79,6 +79,9 @@ Running `scons` from within the `cft` checkout directory loads the `SConstruct` 
     * a fasta file with sequences corresponding to internal nodes on the tree (the ancestral state reconstructions)
 * finally, produce a `output/<dataset-id>/metadata.json` file consumable by the `cftweb` web application summarizing this information
 
+Running `scons` without modifying the `SConstruct` will run default tests on the partis output in `tests/`.
+To check that the output thereby produced matches the expected test output, run `diff -ubr --exclude='*metadata.json' tests/test-output output`
+
 This particular `SConstruct` takes several command line parameters.
 Below are the most frequently used options, which _must_ include `=` in the format `--option=value`:
 
