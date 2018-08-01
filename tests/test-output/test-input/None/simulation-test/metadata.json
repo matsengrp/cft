@@ -1,0 +1,34 @@
+[
+    {
+        "cft.sample:build": {
+            "db:ident": [
+                "498ed22e-945d-11e8-b0c0-abaeb67820c1"
+            ]
+        }, 
+        "cft.sample:partition-file": "tests/partition.yaml", 
+        "tripl:type": "cft.sample", 
+        "cft.sample:locus": "igh", 
+        "cft.sample.db:ident": [
+            "70d15c9e-81a7-3050-96bf-a2bd3e9d563b"
+        ], 
+        "cft.sample:meta": null, 
+        "cft.sample:id": "simulation-test", 
+        "cft.sample:dataset": {
+            "db:ident": [
+                "221174ed-37cc-3c53-9744-0c19ed565b28"
+            ]
+        }, 
+        "cft.sample:parameter-dir": "tests/parameters/simu", 
+        "cft.sample:seeds": null, 
+        "tripl.nestly:aggregate": [], 
+        "cft.sample:subject": {
+            "db:ident": [
+                "d27091b1-8c90-3db4-bc4e-3bd14067d87c"
+            ]
+        }, 
+        "cft.sample:per-sequence-meta-file": null, 
+        "db:ident": [
+            "70d15c9e-81a7-3050-96bf-a2bd3e9d563b"
+        ]
+    }
+]

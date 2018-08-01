@@ -26,6 +26,8 @@ def get_args():
 
 def main():
     args = get_args()
+    if len(args.inseqs) < 2:
+        raise Exception('too few sequences (%d) passed to make_phylip.py (need at least two): %s' % (len(args.inseqs), [sr.id for sr in args.inseqs]))
     mapping = []
     i = 0
     # Go through and change each sequence id to something short and unique

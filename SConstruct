@@ -35,6 +35,7 @@ import yaml
 import json
 import re
 import functools as fun
+import traceback
 
 from os import path
 from warnings import warn
@@ -61,6 +62,7 @@ default_partis_path = path.join(os.getcwd(), 'partis')
 partis_path = os.environ.get('PARTIS', default_partis_path)
 sys.path.append(path.join(partis_path, 'python'))
 import clusterpath
+import utils
 
 # Scons requirements
 from SCons.Script import Environment
@@ -68,7 +70,6 @@ from SCons.Script import Environment
 
 # Build modules (in site_scons):
 import sconsutils
-import utils
 import backtrans_align
 import options
 import software_versions
@@ -158,7 +159,7 @@ def dataset_metadata(infile):
             d = yaml.load(fp)
     label = (options['dataset_tag'] + '-' if options['dataset_tag'] else '') + d['id']
     outdir = path.join(options['outdir_base'], label)
-    return utils.merge_dicts(d, {'id': d['id'] + '-' + time.strftime('%Y.%m.%d'), 'label': label, 'outdir': outdir})
+    return sconsutils.merge_dicts(d, {'id': d['id'] + '-' + time.strftime('%Y.%m.%d'), 'label': label, 'outdir': outdir})
 
 @w.add_nest(full_dump= True,
         label_func= lambda d: d['label'],
@@ -200,7 +201,7 @@ def wrap_test_run(take_n=2):
 @w.add_nest(label_func=str)
 @wrap_test_run(take_n=2)
 def subject(c):
-    return list(set(utils.get_in(sample, ['meta', 'subject'])
+    return list(set(sconsutils.get_in(sample, ['meta', 'subject'])
                     for sample_id, sample in c['dataset']['samples'].items()))
 
 
@@ -215,14 +216,14 @@ def subject(c):
 # These are handled in separate nest loops below, with a pop in between.
 
 # There may eventually be some required arguments here as this is where we get our locus and isotype and such
-@w.add_nest(metadata=lambda c, d: utils.merge_dicts(d.get('meta', {}),
+@w.add_nest(metadata=lambda c, d: sconsutils.merge_dicts(d.get('meta', {}),
                                                     {'id': d['id'], 'seeds': None, 'meta': None}))
 @wrap_test_run(take_n=2)
 def sample(c):
     # Make sure to add timepoints here as necessary
-    return [utils.merge_dicts(sample, {'id': sample_id})
+    return [sconsutils.merge_dicts(sample, {'id': sample_id})
             for sample_id, sample in c['dataset']['samples'].items()
-            if utils.get_in(sample, ['meta', 'subject']) == c['subject']]
+            if sconsutils.get_in(sample, ['meta', 'subject']) == c['subject']]
 
 def locus(c):
     sample = c['sample']
@@ -239,18 +240,18 @@ def locus(c):
 # Eventually, we'll pop off this seed nest level so we can renest these partitions and clusters directly from the sample nest level.
 
 # Initialize our first sub dataset nest level
-@w.add_nest(metadata=lambda c, d: utils.merge_dicts(d.get('meta', {}), {'id': d['id']}))
+@w.add_nest(metadata=lambda c, d: sconsutils.merge_dicts(d.get('meta', {}), {'id': d['id']}))
 # would like to have a lower number here but sometimes we get no good clusters for the first two seeds?
 # (on laura-mb for example).
 @wrap_test_run(take_n=4)
 def seed(c):
-    return [utils.merge_dicts(seed, {'id': seed_id})
+    return [sconsutils.merge_dicts(seed, {'id': seed_id})
             for seed_id, seed in c['dataset']['samples'][c['sample']['id']].get('seeds', {}).items()]
 
 # Some accessor helpers
 
 def timepoint(c):
-    return utils.get_in(c, ['sample', 'meta', 'timepoint'])
+    return sconsutils.get_in(c, ['sample', 'meta', 'timepoint'])
 
 def is_merged(c):
     return timepoint(c) == 'merged'
@@ -288,36 +289,34 @@ def partition_metadata(part, cp, best_plus_i, seed=None, other_id=None):
             'n_clusters': len(clusters),
             'largest_cluster_size': max(map(len, clusters)),
             'logprob': cp.logprobs[i],
-            'partition-file': part['partition-file'],
-            'cluster-annotation-file': part['cluster-annotation-file']}
+            'partition-file': part['partition-file']}
     if seed:
         meta['seed_cluster_size'] = seed_cluster_size(cp, best_plus_i, seed)
-    return utils.merge_dicts(meta, part.get('meta') or {})
+    return sconsutils.merge_dicts(meta, part.get('meta') or {})
 
 # Whenever we iterate over partitions, we always want to assume there could be an `other-partitions` mapping,
 # and iterate over all these things, while tracking their other_id keys in the `other-partitions` dict.
 def with_other_partitions(node):
     parts = []
-    if node.get('partition-file') and node.get('cluster-annotation-file'):
+    if node.get('partition-file'):
         parts.append(node)
     if node.get('other-partitions'):
-        parts += [utils.merge_dicts(part, {'other_id': other_id})
+        parts += [sconsutils.merge_dicts(part, {'other_id': other_id})
                   for other_id, part in node['other-partitions'].items()
-                  if part.get('partition-file') and part.get('cluster-annotation-file')]
+                  if part.get('partition-file')]
     return parts
 
 
 def valid_cluster(cp, part, clust):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
     we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
-    clust_sig = ':'.join(clust)
-    with open(part['cluster-annotation-file']) as fh:
-        for cluster_row in csv.DictReader(fh):
-            if cluster_row['unique_ids'] == clust_sig:
-                n_good_seqs = sum(map(lambda x: x[0] and not (x[1] or x[2]),
-                    zip(*(map(lambda col: [x == 'True' for x in cluster_row[col].split(':')],
-                              ['in_frames', 'stops', 'mutated_invariants'])))))
-                return n_good_seqs > 2
+    _, annotation_list, _ = utils.read_output(part['partition-file'], dont_add_implicit_info=True)
+    for line in annotation_list:
+        if line['unique_ids'] == clust:
+            func_list = [utils.is_functional(line, iseq) for iseq in range(len(line['unique_ids']))]
+            n_good_seqs = func_list.count(True)
+            return n_good_seqs > 2
+    raise Exception('couldn\'t find requested uids %s in %s' (clust, par['partition-file']))
 
 def valid_seed_partition(cp, part, best_plus_i, seed_id):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
@@ -329,23 +328,15 @@ def valid_seed_partition(cp, part, best_plus_i, seed_id):
 
 # Try to read partition file; If fails, it is possibly because it's empty. Catch that case and warn
 def read_partition_file(filename):
-    cp = clusterpath.ClusterPath()
     try:
-        cp.readfile(filename)
-    except Exception as e:
-        warn("Unable to parse partition file (ommitting from results): {}".format(filename))
-        try:
-            with open(filename) as fh:
-                contents = fh.read()
-                if contents == '':
-                    warn("  Explanation: Empty partition file")
-                else:
-                    warn("  Nonempty partition file failed to parse")
-        except Exception:
-            warn("  Explanation: Can't open file; missing file? Poorly formatted?")
-            warn("  Exception: " + str(e))
+        _, _, cpath = utils.read_output(filename, skip_annotations=True)
+    except:
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
+        print(utils.pad_lines(''.join(lines)))
+        warn("Unable to parse partition file (see error above, ommitting from results): {}".format(filename))
         return []
-    return cp
+    return cpath
 
 # note we elide the nested partitions > clusters lists so as not to kill tripl when it tries to load them as a
 # value and can't hash
@@ -394,7 +385,7 @@ def add_cluster_analysis(w):
     @w.add_metadata()
     def _process_partis(outdir, c):
         # Should get this to explicitly depend on cluster0.fa
-        sources = [c['partition']['partition-file'], c['partition']['cluster-annotation-file']]
+        sources = [c['partition']['partition-file']]
         perseq_metafile = c['sample'].get('per-sequence-meta-file')
         if perseq_metafile:
             sources.append(perseq_metafile)
@@ -404,7 +395,6 @@ def add_cluster_analysis(w):
                 'process_partis.py' +
                     ' --remove-stops --remove-frameshifts --remove-mutated-invariants' +
                     ' --partition-file ${SOURCES[0]}' +
-                    ' --cluster-annotation-file ${SOURCES[1]}' +
                    (' --upstream-seqmeta ${SOURCES[2]}' if perseq_metafile else '') +
                     ' --parameter-dir ' + c['sample']['parameter-dir'] +
                     ' --locus ' + locus(c) +
@@ -681,7 +671,7 @@ def add_unseeded_analysis(w):
         def meta(part):
             cp = read_partition_file(part['partition-file'])
             if cp:
-                return utils.merge_dicts(partition_metadata(part, cp, 0, other_id=part.get('other_id')),
+                return sconsutils.merge_dicts(partition_metadata(part, cp, 0, other_id=part.get('other_id')),
                                          {'cp': cp})
         return filter(None, map(meta, with_other_partitions(c['sample'])))
 

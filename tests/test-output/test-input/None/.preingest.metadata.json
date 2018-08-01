@@ -1,0 +1,22 @@
+[
+    {
+        "cft.subject:build": {
+            "db:ident": [
+                "498ed22e-945d-11e8-b0c0-abaeb67820c1"
+            ]
+        }, 
+        "cft.subject:dataset": {
+            "db:ident": [
+                "221174ed-37cc-3c53-9744-0c19ed565b28"
+            ]
+        }, 
+        "cft.subject.db:ident": [
+            "d27091b1-8c90-3db4-bc4e-3bd14067d87c"
+        ], 
+        "cft.subject:id": "None", 
+        "tripl:type": "cft.subject", 
+        "db:ident": [
+            "d27091b1-8c90-3db4-bc4e-3bd14067d87c"
+        ]
+    }
+]

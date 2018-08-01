@@ -60,16 +60,6 @@ def csv_reader(index=None, filter_by=None):
 
 default_germline_sets = os.path.join(partis_path, 'data/germlines/human')
 
-
-def get_cluster_annotation(filename, unique_ids):
-    unique_ids_string = ":".join(unique_ids)
-    with open(filename) as handle:
-        reader = csv.DictReader(handle)
-        for row in reader:
-            if row['unique_ids'] == unique_ids_string:
-                return row
-        raise ValueError("Cluster not found for unique_ids set {}".format(repr(unique_ids)))
-
 def as_dict_rows(column_dict, columns=None):
     columns = columns or column_dict.keys()
     column_lengths = [len(column_dict[c]) for c in columns]
@@ -163,7 +153,6 @@ def merge(d1, d2):
     return d
 
 def process_cluster(args, cluster_line, seed_id):
-    utils.process_input_line(cluster_line)
     utils.add_implicit_info(args.glfo, cluster_line)
 
     cluster_sequences = {
@@ -213,53 +202,43 @@ def process_cluster(args, cluster_line, seed_id):
             cluster[gene+'_'+pos] = cluster_line['regional_bounds'][gene][pos.startswith('e')]
     return cluster
 
-
-def nth(sequence, n):
-    for i, v in enumerate(sequence):
-        if i == n:
-            return  v
-
-def nth_csv_row(filename, n):
-    with open(filename) as handle:
-        reader = csv.DictReader(handle)
-        return nth(reader, n)
-
-
 def processed_data(args):
     """Uses args to find the correct partition, cluster pair and all associated information. Cluster
     information is returned as by process_cluster."""
 
-    cp = clusterpath.ClusterPath()
-    cp.readfile(args.partition_file)
+    file_glfo, annotation_list, cpath = utils.read_output(args.partition_file, dont_add_implicit_info=True)
+    if file_glfo:  # will only be set if we're reading a yaml file
+        args.glfo = file_glfo
 
     # select partition, relative to best partition
-    partition_index = cp.i_best + args.partition
-    part = nth_csv_row(args.partition_file, partition_index)
-    seed_id = cp.seed_unique_id
+    ipart = cpath.i_best + args.partition
 
     # select cluster; unique_ids takes highest precedence
     if args.unique_ids:
         cluster_unique_ids = args.unique_ids
     # default to seed, when possibile
-    elif cp.seed_unique_id and not args.cluster:
-        cluster_unique_ids = next(cluster.split(':') for cluster in part['partition'].split(';')
-                if seed_id in cluster.split(':'))
+    elif cpath.seed_unique_id and not args.cluster:
+        cluster_unique_ids = next(cluster for cluster in cpath.partitions[ipart] if cpath.seed_unique_id in cluster)
     # otherwise, assume we have args.cluster or default it to 0
     else:
-        clusters = sorted((cluster.split(':') for cluster in part['partition'].split(';')), key=len, reverse=True)
+        clusters = sorted(cpath.partitions[ipart], key=len, reverse=True)
         cluster_unique_ids = clusters[args.cluster or 0]
 
-    # Get cluster annotation and put together into 
-    cluster_annotation = get_cluster_annotation(args.cluster_annotation_file, cluster_unique_ids)
-    data = {'n_clusters': part['n_clusters'],
-            'logprob': part['logprob'],
+    # Get cluster annotation and put together into
+    annotations = [l for l in annotation_list if l['unique_ids'] == cluster_unique_ids]
+    if len(annotations) == 0:
+        raise ValueError('requested uids %s not found in %s' % (cluster_unique_ids, args.partition_file))  # it was a value error before, so I'm leaving it at that
+    elif len(annotations) > 1:
+        print '%s more than one annotation with requested uids %s found in %s' % (utils.color('red', 'warning'), cluster_unique_ids, args.partition_file)  # shouldn't be possible
+    cluster_annotation = annotations[0]
+    data = {'n_clusters': len(cpath.partitions[ipart]),
+            'logprob': cpath.logprobs[ipart],
             'partition_file': args.partition_file,
-            'last_modified': time.ctime(os.path.getmtime(args.cluster_annotation_file)),
-            'annotation_file': args.cluster_annotation_file}
+            'last_modified': time.ctime(os.path.getmtime(args.partition_file))}
     if args.seqs_out:
         data['seqs_file'] = os.path.relpath(args.seqs_out, args.paths_relative_to)
     # Process the annotation file specific details/data
-    data.update(process_cluster(args, cluster_annotation, seed_id))
+    data.update(process_cluster(args, cluster_annotation, cpath.seed_unique_id))
     return data
 
 
@@ -267,7 +246,7 @@ def processed_data(args):
 def write_cluster_meta(args, cluster_data):
     def attrs(base):
         return [base + '_' + k for k in ['gene', 'start', 'end', 'per_gene_support']]
-    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'n_seqs', 'last_modified', 'annotation_file', 'partition_file',
+    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'n_seqs', 'last_modified', 'partition_file',
         'cdr3_start', 'cdr3_length', 'mean_mut_freq'] + attrs('v') + attrs('d') + attrs('j')
     doc = subset_dict(cluster_data, to_keep)
     for gene in 'vdj':
@@ -322,10 +301,6 @@ def parse_args():
 
     parser = argparse.ArgumentParser(description=__doc__)
     inputs = parser.add_argument_group(title="Input files", description="(required)")
-    inputs.add_argument(
-        '--cluster-annotation-file',
-        help='cluster annotations file as output by partis',
-        type=existing_file, required=True)
     inputs.add_argument(
         '--partition-file',
         help='partitions file as output by partis',

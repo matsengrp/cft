@@ -29,14 +29,12 @@ samples:
 
     # Unseeded partitions go here
     partition-file: /path/to/Hs-LN-D-5RACE-IgG/partition.csv
-    cluster-annotation-file: /path/to/Hs-LN-D-5RACE-IgG/partition-cluster-annotations.csv
 
     # seed partition runs should be organized under a `seeds` key as follows
     seeds:
       # seed sequence id
       BF520.1-igh:
         partition-file: /path/to/Hs-LN-D-5RACE-IgG/partition.csv
-        cluster-annotation-file: /path/to/Hs-LN-D-5RACE-IgG/partition-cluster-annotations.csv
       # other seeds, as applicable...
 
   # another sample in our dataset...
@@ -51,12 +49,13 @@ Some notes about this:
 * This file can either be in `.yaml` format (shown above), or `.json`.
 * You may specify a `meta` attribute within a particular sample with keys from `[isotype, locus, shorthand, species, subject, timepoint]`.
 * If a sample has multiple unseeded partis runs, these can be nested within an `other-partitions` key, much as `seeds` are specified
+* A functional example is found in `test.yaml`, which is run by default by scons if --infiles is not set
 
 A more fleshed out example, as well as json examples, and python snippets can be seen [on the wiki](https://github.com/matsengrp/cft/wiki).
 
 You may also wish to take a look at `bin/dataset_utils.py`, a little utility script for filtering and merging dataset files.
 You can get a comprehensive help menu by running `bin/dataset_utils.py -h`.
-You may also wish to directory use the script which does the initial extraction of data from partis, `bin/process_partis.py`.
+You may also wish to directly use the script which does the initial extraction of data from partis, `bin/process_partis.py`.
 
 Note that in order for the data to process correctly, the following must be true of the naming scheme for sequences:
 
@@ -71,7 +70,7 @@ CFT uses the `scons` build tool to execute the build process.
 Running `scons` from within the `cft` checkout directory loads the `SConstruct` file, which specifies how data is to be processed:
 
 * initial processing of partis results using `bin/process_partis.py` to produce (among other things) a sequence file for each cluster/clonal-family
-    * a quality filter is applied removing sequences with frameshifts, mutations in "invariant" regions, or stop codons
+    * a quality filter is applied removing sequences with stop codons, with out of frame CDR3 regions, and with mutations in the invariant codons bounding the CDR3
 * build trees out of the sequences for each of these clusters
 * subset the sequences according to a couple of different strategies (seed lineage selection and overall diversity selection)
 * ancestral state reconstructions using this sequence subset, producing:
@@ -80,13 +79,14 @@ Running `scons` from within the `cft` checkout directory loads the `SConstruct` 
     * a fasta file with sequences corresponding to internal nodes on the tree (the ancestral state reconstructions)
 * finally, produce a `output/<dataset-id>/metadata.json` file consumable by the `cftweb` web application summarizing this information
 
+Running `scons` without modifying the `SConstruct` will run default tests on the partis output in `tests/`.
+To check that the output thereby produced matches the expected test output, run `diff -ubr --exclude='*metadata.json' tests/test-output output`
+
 This particular `SConstruct` takes several command line parameters.
-Below are the most frequently used options:
+Below are the most frequently used options, which _must_ include `=` in the format `--option=value`:
 
 * `--infiles`: A `:` separated list of partis output directories relative to `--base-datapath`
-  Defaults (presently) to `laura-mb/latest:kate-qrs/latest`.
 * `--base-datapath`: The location of `--datapaths`, if not specified as absolute paths.
-  Defaults to `/fh/fast/matsen_e/processed-data/partis/`.
 * `--test`: Run on a small subset of all the seeds, as defined in the `SConstruct`, rather than the whole dataset; Useful for testing new code.
 
 A separate "dataset" directory and corresponding `metadata.json` file will be created for each `infile` and placed within the `output` directory, organized by the `id` attribute of the dataset infile.
@@ -137,6 +137,7 @@ First, you'll need a number bioinformatics executables installed in order to run
 * `rppr` (from the `pplacer` suite)
 * `xvfb-run`
 * `R` (and `Rscript`)
+* `prank`
 
 If you are running on Fredhutch's compute nodes, you can use scicomp's module system to gain access to these dependencies:
 
@@ -168,8 +169,7 @@ Now install the python packages.
 These are mostly installed via the `conda` command; `pip` is only used for packages not yet available via conda.
 
 ```
-conda install biopython nestly pyqt
-pip install ete3 scons
+conda install biopython nestly pyqt ete3 scons colorbrewer
 ```
 
 Your mileage may vary, but Chris Warth found it necessary to reactivate the environment and rehash the path, especially after installing `scons` and `nestly`.
