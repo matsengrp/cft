@@ -207,6 +207,8 @@ def processed_data(args):
     information is returned as by process_cluster."""
 
     file_glfo, annotation_list, cpath = utils.read_output(args.partition_file, dont_add_implicit_info=True)
+    if annotation_list is None:
+        raise Exception('cluster annotation file not found')
     if file_glfo:  # will only be set if we're reading a yaml file
         args.glfo = file_glfo
 
