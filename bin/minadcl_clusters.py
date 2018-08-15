@@ -7,7 +7,7 @@ import dendropy as dendro
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('tree', type=lambda x: dendro.Tree.get(path=x, schema='newick'))
+    parser.add_argument('tree', type=lambda x: dendro.Tree.get(path=x, schema='newick', preserve_underscores=True))
     parser.add_argument('centroid_ids', type=argparse.FileType('r'))
     parser.add_argument('cluster_mapping', type=argparse.FileType('w'))
     return parser.parse_args()
