@@ -1,5 +1,5 @@
 unique_id,sequence,is_seed,frameshifted,stops,mutated_invariants,mut_freq,timepoint,multiplicity,timepoints,timepoint_multiplicities,duplicates
-naive,naive,False,,,,0.0,,1,,1,naive
+X-naive-X,X-naive-X,False,,,,0.0,,1,,1,X-naive-X
 -5759326326807322640,-5759326326807322640,False,,,,0.13297872340425532,,1,,1,-5759326326807322640
 2965021686535042726,2965021686535042726,False,,,,0.1196808510638298,,1,,1,2965021686535042726
 6348876731490882539,6348876731490882539,False,,,,0.125,,1,,1,6348876731490882539

@@ -132,7 +132,7 @@ def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta):
 def downsample_sequences(args, sequences):
     sequences = list(sequences)
     if args.max_sequences:
-        always_include = set(args.always_include + ['naive'])
+        always_include = set(args.always_include + [args.inferred_naive_name])
         always_include_seqs = filter(lambda x: x.get('unique_id') in always_include, sequences)
         rest_seqs = filter(lambda x: x.get('unique_id') not in always_include, sequences)
         # first take the always keep, then take as many as you can of the remaining seqs, in order of highest multiplicity
@@ -156,7 +156,7 @@ def process_cluster(args, cluster_line, seed_id):
     utils.add_implicit_info(args.glfo, cluster_line)
 
     cluster_sequences = {
-            'unique_id':             ['naive'] + cluster_line['unique_ids'],
+            'unique_id':             [args.inferred_naive_name] + cluster_line['unique_ids'],
             'seq': [cluster_line['naive_seq']] + seqs(args, cluster_line),
             'is_seed':               ['False'] + [(unique_id == seed_id) for unique_id in cluster_line['unique_ids']],
             'duplicates':               [None] + [':'.join(x) for x in cluster_line['duplicates']],
@@ -207,6 +207,8 @@ def processed_data(args):
     information is returned as by process_cluster."""
 
     file_glfo, annotation_list, cpath = utils.read_output(args.partition_file, dont_add_implicit_info=True)
+    if annotation_list is None:
+        raise Exception('cluster annotation file not found')
     if file_glfo:  # will only be set if we're reading a yaml file
         args.glfo = file_glfo
 
@@ -389,6 +391,9 @@ def parse_args():
     other_args.add_argument(
         '--namespace',
         help='namespace to be applied to cluster meta attr names')
+    other_args.add_argument(
+        '--inferred-naive-name',
+        help='see scons option help')
     # --indel-reversed-seqs
     # --remove-mutated-invariants
 

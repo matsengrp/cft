@@ -20,9 +20,10 @@ def find_node(tree, pattern):
         return nodes[0]
 
 
-# reroot the tree on node matching regex pattern.
-# Usually this is used to root on the naive germline sequence with a name matching 'naive'
-def reroot_tree(tree, pattern='naive'):
+# reroot the tree on node matching pattern.
+# Usually this is used to root on the naive germline sequence
+# NOTE duplicates fcn in process_asr.py
+def reroot_tree(tree, pattern):
     # find all nodes matching pattern
     node = find_node(tree, pattern)
     if tree != node:
@@ -113,7 +114,7 @@ def leaf_style(node, seqmeta, tp_colors, highlight_node=None):
     ete3.add_face_to_node(pie_node, node, column=0)
 
 
-def render_tree(fname, tree, annotations, highlight_node, supports=False, support_cuttof=0.8):
+def render_tree(fname, tree, annotations, highlight_node, inferred_naive_name, supports=False, support_cuttof=0.8):
     "render tree SVG"
     ts = ete3.TreeStyle()
     ts.show_leaf_name = False
@@ -148,8 +149,8 @@ def render_tree(fname, tree, annotations, highlight_node, supports=False, suppor
     timepoint_legend(ts, tp_colors)
     multiplicity_legend(ts)
     # whether or not we had rerooted on naive before, we want to do so for the SVG tree
-    if 'naive' not in tree.name:
-        tree = reroot_tree(tree, 'naive')
+    if inferred_naive_name not in tree.name:
+        tree = reroot_tree(tree, inferred_naive_name)
     ts.scale = 2300
     tree.render(fname, tree_style=ts)
 
@@ -180,6 +181,8 @@ def get_args():
         help="Sequence metadata file for annotating mut_freqs")
     parser.add_argument('svg_out', help="output file")
     parser.add_argument(
+        '--inferred-naive-name', type=str, required=True)
+    parser.add_argument(
         '--seed', type=str, help="id of leaf [default 'seed']", default='seed')
     return parser.parse_args()
 
@@ -192,10 +195,10 @@ def main():
     with open(args.tree) as fh:
         tree = ete3.Tree(fh.read(), format=(0 if args.supports else 1))
 
-    tree = reroot_tree(tree, 'naive')
+    tree = reroot_tree(tree, args.inferred_naive_name)
 
     # write newick file
-    render_tree(args.svg_out, tree, args.seqmeta, args.seed, supports=args.supports)
+    render_tree(args.svg_out, tree, args.seqmeta, args.seed, args.inferred_naive_name, supports=args.supports)
 
 
 if __name__ == '__main__':

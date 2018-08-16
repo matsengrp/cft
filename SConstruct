@@ -401,6 +401,7 @@ def add_cluster_analysis(w):
                     ' --max-sequences 10000' +
                     ' --paths-relative-to ' + dataset_outdir(c) +
                     ' --namespace cft.cluster' +
+                    ' --inferred-naive-name ' + options['inferred_naive_name'] +
                   ((" --always-include " + ','.join(c['sample']['seeds'])) if c['sample'].get('seeds') else '') +
                    (' --partition {}'.format(c['partition']['step']) if c.get('seed') else '') +
                    (' --cluster {}'.format(c['cluster']['sorted_index']) if not c.get('seed') else '') +
@@ -466,7 +467,7 @@ def add_cluster_analysis(w):
             "prune.py -n " + str(recon['prune_count'])
                 + ((" --always-include " + ','.join(c['sample']['seeds'])) if c['sample'].get('seeds') else '')
                 + " --strategy " + recon['prune_strategy']
-                + " --naive naive"
+                + " --naive %s" % options['inferred_naive_name']
                 + (" --seed " + c['seed']['id'] if 'seed' in c else '')
                 + " $SOURCE $TARGET")
 
@@ -516,7 +517,7 @@ def add_cluster_analysis(w):
         return env.Command(
             [path.join(outdir, x) for x in ('pruned.phy', 'seqname_mapping.csv')],
             c['pruned_seqs'],
-            'make_phylip.py $SOURCE $TARGETS --dont-rename naive')
+            'make_phylip.py $SOURCE $TARGETS --dont-rename ' + options['inferred_naive_name'])
 
 
     @w.add_target()
@@ -540,7 +541,7 @@ def add_cluster_analysis(w):
             config = env.Command(
                 path.join(outdir, asr_prog + ".cfg"),
                 c['phy'],
-                'python bin/mkconfig.py $SOURCE ' + asr_prog + ' > $TARGET')
+                'python bin/mkconfig.py $SOURCE ' + asr_prog + ' --inferred-naive-name ' + options['inferred_naive_name'] + '> $TARGET')
             phylip_out = env.SRun(
                 path.join(outdir, "outfile"),
                 config,
@@ -560,6 +561,7 @@ def add_cluster_analysis(w):
                         + (" --seed " + c['seed']['id'] if 'seed' in c else '')
                         + " --outdir " + outdir
                         + " --basename " + basename
+                        + " --inferred-naive-name " + options['inferred_naive_name']
                         + " --seqname-mapping $SOURCES")
             asr_tree, asr_tree_svg, asr_seqs = tgt
             # manually depnd on this because the script isn't in first position
@@ -572,11 +574,11 @@ def add_cluster_analysis(w):
                 c['pruned_seqs'],
                 # Question should use -T for threads? how many?
                 # Don't know if the reroot will really do what we want here
-                'raxml.py --rapid-bootstrap 30 -x 3243 -o naive $SOURCE $TARGET')
+                'raxml.py --rapid-bootstrap 30 -x 3243 -o %s $SOURCE $TARGET' % options['inferred_naive_name'])
             asr_tree_svg = env.Command(
                 path.join(outdir, 'asr.svg'),
                 [asr_supports_tree, c['seqmeta']],
-                'xvfb-run -a bin/plot_tree.py $SOURCES $TARGET --supports'
+                'xvfb-run -a bin/plot_tree.py $SOURCES $TARGET --supports --inferred-naive-name ' + options['inferred_naive_name']
                     + (' --seed ' + c['seed'] if 'seed' in c else ''))
             asr_tree = env.Command(
                 path.join(outdir, 'asr.nwk'),

@@ -77,7 +77,7 @@ def parse_seqdict(fh, mode='dnaml'):
 # parse the dnaml output file and return data strictures containing a
 # list biopython.SeqRecords and a dict containing adjacency
 # relationships and distances between nodes.
-def parse_outfile(outfile, seqmeta, seqname_mapping=None):
+def parse_outfile(outfile, seqmeta, inferred_naive_name, seqname_mapping=None):
     '''parse phylip outfile'''
     name_map = seqname_mapping or {seq_id[0:10]: seq_id for seq_id in seqmeta}
     if len(name_map) != len(seqmeta) and not seqname_mapping:
@@ -106,9 +106,9 @@ def parse_outfile(outfile, seqmeta, seqname_mapping=None):
             else:
                 raise RuntimeError("unrecognized phylip setion = {}".format(sect))
 
-    if 'naive' in bads:
+    if inferred_naive_name in bads:
         warn("Uh... naive in bad sequences?")
-        bads.remove('naive')
+        bads.remove(inferred_naive_name)
     if bads:
         print("good sequences:", sorted(goods))
         print("bad sequences:", sorted(bads))
@@ -166,8 +166,9 @@ def find_node(tree, pattern):
 
 
 # reroot the tree on node matching regex pattern.
-# Usually this is used to root on the naive germline sequence with name 'naive'
-def reroot_tree(tree, pattern='naive'):
+# Usually this is used to root on the naive germline sequence
+# NOTE duplicates fcn in plot_tree.py
+def reroot_tree(tree, pattern):
     # find all nodes matching pattern
     node = find_node(tree, pattern)
     if tree != node:
@@ -219,6 +220,8 @@ def get_args():
     parser.add_argument(
         '--basename', help="basename of output files.   [default 'basename(DNAML)']")
     parser.add_argument(
+        '--inferred-naive-name', type=str, required=True)
+    parser.add_argument(
         '--seed', type=str, help="id of leaf [default 'seed']", default='seed')
     return parser.parse_args()
 
@@ -230,7 +233,7 @@ def main():
     basename = args.basename if args.basename else os.path.basename(args.phylip_outfile)
     outbase = os.path.join(args.outdir, os.path.splitext(basename)[0])
 
-    sequences, parents = parse_outfile(args.phylip_outfile, args.seqmeta, args.seqname_mapping)
+    sequences, parents = parse_outfile(args.phylip_outfile, args.seqmeta, args.inferred_naive_name, args.seqname_mapping)
 
     if not sequences or not parents:
         raise RuntimeError("No sequences were available; are you sure this is a dnaml output file?")
@@ -241,13 +244,13 @@ def main():
         SeqIO.write(sequences, fh, "fasta")
 
     tree = build_tree(sequences, parents)
-    tree = reroot_tree(tree, 'naive')
+    tree = reroot_tree(tree, args.inferred_naive_name)
 
     # write newick file
     fname = outbase + '.nwk'
     tree.write(format=1, format_root_node=True, outfile=fname)
 
-    plot_tree.render_tree(outbase+'.svg', tree, args.seqmeta, args.seed)
+    plot_tree.render_tree(outbase+'.svg', tree, args.seqmeta, args.seed, args.inferred_naive_name)
 
 
 if __name__ == "__main__":

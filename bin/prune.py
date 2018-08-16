@@ -145,7 +145,7 @@ def get_args():
     parser.add_argument(
         '--strategy', choices=["min_adcl", "seed_lineage"], default="seed_lineage")
     parser.add_argument(
-        '--naive', help='id of root [default \'naive\']', default='naive')
+        '--naive', help='id of root', required=True)  # make it required so the default can be set/enforced in the SConstruct
     parser.add_argument(
         '--seed', help='id of leaf [default \'seed\']')
     parser.add_argument(
