@@ -53,6 +53,11 @@ Script.AddOption('--lazy-metadata',
         time when debugging, or when only code in scripts has changed. If `--lazy-metadata` is used, it's best to run again
         before using any of the output metadata.json files.""")
 
+Script.AddOption('--inferred-naive-name',
+        dest='inferred_naive_name',
+        default='X-naive-X',  # needs to be fairly obscure so it doesn't conflict with any names in the input file
+        help="""What do we call the partis-inferred naive sequence when we inject it among the other (input) sequences.""")
+
 
 def get_options(env):
     # prefer realpath so that running latest vs explicit vN doesn't require rerun; also need for defaults below
@@ -64,6 +69,7 @@ def get_options(env):
         prune_strategies = env.GetOption('prune_strategies').split(':'),
         dataset_tag = env.GetOption('dataset_tag') or ('test' if test_run else None),
         always_build_metadata = not env.GetOption('lazy_metadata'),
+        inferred_naive_name = env.GetOption('inferred_naive_name'),
         outdir_base = env.GetOption('outdir'))
 
 
