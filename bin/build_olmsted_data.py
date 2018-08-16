@@ -71,7 +71,8 @@ def pull_datasets(t):
 
 clonal_family_pull_pattern = [
    {    
-     "cft.reconstruction:seqmeta": [{"tripl.csv:data": ["*"]}],
+#     "cft.reconstruction:seqmeta": [{"tripl.csv:data": ["*"]}],
+     "cft.reconstruction:cluster_aa": [{"bio.seq:set": ["*"]}],
      "cft.reconstruction:asr_tree": ["*"],
      "cft.reconstruction:cluster": 
      [
@@ -126,6 +127,9 @@ def createNodeRecords(node):
         node_datum["distance"] = node.get_distance("naive")
     else:
         node_datum["type"] = "root"
+        node_datum["parent"] = None
+        node_datum["length"] = 0.0 
+        node_datum["distance"] = 0.0 
     data.append(node_datum)
     return data
 
@@ -136,10 +140,9 @@ def parseTreeData(s):
 def clean_clonal_family_record(d):
     c = d.copy()
     c['cft.reconstruction:cluster'] = c['cft.reconstruction:cluster'][0]
-#    print(c['cft.reconstruction:asr_tree'][0])
     #c['cft.reconstruction:cluster']['cft.reconstruction:asr_tree'] = c['cft.reconstruction:asr_tree'][0]
-    c['cft.reconstruction:cluster']['cft.reconstruction:seqmeta'] = c['cft.reconstruction:seqmeta']
-
+ #   c['cft.reconstruction:cluster']['cft.reconstruction:seqmeta'] = c['cft.reconstruction:seqmeta']
+    c['cft.reconstruction:cluster']['cft.reconstruction:cluster_aa'] = list(c['cft.reconstruction:cluster_aa'] )[0]['bio.seq:set']
     if(c['cft.reconstruction:asr_tree'][0].get('tripl.file:contents')):
         c['cft.reconstruction:cluster']['cft.reconstruction:asr_tree'] = parseTreeData(list(c['cft.reconstruction:asr_tree'][0]['tripl.file:contents'])[0])
     c = c['cft.reconstruction:cluster']
