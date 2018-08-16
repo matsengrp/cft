@@ -44,7 +44,7 @@ samples:
   # etc.
 ```
 
-Some notes about this:
+### Some notes about this:
 
 * This file can either be in `.yaml` format (shown above), or `.json`.
 * You may specify a `meta` attribute within a particular sample with keys from `[isotype, locus, shorthand, species, subject, timepoint]`.
@@ -60,6 +60,11 @@ You may also wish to directly use the script which does the initial extraction o
 Note that in order for the data to process correctly, the following must be true of the naming scheme for sequences:
 
 * must not include any of the characters: `:`, `;`, `,`
+
+One final note: Partis now by default outputs `yaml` files which contain all the data necessary to run this pipeline.
+However, it was previously the case that partis output separate `csv` files for partition and annotation data, and that both of these had to be passed into the `yaml` dataset files sketched out above.
+If you are running cft on this old `csv` data, things should work fine as long as you don't rename or move these partition/annotation files in relation to each other.
+As long as you keep the naming path relationships the same, cft will infer the location of the corresponding annotation csv files based on the specified partition file paths.
 
 
 ## Running the pipeline
