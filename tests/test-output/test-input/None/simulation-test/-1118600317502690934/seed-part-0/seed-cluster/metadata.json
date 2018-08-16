@@ -11,7 +11,7 @@
                     }
                 ], 
                 "db:ident": [
-                    "d490471d-3c57-32d7-be14-7671f0f48abc"
+                    "fe12d21b-5534-3ac3-9765-a07bab9fcc76"
                 ], 
                 "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/aligned_inseqs.fa"
             }
@@ -19,18 +19,18 @@
         "cft.cluster:cdr3_start": 285, 
         "cft.cluster:seed": {
             "db:ident": [
-                "276754d7-9f68-3360-8a56-8f172c5b122d"
+                "00dcfaf5-bbbc-308e-ade6-c5f685830c64"
             ]
         }, 
         "cft.cluster:j_start": 329, 
         "cft.cluster:partis_seqmeta": {
             "tripl.file:sources": [
                 {
-                    "tripl.file:path": "../../tests/seed-partition.yaml"
+                    "tripl.file:path": "../../tests/seed-partition.csv"
                 }
             ], 
             "db:ident": [
-                "75f49e78-3bdc-3e2a-bb90-0499e7c5ffcb"
+                "7066182d-3030-3cea-99aa-044d6b7b92fa"
             ], 
             "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/partis_seqmeta.csv"
         }, 
@@ -38,7 +38,7 @@
         "cft.cluster:j_end": 379, 
         "cft.cluster:seqs_file": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/cluster_seqs.fa", 
         "cft.cluster.db:ident": [
-            "727abc08-cb86-3555-b9f1-22b2dd0a8c61"
+            "a1d92da1-7ae8-333d-8069-d44cb85140b9"
         ], 
         "cft.cluster:n_seqs": 40, 
         "cft.cluster:v_gene": "IGHV3-64*04", 
@@ -54,7 +54,7 @@
                 }
             ], 
             "db:ident": [
-                "2b4fedbe-39a9-38d5-ba3a-c2dee8dbe6e5"
+                "01a1db9d-ae07-37b5-949f-b40050842c84"
             ], 
             "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/translated_inseqs.fa"
         }, 
@@ -70,7 +70,7 @@
                     }
                 ], 
                 "db:ident": [
-                    "41ca1dab-7265-3d63-9ca5-2bd29c6eb83e"
+                    "c23e1339-9526-3384-85a6-d125b531a0d7"
                 ], 
                 "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/sorted_aligned_translated_inseqs.fa"
             }
@@ -78,11 +78,11 @@
         "cft.cluster:partis_metadata": {
             "tripl.file:sources": [
                 {
-                    "tripl.file:path": "../../tests/seed-partition.yaml"
+                    "tripl.file:path": "../../tests/seed-partition.csv"
                 }
             ], 
             "db:ident": [
-                "5e1a5452-7ce5-3b89-9101-997ce721d26f"
+                "538226b6-96ec-348e-a705-118a6010314f"
             ], 
             "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/partis_metadata.json"
         }, 
@@ -94,7 +94,7 @@
                     }
                 ], 
                 "db:ident": [
-                    "401b7632-6fe0-3f2d-8e8d-59aa0c83ba3a"
+                    "bf055693-1519-33ea-9a10-61716fe4418f"
                 ], 
                 "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/fasttree.nwk"
             }
@@ -102,7 +102,7 @@
         "cft.cluster:cdr3_length": 63, 
         "cft.cluster:build": {
             "db:ident": [
-                "498ed22e-945d-11e8-b0c0-abaeb67820c1"
+                "20680580-a0f8-11e8-8b0f-c52491d13ce2"
             ]
         }, 
         "cft.cluster:v_end": 296, 
@@ -117,7 +117,7 @@
                     }
                 ], 
                 "db:ident": [
-                    "2b4fedbe-39a9-38d5-ba3a-c2dee8dbe6e5"
+                    "01a1db9d-ae07-37b5-949f-b40050842c84"
                 ], 
                 "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/translated_inseqs.fa"
             }, 
@@ -131,7 +131,7 @@
                     }
                 ], 
                 "db:ident": [
-                    "7f56ec70-f5b8-37e5-869a-1b452d80fb5c"
+                    "86b18985-b8fb-36a6-8911-5a9b4d021c1c"
                 ], 
                 "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/inseqs_trimmed.fa"
             }
@@ -152,7 +152,7 @@
                 }
             ], 
             "db:ident": [
-                "7f56ec70-f5b8-37e5-869a-1b452d80fb5c"
+                "86b18985-b8fb-36a6-8911-5a9b4d021c1c"
             ], 
             "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/inseqs_trimmed.fa"
         }, 
@@ -160,7 +160,7 @@
         "cft.cluster:d_gene": "IGHD2-2*02", 
         "cft.cluster:subject": {
             "db:ident": [
-                "d27091b1-8c90-3db4-bc4e-3bd14067d87c"
+                "8dfd4b6b-666a-3578-adf6-bf09f1c76cd8"
             ]
         }, 
         "cft.cluster:sorted_inseqs": [
@@ -171,7 +171,7 @@
                     }
                 ], 
                 "db:ident": [
-                    "80ef8ab7-5f4d-3a6d-8c58-f98a033297b2"
+                    "243e278b-4c3c-3b0a-a4a1-f6c653a34382"
                 ], 
                 "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/sorted_inseqs.fa"
             }
@@ -179,28 +179,28 @@
         "cft.cluster:d_per_gene_support": [
             {
                 "cft.gene_support:gene": "IGHD2-2*02", 
-                "cft.gene_support:prob": 0.962118388533266
+                "cft.gene_support:prob": 0.962118388533
             }, 
             {
                 "cft.gene_support:gene": "IGHD2-2*01", 
-                "cft.gene_support:prob": 0.03788156219504781
+                "cft.gene_support:prob": 0.037881562195
             }, 
             {
                 "cft.gene_support:gene": "IGHD2-2*03", 
-                "cft.gene_support:prob": 4.927161063826962e-08
+                "cft.gene_support:prob": 4.92716106383e-08
             }, 
             {
                 "cft.gene_support:gene": "IGHD2-15*01", 
-                "cft.gene_support:prob": 3.0193262697735936e-16
+                "cft.gene_support:prob": 3.01932626977e-16
             }
         ], 
-        "cft.cluster:partition_file": "tests/seed-partition.yaml", 
+        "cft.cluster:partition_file": "tests/seed-partition.csv", 
         "cft.cluster:mean_mut_freq": 0.019552127731547256, 
         "cft.cluster:id": "seed-cluster", 
         "cft.cluster:d_end": 327, 
         "cft.cluster:dataset": {
             "db:ident": [
-                "221174ed-37cc-3c53-9744-0c19ed565b28"
+                "2023c7c6-0885-3bae-8889-dea16773281c"
             ]
         }, 
         "cft.cluster:j_per_gene_support": [
@@ -210,17 +210,17 @@
             }, 
             {
                 "cft.gene_support:gene": "IGHJ3*01", 
-                "cft.gene_support:prob": 1.1616483093773221e-21
+                "cft.gene_support:prob": 1.16164830938e-21
             }
         ], 
         "cft.cluster:inseqs": {
             "tripl.file:sources": [
                 {
-                    "tripl.file:path": "../../tests/seed-partition.yaml"
+                    "tripl.file:path": "../../tests/seed-partition.csv"
                 }
             ], 
             "db:ident": [
-                "efa12d60-5543-33c3-a3be-78cebe5d9ad3"
+                "20ff3c37-3270-3984-9da9-e0058da68ea7"
             ], 
             "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/cluster_seqs.fa"
         }, 
@@ -232,23 +232,23 @@
                     }
                 ], 
                 "db:ident": [
-                    "d54c97d7-5bc6-3a88-8dd0-e11e928bc32c"
+                    "2203a6c2-1631-37f6-8a59-8c6525d93d26"
                 ], 
                 "tripl.file:path": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/aligned_translated_inseqs.fa"
             }
         ], 
         "cft.cluster:partition": {
             "db:ident": [
-                "6584423d-748b-3510-ae23-902e18526fdf"
+                "19c4ff26-e5a6-3f41-82d0-a04e80489ed0"
             ]
         }, 
         "cft.cluster:sample": {
             "db:ident": [
-                "70d15c9e-81a7-3050-96bf-a2bd3e9d563b"
+                "9ed415d6-79f5-3c74-8d4e-c80bb0faf028"
             ]
         }, 
         "db:ident": [
-            "727abc08-cb86-3555-b9f1-22b2dd0a8c61"
+            "a1d92da1-7ae8-333d-8069-d44cb85140b9"
         ]
     }
 ]

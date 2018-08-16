@@ -6,19 +6,19 @@
     "cft.cluster:d_per_gene_support": [
         {
             "cft.gene_support:gene": "IGHD2-2*02", 
-            "cft.gene_support:prob": 0.962118388533266
+            "cft.gene_support:prob": 0.962118388533
         }, 
         {
             "cft.gene_support:gene": "IGHD2-2*01", 
-            "cft.gene_support:prob": 0.03788156219504781
+            "cft.gene_support:prob": 0.037881562195
         }, 
         {
             "cft.gene_support:gene": "IGHD2-2*03", 
-            "cft.gene_support:prob": 4.927161063826962e-08
+            "cft.gene_support:prob": 4.92716106383e-08
         }, 
         {
             "cft.gene_support:gene": "IGHD2-15*01", 
-            "cft.gene_support:prob": 3.0193262697735936e-16
+            "cft.gene_support:prob": 3.01932626977e-16
         }
     ], 
     "cft.cluster:d_start": 299, 
@@ -32,7 +32,7 @@
         }, 
         {
             "cft.gene_support:gene": "IGHJ3*01", 
-            "cft.gene_support:prob": 1.1616483093773221e-21
+            "cft.gene_support:prob": 1.16164830938e-21
         }
     ], 
     "cft.cluster:j_start": 329, 
@@ -40,7 +40,7 @@
     "cft.cluster:mean_mut_freq": 0.019552127731547256, 
     "cft.cluster:n_seqs": 40, 
     "cft.cluster:naive_seq": "CAGGTGCAGCTGGTGGAGTCTGGGGGAGGCTTGGTCCAGCCTGGGGGGTCCCTGAGACTCTCCTGTTCAGCCTCTGGATTCACCTTCAGTAGCTATGCTATGCACTGGGTCCGCCAGGCTCCAGGGAAGGGACTGGAATATGTTTCAGCTATTAGTAGTAATGGGGGTAGCACATACTACGCAGACTCAGTGAAGGGCAGATTCACCATCTCCAGAGACAATTCCAAGAACACGCTGTATCTGCAAATGAACAGCCTGAGAGCTGAGGACACGGCTGTGTATTACTGTGCGAGAGAGTTAGGATATTGTAGTAGTACCAGCTGCTATGGTGATGCTTTTGATATCTGGGGCCAAGGGACAATGGTCACCGTCTCTTCAG", 
-    "cft.cluster:partition_file": "tests/seed-partition.yaml", 
+    "cft.cluster:partition_file": "tests/seed-partition.csv", 
     "cft.cluster:seqs_file": "None/simulation-test/-1118600317502690934/seed-part-0/seed-cluster/cluster_seqs.fa", 
     "cft.cluster:v_end": 296, 
     "cft.cluster:v_gene": "IGHV3-64*04", 

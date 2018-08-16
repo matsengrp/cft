@@ -2,32 +2,32 @@
     {
         "cft.seed:subject": {
             "db:ident": [
-                "d27091b1-8c90-3db4-bc4e-3bd14067d87c"
+                "8dfd4b6b-666a-3578-adf6-bf09f1c76cd8"
             ]
         }, 
         "cft.seed:build": {
             "db:ident": [
-                "498ed22e-945d-11e8-b0c0-abaeb67820c1"
+                "20680580-a0f8-11e8-8b0f-c52491d13ce2"
             ]
         }, 
         "cft.seed:dataset": {
             "db:ident": [
-                "221174ed-37cc-3c53-9744-0c19ed565b28"
+                "2023c7c6-0885-3bae-8889-dea16773281c"
             ]
         }, 
         "cft.seed:sample": {
             "db:ident": [
-                "70d15c9e-81a7-3050-96bf-a2bd3e9d563b"
+                "9ed415d6-79f5-3c74-8d4e-c80bb0faf028"
             ]
         }, 
-        "cft.seed:partition-file": "tests/seed-partition.yaml", 
+        "cft.seed:partition-file": "tests/seed-partition.csv", 
         "cft.seed.db:ident": [
-            "276754d7-9f68-3360-8a56-8f172c5b122d"
+            "00dcfaf5-bbbc-308e-ade6-c5f685830c64"
         ], 
         "cft.seed:id": "-1118600317502690934", 
         "tripl:type": "cft.seed", 
         "db:ident": [
-            "276754d7-9f68-3360-8a56-8f172c5b122d"
+            "00dcfaf5-bbbc-308e-ade6-c5f685830c64"
         ]
     }
 ]
