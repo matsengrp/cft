@@ -71,7 +71,7 @@ def pull_datasets(t):
 
 clonal_family_pull_pattern = [
    {    
-#     "cft.reconstruction:seqmeta": [{"tripl.csv:data": ["*"]}],
+     #"cft.reconstruction:seqmeta": [{"tripl.csv:data": ["*"]}],
      "cft.reconstruction:cluster_aa": [{"bio.seq:set": ["*"]}],
      "cft.reconstruction:asr_tree": ["*"],
      "cft.reconstruction:cluster": 
@@ -99,25 +99,25 @@ clonal_family_pull_pattern = [
       "cft.cluster:naive_seq",
       "cft.cluster:mean_mut_freq",
       {"cft.cluster:sample": ["cft.sample:id", "cft.sample:timepoint"],
-      "cft.cluster:dataset": ["cft.dataset:id"],
-      "cft.cluster:partition": ["cft.partition:id", "cft.partition:logprob", "cft.partition:step"],
-      "cft.cluster:subject": ["cft.subject:id"],
-      "cft.cluster:v_per_gene_support": ["cft.gene_support:gene", "cft.gene_support:prob"],
-      "cft.cluster:d_per_gene_support": ["cft.gene_support:gene", "cft.gene_support:prob"],
-      "cft.cluster:j_per_gene_support": ["cft.gene_support:gene", "cft.gene_support:prob"],
+       "cft.cluster:dataset": ["cft.dataset:id"],
+       "cft.cluster:partition": ["cft.partition:id", "cft.partition:logprob", "cft.partition:step"],
+       "cft.cluster:subject": ["cft.subject:id"],
+       "cft.cluster:v_per_gene_support": ["cft.gene_support:gene", "cft.gene_support:prob"],
+       "cft.cluster:d_per_gene_support": ["cft.gene_support:gene", "cft.gene_support:prob"],
+       "cft.cluster:j_per_gene_support": ["cft.gene_support:gene", "cft.gene_support:prob"],
       }
      ]
    } 
 ]
 
-def createNodeRecords(node):
+def create_node_records(node):
     data = []
     node_datum = {}
     node_datum["label"] = node_datum["id"] = node.name
     if not node.is_leaf():
         node_datum["type"] = "node"
         for n in node.children:
-            children = createNodeRecords(n)
+            children = create_node_records(n)
             data = data + children
     else:
         node_datum["type"] = "leaf"
@@ -133,18 +133,18 @@ def createNodeRecords(node):
     data.append(node_datum)
     return data
 
-def parseTreeData(s):
+def parse_tree_data(s):
     t = PhyloTree(s, format=1)
-    return createNodeRecords(t)
+    return create_node_records(t)
 
 def clean_clonal_family_record(d):
     c = d.copy()
     c['cft.reconstruction:cluster'] = c['cft.reconstruction:cluster'][0]
     #c['cft.reconstruction:cluster']['cft.reconstruction:asr_tree'] = c['cft.reconstruction:asr_tree'][0]
- #   c['cft.reconstruction:cluster']['cft.reconstruction:seqmeta'] = c['cft.reconstruction:seqmeta']
+    #c['cft.reconstruction:cluster']['cft.reconstruction:seqmeta'] = c['cft.reconstruction:seqmeta']
     c['cft.reconstruction:cluster']['cft.reconstruction:cluster_aa'] = list(c['cft.reconstruction:cluster_aa'] )[0]['bio.seq:set']
     if(c['cft.reconstruction:asr_tree'][0].get('tripl.file:contents')):
-        c['cft.reconstruction:cluster']['cft.reconstruction:asr_tree'] = parseTreeData(list(c['cft.reconstruction:asr_tree'][0]['tripl.file:contents'])[0])
+        c['cft.reconstruction:cluster']['cft.reconstruction:asr_tree'] = parse_tree_data(list(c['cft.reconstruction:asr_tree'][0]['tripl.file:contents'])[0])
     c = c['cft.reconstruction:cluster']
     try:
         del c['cft.cluster:unique_ids']
@@ -155,8 +155,7 @@ def clean_clonal_family_record(d):
 def pull_clonal_families(t):
     result = map(comp(clean_record, clean_clonal_family_record),
             t.pull_many(clonal_family_pull_pattern, {'tripl:type': 'cft.reconstruction'}))
-#    print(result)
-   # result[0]['cft.reconstruction:cluster']['cft.reconstruction:asr_tree'] = parseTreeData(list(result['cft.reconstruction:cluster']['cft.reconstruction:asr_tree']['tripl.file:contents'])[0])
+    #result[0]['cft.reconstruction:cluster']['cft.reconstruction:asr_tree'] = parse_tree_data(list(result['cft.reconstruction:cluster']['cft.reconstruction:asr_tree']['tripl.file:contents'])[0])
     return result
 
 
