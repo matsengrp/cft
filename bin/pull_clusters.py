@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+# DEPRECATED! See bin/build_olmsted_data.py for generalization/replacement!
+import warnings
+warnings.warn('DEPRECATED! See bin/build_olmsted_data.py for generalization/replacement!')
+
+
 import argparse
 import json
 import csv
