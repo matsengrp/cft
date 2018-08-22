@@ -440,6 +440,17 @@ def add_cluster_analysis(w):
             c['aligned_inseqs'],
             "FastTree -nt -quiet $SOURCE > $TARGET 2> $TARGET-.log")
 
+    @w.add_target(ingest=True)
+    def selection_metrics(baseoutdir, c):
+        outdir = path.join(baseoutdir, 'selection-metrics')
+        return env.Command(
+            [path.join(outdir, "tree-stats.json"), path.join(outdir, "lonr")],  # NOTE tree-stats.json isn't used yet
+            [path.join(baseoutdir, "fasttree.nwk"), c['aligned_inseqs']],  # sources
+            # TODO probably remove the --overwrite
+            # TODO lonr a.t.m. is still making its own trees, which should probably change
+            "%s/bin/calculate_tree_metrics.py --treefile ${SOURCES[0]} --seqfile ${SOURCES[1]} --outfile ${TARGETS[0]} --naive-seq-name %s --lonr-outdir ${TARGETS[1]} --overwrite" % (partis_path, options['inferred_naive_name'])
+        )
+
     @w.add_nest(metadata=lambda c, d: d)
     def reconstruction(c):
         return [{'id': prune_strategy + '-' + asr_prog,
