@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from __future__ import division
 import argparse
 import json
 import csv
@@ -110,28 +110,38 @@ clonal_family_pull_pattern = [
    } 
 ]
 
-def create_node_records(node):
-    data = []
-    node_datum = {}
-    node_datum["label"] = node_datum["id"] = node.name
-    if not node.is_leaf():
-        node_datum["type"] = "node"
-        for n in node.children:
-            children = create_node_records(n)
-            data = data + children
-    else:
-        node_datum["type"] = "leaf"
-    if node.up:
-        node_datum["parent"] = node.up.name
-        node_datum["length"] = node.get_distance(node.up)
-        node_datum["distance"] = node.get_distance("naive")
-    else:
-        node_datum["type"] = "root"
-        node_datum["parent"] = None
-        node_datum["length"] = 0.0 
-        node_datum["distance"] = 0.0 
-    data.append(node_datum)
-    return data
+def create_node_records(tree):
+    records = []
+    leaves_counter = 1
+    for n in tree.traverse('postorder'):
+        n.label = n.id = n.name
+        n.type = "node"
+        if n.is_leaf():
+            # get height for leaves
+            n.type = "leaf"
+            n.height = leaves_counter
+            leaves_counter +=1
+        else:
+            # get height for non leaves
+            total_height = 0
+            for child in n.children:
+                total_height += child.height
+            avg_height = total_height/len(n.children)
+            n.height = avg_height
+        if n.up:
+            # get parent info, distance for non root
+            n.parent = n.up.name
+            n.length = n.get_distance(n.up)
+            n.distance = n.get_distance("naive")
+        else:
+            # n is root
+            n.type = "root"
+            n.parent = None
+            n.length = 0.0
+            n.distance = 0.0
+        records.append({'id': n.id, 'label': n.label, 'type': n.type, 'parent': n.parent, 'length': n.length, 'distance': n.distance, 'height': n.height})
+
+    return records
 
 def parse_tree_data(s):
     t = PhyloTree(s, format=1)
