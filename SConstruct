@@ -440,16 +440,15 @@ def add_cluster_analysis(w):
             c['aligned_inseqs'],
             "FastTree -nt -quiet $SOURCE > $TARGET 2> $TARGET-.log")
 
-    @w.add_target(ingest=True)
-    def selection_metrics(baseoutdir, c):
-        outdir = path.join(baseoutdir, 'selection-metrics')
-        return env.Command(
-            [path.join(outdir, "tree-stats.json"), path.join(outdir, "lonr")],  # NOTE tree-stats.json isn't used yet
-            [path.join(baseoutdir, "fasttree.nwk"), c['aligned_inseqs']],  # sources
-            # TODO probably remove the --overwrite
-            # TODO lonr a.t.m. is still making its own trees, which should probably change
-            "%s/bin/calculate_tree_metrics.py --treefile ${SOURCES[0]} --seqfile ${SOURCES[1]} --outfile ${TARGETS[0]} --naive-seq-name %s --lonr-outdir ${TARGETS[1]} --overwrite" % (partis_path, options['inferred_naive_name'])
-        )
+    # @w.add_target(ingest=True)
+    # def selection_metrics(baseoutdir, c):
+    #     outdir = path.join(baseoutdir, 'selection-metrics')
+    #     return env.Command(
+    #         [path.join(outdir, "tree-stats.json")],
+    #         [path.join(baseoutdir, "fasttree.nwk"), c['aligned_inseqs']],  # sources # don't use fasttree any more
+    #         # TODO lonr a.t.m. is still making its own trees, which should probably change TODO
+    #         "%s/bin/calculate_tree_metrics.py --seqfile ${SOURCES[1]} XXX --treefile ${SOURCES[0]} XXX --outfile ${TARGETS[0]} --naive-seq-name %s --debug" % (partis_path, options['inferred_naive_name'])
+    #     )
 
     @w.add_nest(metadata=lambda c, d: d)
     def reconstruction(c):
@@ -599,6 +598,18 @@ def add_cluster_analysis(w):
         else:
             print("something has gone terribly wrong")
 
+
+    # doesn't work yet
+    # @w.add_target(ingest=True)
+    # def selection_metrics(baseoutdir, c):
+    #     outdir = path.join(baseoutdir, 'selection-metrics')
+    #     phylip_outfile = baseoutdir + '/outfile'
+    #     return env.Command(
+    #         [path.join(outdir, "tree-stats.json")],
+    #         [phylip_outfile, c['aligned_inseqs']],  # sources
+    #         # TODO lonr a.t.m. is still making its own trees, which should probably change TODO
+    #         "%s/bin/calculate_tree_metrics.py --seqfile ${SOURCES[1]} --phylip-outfile ${SOURCES[0]} --outfile ${TARGETS[0]} --naive-seq-name %s --debug" % (partis_path, options['inferred_naive_name'])
+    #     )
 
     #@w.add_target(ingest=True)
     #def asr_input_tree(outdir, c):
