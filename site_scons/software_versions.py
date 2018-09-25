@@ -25,7 +25,7 @@ software_versions = {
     'muscle': 'muscle -version',
     'seqmagick': 'seqmagick --version',
     'FastTree': None,
-    'prank': 'prank -v',
+    #'prank': 'prank -v',
     'tripl': tripl_version,
     #'nestly': lambda: nestly.__version__,
     'ete3': lambda: ete3.__version__,

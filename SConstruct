@@ -504,7 +504,8 @@ def add_cluster_analysis(w):
         # orig/new names, joined on sequence from the other file
         sources = {'--partis-seqmeta': c['partis_seqmeta'],
                    '--cluster-mapping': c['cluster_mapping'] if c['reconstruction']['prune_strategy'] == 'min_adcl' else None,
-                   }
+                   '--pruned-ids': c['pruned_ids'] if c['reconstruction']['prune_strategy'] == 'seed_lineage' else None, 
+                  }
         sources = {k: v for k, v in sources.items() if v}
         base_call = 'aggregate_minadcl_cluster_multiplicities.py '
         for i, (k, v) in enumerate(sources.items()):

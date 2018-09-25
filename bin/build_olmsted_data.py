@@ -15,7 +15,6 @@ def get_args():
     parser.add_argument('-s', '--sequences-out')
     return parser.parse_args()
 
-
 # Some generic data processing helpers helpers
 
 def comp(f, g):
@@ -71,9 +70,10 @@ def pull_datasets(t):
 
 clonal_family_pull_pattern = [
    {    
-     #"cft.reconstruction:seqmeta": [{"tripl.csv:data": ["*"]}],
+     "cft.reconstruction:seqmeta": [{"tripl.csv:data": ["bio.seq:id", "cft.seq:cluster_multiplicity", "cft.seq:multiplicity"]}],
      "cft.reconstruction:cluster_aa": [{"bio.seq:set": ["*"]}],
      "cft.reconstruction:asr_tree": ["*"],
+     "cft.reconstruction:asr_seqs": [{'bio.seq:set': ['bio.seq:id', 'bio.seq:seq']}],
      "cft.reconstruction:cluster": 
      [
       "db:ident",
@@ -110,11 +110,20 @@ clonal_family_pull_pattern = [
    } 
 ]
 
-def create_node_records(tree):
+def create_node_records(tree, nt_seqs_dict, aa_seqs_dict, seqmeta_dict):
     records = []
     leaves_counter = 1
     for n in tree.traverse('postorder'):
         n.label = n.id = n.name
+        n.nt_seq = nt_seqs_dict[n.name]
+        n.aa_seq = aa_seqs_dict[n.name]
+        mult = None
+        cluster_mult = None
+        if n.name in seqmeta_dict.keys():
+            mult = seqmeta_dict[n.name]["cft.seq:multiplicity"].pop()
+            clust_mult = seqmeta_dict[n.name]["cft.seq:cluster_multiplicity"].pop()
+        n.multiplicity = int(mult) if mult else mult
+        n.cluster_multiplicity = int(clust_mult) if clust_mult else clust_mult
         n.type = "node"
         if n.is_leaf():
             # get height for leaves
@@ -139,22 +148,36 @@ def create_node_records(tree):
             n.parent = None
             n.length = 0.0
             n.distance = 0.0
-        records.append({'id': n.id, 'label': n.label, 'type': n.type, 'parent': n.parent, 'length': n.length, 'distance': n.distance, 'height': n.height})
+        records.append({'id': n.id, 'label': n.label, 'type': n.type, 'parent': n.parent, 'length': n.length, 'distance': n.distance, 'height': n.height, 'nt_seq': n.nt_seq, 'aa_seq': n.aa_seq, 'multiplicity': n.multiplicity, 'cluster_multiplicity': n.cluster_multiplicity})
 
     return records
 
-def parse_tree_data(s):
+def parse_tree_data(s, nt_seqs_dict, aa_seqs_dict, seqmeta_dict):
     t = PhyloTree(s, format=1)
-    return create_node_records(t)
+    return create_node_records(t, nt_seqs_dict, aa_seqs_dict, seqmeta_dict)
+
+def create_seqs_dict(seq_records):
+    d = dict()
+    for record in seq_records:
+        d[record["bio.seq:id"].pop()] = record["bio.seq:seq"].pop()
+    return d
+
+def create_seqmeta_dict(seqmeta_records):
+    d = dict()
+    for record in seqmeta_records:
+        seq_id = record["bio.seq:id"].pop()
+        d[seq_id] = record
+    return d
 
 def clean_clonal_family_record(d):
     c = d.copy()
     c['cft.reconstruction:cluster'] = c['cft.reconstruction:cluster'][0]
-    #c['cft.reconstruction:cluster']['cft.reconstruction:asr_tree'] = c['cft.reconstruction:asr_tree'][0]
     #c['cft.reconstruction:cluster']['cft.reconstruction:seqmeta'] = c['cft.reconstruction:seqmeta']
-    c['cft.reconstruction:cluster']['cft.reconstruction:cluster_aa'] = list(c['cft.reconstruction:cluster_aa'] )[0]['bio.seq:set']
+    aa_seqs_dict = create_seqs_dict(list(c['cft.reconstruction:cluster_aa'])[0]['bio.seq:set'])
+    nt_seqs_dict = create_seqs_dict(list(c['cft.reconstruction:asr_seqs'])[0]['bio.seq:set'])
+    seqmeta_dict = create_seqmeta_dict(list(c['cft.reconstruction:seqmeta'])[0]['tripl.csv:data'])
     if(c['cft.reconstruction:asr_tree'][0].get('tripl.file:contents')):
-        c['cft.reconstruction:cluster']['cft.reconstruction:asr_tree'] = parse_tree_data(list(c['cft.reconstruction:asr_tree'][0]['tripl.file:contents'])[0])
+        c['cft.reconstruction:cluster']['cft.reconstruction:asr_tree'] = parse_tree_data(list(c['cft.reconstruction:asr_tree'][0]['tripl.file:contents'])[0], nt_seqs_dict, aa_seqs_dict, seqmeta_dict)
     c = c['cft.reconstruction:cluster']
     try:
         del c['cft.cluster:unique_ids']
@@ -167,7 +190,6 @@ def pull_clonal_families(t):
             t.pull_many(clonal_family_pull_pattern, {'tripl:type': 'cft.reconstruction'}))
     #result[0]['cft.reconstruction:cluster']['cft.reconstruction:asr_tree'] = parse_tree_data(list(result['cft.reconstruction:cluster']['cft.reconstruction:asr_tree']['tripl.file:contents'])[0])
     return result
-
 
 def write_out(data, filename, args):
     with open(filename, 'w') as fh:

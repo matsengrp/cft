@@ -5,7 +5,9 @@ import csv
 import collections
 #import itertools
 
-
+def filter_by_ids(results, ids):
+    filtered_results = [result for result in results if result['unique_id'] in ids]
+    return filtered_results
 
 def aggregate_clusters(merge_results, cluster_mapping):
     merge_results = {row['sequence']: row for row in merge_results}
@@ -69,11 +71,18 @@ def seqmeta_reader(filename):
                       'duplicates': d['duplicates'].split(':')})
             for d in data]
 
+def pruned_ids_reader(filename):
+    data = set()
+    with open(filename) as f:
+        for line in f:
+            data.add(line.rstrip())
+    return data 
 
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--cluster-mapping', type=cluster_reader)
     parser.add_argument('--partis-seqmeta', type=seqmeta_reader)
+    parser.add_argument('--pruned-ids', type=pruned_ids_reader)
     parser.add_argument('output', type=argparse.FileType('w'))
     args = parser.parse_args()
     return args
@@ -91,6 +100,8 @@ def main():
     results = args.partis_seqmeta
     if args.cluster_mapping:
         results = aggregate_clusters(results, args.cluster_mapping)
+    if args.pruned_ids:
+        results = filter_by_ids(results, args.pruned_ids)
     out_writer.writerows(format_results(results))
     args.output.close()
 
