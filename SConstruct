@@ -395,7 +395,7 @@ def add_cluster_analysis(w):
                 'process_partis.py' +
                     ' --remove-stops --remove-frameshifts --remove-mutated-invariants' +
                     ' --partition-file ${SOURCES[0]}' +
-                   (' --upstream-seqmeta ${SOURCES[2]}' if perseq_metafile else '') +
+                   (' --upstream-seqmeta ${SOURCES[1]}' if perseq_metafile else '') +
                     ' --parameter-dir ' + c['sample']['parameter-dir'] +
                     ' --locus ' + locus(c) +
                     ' --max-sequences 10000' +
