@@ -61,8 +61,8 @@ from tripl import nestly as nestly_tripl
 default_partis_path = path.join(os.getcwd(), 'partis')
 partis_path = os.environ.get('PARTIS', default_partis_path)
 sys.path.append(path.join(partis_path, 'python'))
-import clusterpath
-import utils
+import utils as partisutils
+print("partis utils loading from:", partisutils.__file__)
 
 # Scons requirements
 from SCons.Script import Environment
@@ -310,13 +310,13 @@ def with_other_partitions(node):
 def valid_cluster(cp, part, clust):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
     we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
-    _, annotation_list, _ = utils.read_output(part['partition-file'], dont_add_implicit_info=True)
+    _, annotation_list, _ = partisutils.read_output(part['partition-file'], dont_add_implicit_info=True)
     for line in annotation_list:
         if line['unique_ids'] == clust:
-            func_list = [utils.is_functional(line, iseq) for iseq in range(len(line['unique_ids']))]
+            func_list = [partisutils.is_functional(line, iseq) for iseq in range(len(line['unique_ids']))]
             n_good_seqs = func_list.count(True)
             return n_good_seqs > 2
-    raise Exception('couldn\'t find requested uids %s in %s' (clust, par['partition-file']))
+    raise Exception('couldn\'t find requested uids %s in %s' (clust, part['partition-file']))
 
 def valid_seed_partition(cp, part, best_plus_i, seed_id):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
@@ -329,11 +329,11 @@ def valid_seed_partition(cp, part, best_plus_i, seed_id):
 # Try to read partition file; If fails, it is possibly because it's empty. Catch that case and warn
 def read_partition_file(filename):
     try:
-        _, _, cpath = utils.read_output(filename, skip_annotations=True)
+        _, _, cpath = partisutils.read_output(filename, skip_annotations=True)
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
-        print(utils.pad_lines(''.join(lines)))
+        print(''.join((' ' * 8) + line for line in lines))
         warn("Unable to parse partition file (see error above, ommitting from results): {}".format(filename))
         return []
     return cpath
