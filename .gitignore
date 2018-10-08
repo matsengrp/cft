@@ -102,3 +102,4 @@ data
 /cftweb
 datascripts
 *metadata.json
+.sconsign.dblite
