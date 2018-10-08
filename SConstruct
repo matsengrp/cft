@@ -471,6 +471,15 @@ def add_cluster_analysis(w):
                 + (" --seed " + c['seed']['id'] if 'seed' in c else '')
                 + " $SOURCE $TARGET")
 
+    # create png showing included seqs (kept in pruning) as red
+    @w.add_target()
+    def pruned_cluster_fasttree_png(outdir, c):
+        pruned_cluster_fasttree_png = env.Command(
+            path.join(outdir, "pruned_cluster_fasttree.png"),
+            [c["fasttree"], c["pruned_ids"]],
+            "xvfb-run -a bin/annotate_fasttree_tree.py $SOURCES " + " --naive %s" % options['inferred_naive_name'] + (" --seed " + c['seed']['id'] if 'seed' in c else '')  + " --output-path $TARGET")
+        env.Depends(pruned_cluster_fasttree_png, "bin/annotate_fasttree_tree.py")
+        return pruned_cluster_fasttree_png
 
     @w.add_target()
     def cluster_mapping(outdir, c):
