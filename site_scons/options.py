@@ -55,7 +55,7 @@ Script.AddOption('--lazy-metadata',
 
 Script.AddOption('--inferred-naive-name',
         dest='inferred_naive_name',
-        default='X-naive-X',  # needs to be fairly obscure so it doesn't conflict with any names in the input file
+        default='inferred_naive',
         help="""What do we call the partis-inferred naive sequence when we inject it among the other (input) sequences.""")
 
 
