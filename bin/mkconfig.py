@@ -42,7 +42,6 @@ Setting for this run:
 ____________
 
 """
-import re
 import os
 import argparse
 from warnings import warn
@@ -67,10 +66,11 @@ def main():
 
     parser.add_argument('phylip', nargs=1, help='PHYLIP input', type=existing_file)
     parser.add_argument('treeprog', help='dnaml or dnapars', type=str)
-    parser.add_argument('--inferred-naive-name', required=True)
     args = parser.parse_args()
 
-    naive = extract_naive(args.phylip[0], args.inferred_naive_name)
+    # Note that we have hardcoded `naive` as the translation for the inferred_naive_name in
+    # bin/make_phylip.py, so this will always be the name we look for here.
+    naive = extract_naive(args.phylip[0], 'naive')
     print("{}".format(os.path.basename(args.phylip[0])))		# phylip input file
     if naive:
         print("O")						# Outgroup root

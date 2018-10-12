@@ -12,6 +12,11 @@ Script.AddOption('--infiles',
         assumed to be in --base-datapath. Dataset names will be assined in relation to this --base-datapath
         if present. Note: symlinks may not work properly here unless they point to things in base-datapath also.""")
 
+Script.AddOption('--depth',
+        dest="depth",
+        default=50,
+        help="""How many clonal families should we process per unseeded samples?""")
+
 Script.AddOption('--asr-progs',
         dest='asr_progs',
         metavar='LIST',
@@ -64,6 +69,7 @@ def get_options(env):
     test_run = env.GetOption("test_run")
     return dict(
         infiles = env.GetOption('infiles').split(':'),
+        depth = int(env.GetOption('depth')),
         test_run = env.GetOption('test_run'),
         asr_progs = env.GetOption('asr_progs').split(':'),
         prune_strategies = env.GetOption('prune_strategies').split(':'),

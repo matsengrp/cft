@@ -209,7 +209,7 @@ def subject(c):
 # Initialize sample nest
 # -----------------------------
 
-# Samples an either point to a specific timepoint through the yaml meta, or can have a "merged" attribute
+# Samples can either point to a specific timepoint through the yaml meta, or can have a "merged" attribute
 # value there, if it is a sample composed of many timepoints. These metadata will be processed accordingly.
 
 # Samples can have partitions, and they can also have other-partitions, and seeded partitions.
@@ -378,7 +378,11 @@ def partition(c):
 
 # This is a little silly, but gives us the right semantics for partitions > clusters
 #w.add('cluster', ['cluster'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
-w.add('cluster', ['seed-cluster'])
+@w.add_nest(label_func=lambda d: d['id'])
+def cluster(c):
+    part = c['partition']
+    return [{'id': 'seed-cluster',
+             'size': part['seed_cluster_size']}]
 
 
 def add_cluster_analysis(w):
@@ -474,12 +478,20 @@ def add_cluster_analysis(w):
     # create png showing included seqs (kept in pruning) as red
     @w.add_target()
     def pruned_cluster_fasttree_png(outdir, c):
-        pruned_cluster_fasttree_png = env.Command(
-            path.join(outdir, "pruned_cluster_fasttree.png"),
-            [c["fasttree"], c["pruned_ids"]],
-            "xvfb-run -a bin/annotate_fasttree_tree.py $SOURCES " + " --naive %s" % options['inferred_naive_name'] + (" --seed " + c['seed']['id'] if 'seed' in c else '')  + " --output-path $TARGET")
-        env.Depends(pruned_cluster_fasttree_png, "bin/annotate_fasttree_tree.py")
-        return pruned_cluster_fasttree_png
+        cluster = c['cluster']
+        max_cluster_size = 4500
+        if cluster.get('size') < max_cluster_size:
+            pruned_cluster_fasttree_png = env.Command(
+                path.join(outdir, "pruned_cluster_fasttree.png"),
+                [c["fasttree"], c["pruned_ids"]],
+                # The `-` at the start here tells scons to ignore if it doesn't build; this may occasionally be
+                # the case for large clusters. Also, redirect stdin/out to dev/null because the errors messages
+                # here can be pretty noisy.
+                "- xvfb-run -a bin/annotate_fasttree_tree.py $SOURCES " + " --naive %s" % options['inferred_naive_name'] +
+                    (" --seed " + c['seed']['id'] if 'seed' in c else '')  +
+                    " --output-path $TARGET &>> /dev/null" )
+            env.Depends(pruned_cluster_fasttree_png, "bin/annotate_fasttree_tree.py")
+            return pruned_cluster_fasttree_png
 
     @w.add_target()
     def cluster_mapping(outdir, c):
@@ -527,7 +539,7 @@ def add_cluster_analysis(w):
         return env.Command(
             [path.join(outdir, x) for x in ('pruned.phy', 'seqname_mapping.csv')],
             c['pruned_seqs'],
-            'make_phylip.py $SOURCE $TARGETS --dont-rename ' + options['inferred_naive_name'])
+            'make_phylip.py $SOURCE $TARGETS --inferred-naive-name ' + options['inferred_naive_name'])
 
 
     @w.add_target()
@@ -551,7 +563,7 @@ def add_cluster_analysis(w):
             config = env.Command(
                 path.join(outdir, asr_prog + ".cfg"),
                 c['phy'],
-                'python bin/mkconfig.py $SOURCE ' + asr_prog + ' --inferred-naive-name ' + options['inferred_naive_name'] + '> $TARGET')
+                'python bin/mkconfig.py $SOURCE ' + asr_prog + '> $TARGET')
             phylip_out = env.SRun(
                 path.join(outdir, "outfile"),
                 config,
@@ -707,7 +719,7 @@ def add_unseeded_analysis(w):
                 # Sort by len (dec) and apply index i
                 in enumerate(sorted(c['partition']['clusters'], key=len, reverse=True))
                 # Select top 5 or any matching seeds of interest
-                if (len(clust) > 5) and (i < 5 or has_seeds(clust, c)) and valid_cluster(cp, part, clust)]
+                if (len(clust) > 5) and (i < 100 or has_seeds(clust, c)) and valid_cluster(cp, part, clust)]
 
 
     # Finally call out to the separate cluster analyses as defined above
