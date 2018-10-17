@@ -36,6 +36,7 @@ import json
 import re
 import functools as fun
 import traceback
+import string
 
 from os import path
 from warnings import warn
@@ -599,17 +600,21 @@ def add_cluster_analysis(w):
             print("something has gone terribly wrong")
 
 
-    # doesn't work yet
-    # @w.add_target(ingest=True)
-    # def selection_metrics(baseoutdir, c):
-    #     outdir = path.join(baseoutdir, 'selection-metrics')
-    #     phylip_outfile = baseoutdir + '/outfile'
-    #     return env.Command(
-    #         [path.join(outdir, "tree-stats.json")],
-    #         [phylip_outfile, c['aligned_inseqs']],  # sources
-    #         # TODO lonr a.t.m. is still making its own trees, which should probably change TODO
-    #         "%s/bin/calculate_tree_metrics.py --seqfile ${SOURCES[1]} --phylip-outfile ${SOURCES[0]} --outfile ${TARGETS[0]} --naive-seq-name %s --debug" % (partis_path, options['inferred_naive_name'])
-    #     )
+    @w.add_target(ingest=True)
+    def selection_metrics(baseoutdir, c):
+        outdir = path.join(baseoutdir, 'selection-metrics')
+        new_partis_infname = path.join(baseoutdir, 'asr-with-only-Ns.fa')
+        extra_ambig_chars = 'RYSWKMBDHV'
+        ambiguous_char_translations = string.maketrans(extra_ambig_chars, ''.join('N' for _ in range(len(extra_ambig_chars))))
+        seqfos = utils.read_fastx(path.join(baseoutdir, 'asr.fa'))
+        with open(new_partis_infname, 'w') as nfile:
+            for sfo in seqfos:
+                nfile.write('>%s\n%s\n' % (sfo['name'], sfo['seq'].translate(ambiguous_char_translations)))
+        return env.Command(
+            [path.join(outdir, "selection-metric-annotations.yaml")],
+            [new_partis_infname, path.join(baseoutdir, 'asr.nwk')],  # sources
+            "%s/bin/partis annotate --parameter-dir %s --all-seqs-simultaneous --get-tree-metrics --infname ${SOURCES[0]} --treefname ${SOURCES[1]} --outfname ${TARGETS[0]}" % (partis_path, c['sample']['parameter-dir'])
+        )
 
     #@w.add_target(ingest=True)
     #def asr_input_tree(outdir, c):
