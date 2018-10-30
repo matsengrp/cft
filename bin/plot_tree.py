@@ -12,7 +12,7 @@ def find_node(tree, pattern):
     regex = re.compile(pattern).search
     nodes =  [ node for node in tree.traverse() for m in [regex(node.name)] if m]
     if not nodes:
-        warnings.warn("Cannot find matching node; looking for name matching '{}'".format(pattern))
+        # warnings.warn("Cannot find matching node; looking for name matching '{}'".format(pattern))
         return
     else:
         if len(nodes) > 1:

@@ -66,11 +66,17 @@ def main():
 
     parser.add_argument('phylip', nargs=1, help='PHYLIP input', type=existing_file)
     parser.add_argument('treeprog', help='dnaml or dnapars', type=str)
+
     args = parser.parse_args()
 
     # Note that we have hardcoded `naive` as the translation for the inferred_naive_name in
     # bin/make_phylip.py, so this will always be the name we look for here.
     naive = extract_naive(args.phylip[0], 'naive')
+
+    # Not doing this because if you specify a long name it errors anyway...
+    #parser.add_argument('--inferred-naive-name', required=True)
+    #naive = extract_naive(args.phylip[0], args.inferred_naive_name)
+
     print("{}".format(os.path.basename(args.phylip[0])))		# phylip input file
     if naive:
         print("O")						# Outgroup root
