@@ -82,7 +82,8 @@ def get_options(env):
         dataset_tag = env.GetOption('dataset_tag') or ('test' if test_run else None),
         always_build_metadata = not env.GetOption('lazy_metadata'),
         inferred_naive_name = env.GetOption('inferred_naive_name'),
-        outdir_base = env.GetOption('outdir'))
+        outdir_base = env.GetOption('outdir'),
+        fasttree_png = env.GetOption('fasttree_png'))
 
 
 
