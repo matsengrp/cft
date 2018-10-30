@@ -629,7 +629,7 @@ def add_cluster_analysis(w):
         new_partis_infname = path.join(baseoutdir, 'asr-with-only-Ns.fa')
         extra_ambig_chars = 'RYSWKMBDHV'
         ambiguous_char_translations = string.maketrans(extra_ambig_chars, ''.join('N' for _ in range(len(extra_ambig_chars))))
-        seqfos = utils.read_fastx(path.join(baseoutdir, 'asr.fa'))
+        seqfos = partisutils.read_fastx(path.join(baseoutdir, 'asr.fa'))
         with open(new_partis_infname, 'w') as nfile:
             for sfo in seqfos:
                 nfile.write('>%s\n%s\n' % (sfo['name'], sfo['seq'].translate(ambiguous_char_translations)))
