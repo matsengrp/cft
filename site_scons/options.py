@@ -14,7 +14,7 @@ Script.AddOption('--infiles',
 
 Script.AddOption('--depth',
         dest="depth",
-        default=50,
+        default=20,
         help="""How many clonal families should we process per unseeded samples?""")
 
 Script.AddOption('--asr-progs',
@@ -62,6 +62,13 @@ Script.AddOption('--inferred-naive-name',
         dest='inferred_naive_name',
         default='inferred_naive',
         help="""What do we call the partis-inferred naive sequence when we inject it among the other (input) sequences.""")
+
+Script.AddOption('--fasttree-png',
+        dest='fasttree_png',
+        action='store_true',
+        default=False,
+        help="Setting this flag builds fasttree pngs for small-med sized trees")
+
 
 
 def get_options(env):

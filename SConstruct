@@ -475,23 +475,25 @@ def add_cluster_analysis(w):
                 + (" --seed " + c['seed']['id'] if 'seed' in c else '')
                 + " $SOURCE $TARGET")
 
-    # create png showing included seqs (kept in pruning) as red
-    @w.add_target()
-    def pruned_cluster_fasttree_png(outdir, c):
-        cluster = c['cluster']
-        max_cluster_size = 4500
-        if cluster.get('size') < max_cluster_size:
-            pruned_cluster_fasttree_png = env.Command(
-                path.join(outdir, "pruned_cluster_fasttree.png"),
-                [c["fasttree"], c["pruned_ids"]],
-                # The `-` at the start here tells scons to ignore if it doesn't build; this may occasionally be
-                # the case for large clusters. Also, redirect stdin/out to dev/null because the errors messages
-                # here can be pretty noisy.
-                "- xvfb-run -a bin/annotate_fasttree_tree.py $SOURCES " + " --naive %s" % options['inferred_naive_name'] +
-                    (" --seed " + c['seed']['id'] if 'seed' in c else '')  +
-                    " --output-path $TARGET &>> /dev/null" )
-            env.Depends(pruned_cluster_fasttree_png, "bin/annotate_fasttree_tree.py")
-            return pruned_cluster_fasttree_png
+
+    if options['fasttree_png']:
+        # create png showing included seqs (kept in pruning) as red
+        @w.add_target()
+        def pruned_cluster_fasttree_png(outdir, c):
+            cluster = c['cluster']
+            max_cluster_size = 4500
+            if cluster.get('size') < max_cluster_size:
+                pruned_cluster_fasttree_png = env.Command(
+                    path.join(outdir, "pruned_cluster_fasttree.png"),
+                    [c["fasttree"], c["pruned_ids"]],
+                    # The `-` at the start here tells scons to ignore if it doesn't build; this may occasionally be
+                    # the case for large clusters. Also, redirect stdin/out to dev/null because the errors messages
+                    # here can be pretty noisy.
+                    "- xvfb-run -a bin/annotate_fasttree_tree.py $SOURCES " + " --naive %s" % options['inferred_naive_name'] +
+                        (" --seed " + c['seed']['id'] if 'seed' in c else '')  +
+                        " --output-path $TARGET &>> /dev/null" )
+                env.Depends(pruned_cluster_fasttree_png, "bin/annotate_fasttree_tree.py")
+                return pruned_cluster_fasttree_png
 
     @w.add_target()
     def cluster_mapping(outdir, c):
@@ -718,8 +720,8 @@ def add_unseeded_analysis(w):
                 for i, clust
                 # Sort by len (dec) and apply index i
                 in enumerate(sorted(c['partition']['clusters'], key=len, reverse=True))
-                # Select top 5 or any matching seeds of interest
-                if (len(clust) > 5) and (i < 100 or has_seeds(clust, c)) and valid_cluster(cp, part, clust)]
+                # Select top N or any matching seeds of interest
+                if (len(clust) > 5) and (i < options['depth'] or has_seeds(clust, c)) and valid_cluster(cp, part, clust)]
 
 
     # Finally call out to the separate cluster analyses as defined above
