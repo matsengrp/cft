@@ -70,7 +70,6 @@ Script.AddOption('--fasttree-png',
         help="Setting this flag builds fasttree pngs for small-med sized trees")
 
 
-
 def get_options(env):
     # prefer realpath so that running latest vs explicit vN doesn't require rerun; also need for defaults below
     test_run = env.GetOption("test_run")
