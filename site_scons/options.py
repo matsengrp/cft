@@ -14,8 +14,8 @@ Script.AddOption('--infiles',
 
 Script.AddOption('--depth',
         dest="depth",
-        default=20,
-        help="""How many clonal families should we process per unseeded samples?""")
+        help="""How many clonal families should we process per unseeded sample and locus? Defaults to 20,
+        unless this is a test run in which case it defaults to 3.""")
 
 Script.AddOption('--asr-progs',
         dest='asr_progs',
@@ -75,8 +75,8 @@ def get_options(env):
     test_run = env.GetOption("test_run")
     return dict(
         infiles = env.GetOption('infiles').split(':'),
-        depth = int(env.GetOption('depth')),
-        test_run = env.GetOption('test_run'),
+        depth = int(env.GetOption('depth') or (3 if test_run else 30)),
+        test_run = test_run,
         asr_progs = env.GetOption('asr_progs').split(':'),
         prune_strategies = env.GetOption('prune_strategies').split(':'),
         dataset_tag = env.GetOption('dataset_tag') or ('test' if test_run else None),

@@ -153,7 +153,8 @@ def merge(d1, d2):
     return d
 
 def process_cluster(args, cluster_line, seed_id):
-    utils.add_implicit_info(args.glfo, cluster_line)
+    #print("calling utils.add_implicit_info with args:", args.glfo, cluster_line)
+    #utils.add_implicit_info(args.glfo, cluster_line)
 
     cluster_sequences = {
             'unique_id':             [args.inferred_naive_name] + cluster_line['unique_ids'],
@@ -202,11 +203,14 @@ def process_cluster(args, cluster_line, seed_id):
             cluster[gene+'_'+pos] = cluster_line['regional_bounds'][gene][pos.startswith('e')]
     return cluster
 
+
+
 def processed_data(args):
     """Uses args to find the correct partition, cluster pair and all associated information. Cluster
     information is returned as by process_cluster."""
 
-    file_glfo, annotation_list, cpath = utils.read_output(args.partition_file, dont_add_implicit_info=True)
+    print("calling utils.read_output with args:", args.partition_file, args.glfo)
+    file_glfo, annotation_list, cpath = utils.read_output(args.partition_file, glfo=args.glfo)
     if annotation_list is None:
         raise Exception('cluster annotation file not found')
     if file_glfo:  # will only be set if we're reading a yaml file

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+# WARNING: This file appears to be deprecated!
+
 import collections
 import argparse
 from os import path

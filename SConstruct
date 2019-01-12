@@ -120,6 +120,8 @@ def git(*args):
     return subprocess.check_output(['git'] + list(args))
 
 
+print("\nscons build command:", " ".join(sys.argv))
+
 nest = nestly.Nest()
 w = nestly_scons.SConsWrap(nest, options['outdir_base'], alias_environment=env)
 w = nestly_tripl.NestWrap(w,
@@ -199,11 +201,22 @@ def wrap_test_run(take_n=2):
 # We don't really do much here other than nest through the subjects in the input file for the sake of
 # establishing the metadata heirarchy
 
+
+def keep_sample(sample):
+    return sample.get('partition-file') or \
+           [seed for seed in sample.get('seeds', {}).values() if seed.get('partition-file')]
+
+def samples(c):
+    return {sample_id: sample
+            for sample_id, sample in c['dataset']['samples'].items()
+            if keep_sample(sample)}
+
+
 @w.add_nest(label_func=str)
 @wrap_test_run(take_n=2)
 def subject(c):
     return list(set(sconsutils.get_in(sample, ['meta', 'subject'])
-                    for sample_id, sample in c['dataset']['samples'].items()))
+                    for sample_id, sample in samples(c).items()))
 
 
 
@@ -223,7 +236,7 @@ def subject(c):
 def sample(c):
     # Make sure to add timepoints here as necessary
     return [sconsutils.merge_dicts(sample, {'id': sample_id})
-            for sample_id, sample in c['dataset']['samples'].items()
+            for sample_id, sample in samples(c).items()
             if sconsutils.get_in(sample, ['meta', 'subject']) == c['subject']]
 
 def locus(c):
@@ -244,10 +257,11 @@ def locus(c):
 @w.add_nest(metadata=lambda c, d: sconsutils.merge_dicts(d.get('meta', {}), {'id': d['id']}))
 # would like to have a lower number here but sometimes we get no good clusters for the first two seeds?
 # (on laura-mb for example).
-@wrap_test_run(take_n=4)
+@wrap_test_run(take_n=3)
 def seed(c):
     return [sconsutils.merge_dicts(seed, {'id': seed_id})
-            for seed_id, seed in c['dataset']['samples'][c['sample']['id']].get('seeds', {}).items()]
+            for seed_id, seed in samples(c)[c['sample']['id']].get('seeds', {}).items()
+            if seed.get('partition-file')]
 
 # Some accessor helpers
 
@@ -290,7 +304,9 @@ def partition_metadata(part, cp, best_plus_i, seed=None, other_id=None):
             'n_clusters': len(clusters),
             'largest_cluster_size': max(map(len, clusters)),
             'logprob': cp.logprobs[i],
-            'partition-file': part['partition-file']}
+            'partition-file': part['partition-file'],
+            'cluster-annotation-file': part['cluster-annotation-file']
+            }
     if seed:
         meta['seed_cluster_size'] = seed_cluster_size(cp, best_plus_i, seed)
     return sconsutils.merge_dicts(meta, part.get('meta') or {})
@@ -311,13 +327,14 @@ def with_other_partitions(node):
 def valid_cluster(cp, part, clust):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
     we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
+    #_, annotation_list, _ = partisutils.read_output(part['partition-file'], part['cluster-annotation-file'], dont_add_implicit_info=True)
     _, annotation_list, _ = partisutils.read_output(part['partition-file'], dont_add_implicit_info=True)
     for line in annotation_list:
-        if line['unique_ids'] == clust:
+        if line.get('unique_ids') == clust:
             func_list = [partisutils.is_functional(line, iseq) for iseq in range(len(line['unique_ids']))]
             n_good_seqs = func_list.count(True)
             return n_good_seqs > 2
-    raise Exception('couldn\'t find requested uids %s in %s' (clust, part['partition-file']))
+    raise Exception('couldn\'t find requested uids %s in %s' % (clust, part['partition-file']))
 
 def valid_seed_partition(cp, part, best_plus_i, seed_id):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
@@ -328,14 +345,18 @@ def valid_seed_partition(cp, part, best_plus_i, seed_id):
 # The actual nest construction for this
 
 # Try to read partition file; If fails, it is possibly because it's empty. Catch that case and warn
-def read_partition_file(filename):
+def read_partition_file(part):
     try:
-        _, _, cpath = partisutils.read_output(filename, skip_annotations=True)
+        #_, _, cpath = partisutils.read_output(part['partition-file'], part['cluster-annotation-file'],
+        _, _, cpath = partisutils.read_output(part['partition-file'],
+                # lets try this
+                #dont_add_implicit_info=True, skip_annotations=True)
+                skip_annotations=True)
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
         print(''.join((' ' * 8) + line for line in lines))
-        warn("Unable to parse partition file (see error above, ommitting from results): {}".format(filename))
+        warn("Unable to parse partition file (see error above, ommitting from results): {}".format(part))
         return []
     return cpath
 
@@ -348,7 +369,7 @@ def partition(c):
     for actual analysis."""
     keep_partitions = []
     for part in with_other_partitions(c['seed']):
-        cp = read_partition_file(part['partition-file'])
+        cp = read_partition_file(part)
         if cp:
             # important to start from i_best
             for best_plus_i in range(len(cp.partitions) - cp.i_best):
@@ -387,9 +408,15 @@ def cluster(c):
 
 
 def add_cluster_analysis(w):
+
+    @w.add_target(name='path')
+    def path_fn(outdir, c):
+        return outdir
+
     @w.add_metadata()
     def _process_partis(outdir, c):
         # Should get this to explicitly depend on cluster0.fa
+        #sources = [c['partition']['partition-file'], c['partition']['cluster-annotation-file']]
         sources = [c['partition']['partition-file']]
         perseq_metafile = c['sample'].get('per-sequence-meta-file')
         if perseq_metafile:
@@ -400,6 +427,7 @@ def add_cluster_analysis(w):
                 'process_partis.py' +
                     ' --remove-stops --remove-frameshifts --remove-mutated-invariants' +
                     ' --partition-file ${SOURCES[0]}' +
+                    #' --cluster-annotation-file ${SOURCES[1]}' +
                    (' --upstream-seqmeta ${SOURCES[1]}' if perseq_metafile else '') +
                     ' --parameter-dir ' + c['sample']['parameter-dir'] +
                     ' --locus ' + locus(c) +
@@ -472,12 +500,22 @@ def add_cluster_analysis(w):
     # calculate list of sequences to be pruned
     @w.add_target()
     def pruned_ids(outdir, c):
+        tgt = path.join(outdir, "pruned_ids.txt")
+        # This whole thing is a safety mechanism to prevent prune files with 0 sequences from hanging around,
+        # which can happen from failed builds
+        try:
+            remove = False
+            with open(tgt, 'r') as fh:
+                remove = len(fh.readlines()) == 0
+            if remove:
+                os.remove(tgt)
+        except:
+            pass
         recon = c['reconstruction']
         builder = fun.partial(env.SRun, srun_args='`minadcl_srun_args.py $SOURCE`') \
                 if recon['prune_strategy'] == 'min_adcl' \
                 else env.Command
-        return builder(
-            path.join(outdir, "pruned_ids.txt"),
+        return builder(tgt,
             c['fasttree'],
             "prune.py -n " + str(recon['prune_count'])
                 + ((" --always-include " + ','.join(c['sample']['seeds'])) if c['sample'].get('seeds') else '')
@@ -526,11 +564,8 @@ def add_cluster_analysis(w):
             "seqmagick convert --include-from-file $SOURCES - | " +
             "seqmagick convert --squeeze - $TARGET")
 
-
-    @w.add_target(ingest=True, attr_map={'bio.seq:id': 'sequence', 'cft.timepoint:id': 'timepoint',
-        #'cft.seq:multiplicity': 'multiplicity'})
-        'cft.seq:multiplicity': 'multiplicity', 'cft.seq:cluster_multiplicity': 'cluster_multiplicity'})
-    def seqmeta(outdir, c):
+    @w.add_target()
+    def tip_seqmeta(outdir, c):
         """The merge of process_partis output with pre sequence metadata spit out by datascripts containing
         timepoint mappings. Base input multiplicity is coded into the original input sequence names from vlad as N-M,
         where N is the ranking of vlads untrimmed deduplication, and M is the multiplicity of said deduplication."""
@@ -544,7 +579,7 @@ def add_cluster_analysis(w):
         base_call = 'aggregate_minadcl_cluster_multiplicities.py '
         for i, (k, v) in enumerate(sources.items()):
             base_call += k + ' ${SOURCES[' + str(i) + ']} '
-        return env.Command(path.join(outdir, 'seqmeta.csv'), sources.values(), base_call + '$TARGET')
+        return env.Command(path.join(outdir, 'tip_seqmeta.csv'), sources.values(), base_call + '$TARGET')
 
     @w.add_target()
     def _phy(outdir, c):
@@ -588,7 +623,7 @@ def add_cluster_analysis(w):
             basename = 'asr'
             tgt = env.Command(
                     [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg', 'fa']],
-                    [c['seqname_mapping'], phylip_out, c['seqmeta']],
+                    [c['seqname_mapping'], phylip_out, c['tip_seqmeta']],
                     # Note that adding `-` at the beginning of this command string can keep things running if
                     # there's an error trying to build a tree from 2 sequences; should be filtered prior now...
                     "xvfb-run -a bin/process_asr.py"
@@ -611,7 +646,7 @@ def add_cluster_analysis(w):
                 'raxml.py --rapid-bootstrap 30 -x 3243 -o %s $SOURCE $TARGET' % options['inferred_naive_name'])
             asr_tree_svg = env.Command(
                 path.join(outdir, 'asr.svg'),
-                [asr_supports_tree, c['seqmeta']],
+                [asr_supports_tree, c['tip_seqmeta']],
                 'xvfb-run -a bin/plot_tree.py $SOURCES $TARGET --supports --inferred-naive-name ' + options['inferred_naive_name']
                     + (' --seed ' + c['seed'] if 'seed' in c else ''))
             asr_tree = env.Command(
@@ -622,22 +657,6 @@ def add_cluster_analysis(w):
         else:
             print("something has gone terribly wrong")
 
-
-    @w.add_target(ingest=True)
-    def selection_metrics(baseoutdir, c):
-        outdir = path.join(baseoutdir, 'selection-metrics')
-        new_partis_infname = path.join(baseoutdir, 'asr-with-only-Ns.fa')
-        extra_ambig_chars = 'RYSWKMBDHV'
-        ambiguous_char_translations = string.maketrans(extra_ambig_chars, ''.join('N' for _ in range(len(extra_ambig_chars))))
-        seqfos = partisutils.read_fastx(path.join(baseoutdir, 'asr.fa'))
-        with open(new_partis_infname, 'w') as nfile:
-            for sfo in seqfos:
-                nfile.write('>%s\n%s\n' % (sfo['name'], sfo['seq'].translate(ambiguous_char_translations)))
-        return env.Command(
-            [path.join(outdir, "selection-metric-annotations.yaml")],
-            [new_partis_infname, path.join(baseoutdir, 'asr.nwk')],  # sources
-            "%s/bin/partis annotate --parameter-dir %s --all-seqs-simultaneous --get-tree-metrics --infname ${SOURCES[0]} --treefname ${SOURCES[1]} --outfname ${TARGETS[0]}" % (partis_path, c['sample']['parameter-dir'])
-        )
 
     #@w.add_target(ingest=True)
     #def asr_input_tree(outdir, c):
@@ -676,6 +695,38 @@ def add_cluster_analysis(w):
     def asr_seqs(outdir, c):
         return c['_asr'][2]
 
+    @w.add_target()
+    def selection_metrics(baseoutdir, c):
+        outdir = path.join(baseoutdir, 'selection-metrics')
+        def fix_file(target, source, env):
+            extra_ambig_chars = 'RYSWKMBDHV-'
+            target = str(target[0])
+            source = str(source[0])
+            ambiguous_char_translations = string.maketrans(extra_ambig_chars, ''.join('N' for _ in range(len(extra_ambig_chars))))
+            seqfos = partisutils.read_fastx(source)
+            with open(target, 'w') as nfile:
+                for sfo in seqfos:
+                    nfile.write('>%s\n%s\n' % (sfo['name'], sfo['seq'].translate(ambiguous_char_translations)))
+        new_partis_infname = path.join(baseoutdir, 'asr-with-only-Ns.fa')
+        new_partis_infile = env.Command(new_partis_infname, c['asr_seqs'], fix_file)
+
+        return env.Command(
+            [path.join(outdir, "selection-metric-annotations.yaml")],
+            [new_partis_infile, path.join(baseoutdir, 'asr.nwk')],  # sources
+            "%s/bin/partis annotate --locus %s --parameter-dir %s --all-seqs-simultaneous --get-tree-metrics --infname ${SOURCES[0]} --treefname ${SOURCES[1]} --outfname ${TARGETS[0]}" % (partis_path, locus(c), c['sample']['parameter-dir'])
+        )
+
+    @w.add_target(ingest=True, attr_map={'bio.seq:id': 'sequence', 'cft.timepoint:id': 'timepoint',
+        'cft.seq:timepoint': 'timepoint', 'cft.seq:timepoints': 'timepoints', 'cft.seq:cluster_timepoints': 'cluster_timepoints',
+        'cft.seq:multiplicity': 'multiplicity', 'cft.seq:cluster_multiplicity': 'cluster_multiplicity',
+        'cft.seq:timepoint_multiplicities': 'timepoint_multiplicities',
+        'cft.seq:cluster_timepoint_multiplicities': 'cluster_timepoint_multiplicities',
+        'cft.tree.node:lbi': 'lbi', 'cft.tree.node:lbr': 'lbr'})
+    def seqmeta(outdir, c):
+        return env.Command(path.join(outdir, "seqmeta.csv"),
+            [c['tip_seqmeta'], c['selection_metrics']],
+            "merge_selection_metrics.py $SOURCES $TARGET")
+
 
     @w.add_target(ingest=True)
     def cluster_aa(outdir, c):
@@ -683,7 +734,6 @@ def add_cluster_analysis(w):
             path.join(outdir, 'cluster_aa.fa'),
             c['asr_seqs'],
             "sed 's/\?/N/g' $SOURCE | seqmagick convert --translate dna2protein - $TARGET")
-
 
 
 # Temporarily turn off to debug above
@@ -721,7 +771,7 @@ def add_unseeded_analysis(w):
         """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
         for actual analysis."""
         def meta(part):
-            cp = read_partition_file(part['partition-file'])
+            cp = read_partition_file(part)
             if cp:
                 return sconsutils.merge_dicts(partition_metadata(part, cp, 0, other_id=part.get('other_id')),
                                          {'cp': cp})
@@ -771,7 +821,7 @@ w.pop('subject')
 @w.add_target()
 def metadata_snapshot(outdir, c):
     return env.Command(
-            path.join(outdir, time.strftime('%Y-%m-%d') + '-metadata.json'),
+            path.join(outdir, time.strftime('%Y-%m-%d') + ('-test' if options['test_run'] else '') + '-metadata.json'),
             path.join(outdir, 'metadata.json'),
             'cp $SOURCE $TARGET')
 

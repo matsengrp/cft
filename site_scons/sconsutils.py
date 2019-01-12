@@ -14,6 +14,18 @@ import copy
 # Utility functions
 # -----------------
 
+
+def logged(f):
+    "Returns a version of f which prints the results of calling; for use as decorator on nest fns"
+    f_name = f.__name__
+    def f_(*args, **kw_args):
+        result = f(*args, **kw_args)
+        print f_name, "nest results:", result
+        return result
+    f_.__name__ = f_name
+    return f_
+
+
 def merge_dicts(d1, d2):
     d = copy.deepcopy(d1)
     d.update(d2)
