@@ -305,7 +305,7 @@ def partition_metadata(part, cp, best_plus_i, seed=None, other_id=None):
             'largest_cluster_size': max(map(len, clusters)),
             'logprob': cp.logprobs[i],
             'partition-file': part['partition-file'],
-            'cluster-annotation-file': part['cluster-annotation-file']
+            'cluster-annotation-file': part.get('cluster-annotation-file')
             }
     if seed:
         meta['seed_cluster_size'] = seed_cluster_size(cp, best_plus_i, seed)
@@ -327,7 +327,7 @@ def with_other_partitions(node):
 def valid_cluster(cp, part, clust):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
     we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
-    #_, annotation_list, _ = partisutils.read_output(part['partition-file'], part['cluster-annotation-file'], dont_add_implicit_info=True)
+    #_, annotation_list, _ = partisutils.read_output(part['partition-file'], part.get('cluster-annotation-file'), dont_add_implicit_info=True)
     _, annotation_list, _ = partisutils.read_output(part['partition-file'], dont_add_implicit_info=True)
     for line in annotation_list:
         if line.get('unique_ids') == clust:
@@ -347,7 +347,7 @@ def valid_seed_partition(cp, part, best_plus_i, seed_id):
 # Try to read partition file; If fails, it is possibly because it's empty. Catch that case and warn
 def read_partition_file(part):
     try:
-        #_, _, cpath = partisutils.read_output(part['partition-file'], part['cluster-annotation-file'],
+        #_, _, cpath = partisutils.read_output(part['partition-file'], part.get('cluster-annotation-file'),
         _, _, cpath = partisutils.read_output(part['partition-file'],
                 # lets try this
                 #dont_add_implicit_info=True, skip_annotations=True)
@@ -416,7 +416,7 @@ def add_cluster_analysis(w):
     @w.add_metadata()
     def _process_partis(outdir, c):
         # Should get this to explicitly depend on cluster0.fa
-        #sources = [c['partition']['partition-file'], c['partition']['cluster-annotation-file']]
+        #sources = [c['partition']['partition-file'], c['partition'].get('cluster-annotation-file')]
         sources = [c['partition']['partition-file']]
         perseq_metafile = c['sample'].get('per-sequence-meta-file')
         if perseq_metafile:
