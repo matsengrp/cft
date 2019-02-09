@@ -51,10 +51,10 @@ from nestly import scons as nestly_scons
 
 # Tripl data modelling
 # Uncomment this line for a local checkout
-sys.path = [path.join(os.getcwd(), 'tripl')] + sys.path
+sys.path = [path.join(os.getcwd(), 'deps', 'tripl')] + sys.path
 from tripl import nestly as nestly_tripl
 
-
+sys.path.insert(0, os.environ['CONDA_PREFIX'])
 # Partis and datascripts things
 
 # If the PARTIS env var isn't already set, default to $PWD/partis (where we have a git

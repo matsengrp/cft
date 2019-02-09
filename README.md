@@ -1,3 +1,30 @@
+# Dumping this here for now: here is what I did differently from cft readme (non-comprehensive)
+
+Git pull in deps/tripl
+Use local checkout line like `sys.path = [path.join(os.getcwd(), 'deps', 'tripl')] + sys.path`
+conda install python=2.7
+conda install biopython pyqt scons
+conda install -c r r-rcolorbrewer 
+conda install -c etetoolkit ete3
+conda install -c conda-forge nestly
+conda install -c conda-forge yaml
+
+conda install --force scipy=0.17.0
+conda install -c bioconda fasttree?
+
+conda install -c anaconda gcc
+export PATH=/miniconda2/envs/cft_min/lib/gcc:$PATH
+
+
+MODULES
+module load phylip seqmagick FastTree
+ml pplacer
+ml unload python2/2.7.8 
+ml unload GCCcore/5.4.0
+Ml unload FastTree?
+
+
+
 # CFT: Clonal Family Tree
 
 A pipeline for producing clonal family trees and ancestral state reconstructions using partis output.
