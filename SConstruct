@@ -721,6 +721,7 @@ def add_cluster_analysis(w):
         'cft.seq:multiplicity': 'multiplicity', 'cft.seq:cluster_multiplicity': 'cluster_multiplicity',
         'cft.seq:timepoint_multiplicities': 'timepoint_multiplicities',
         'cft.seq:cluster_timepoint_multiplicities': 'cluster_timepoint_multiplicities',
+        'cft.seq:affinity': 'affinity',
         'cft.tree.node:lbi': 'lbi', 'cft.tree.node:lbr': 'lbr'})
     def seqmeta(outdir, c):
         return env.Command(path.join(outdir, "seqmeta.csv"),
