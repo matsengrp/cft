@@ -51,7 +51,7 @@ from nestly import scons as nestly_scons
 
 # Tripl data modelling
 # Uncomment this line for a local checkout
-sys.path = [path.join(os.getcwd(), 'tripl')] + sys.path
+sys.path = [path.join(os.getcwd(), 'deps', 'tripl')] + sys.path
 from tripl import nestly as nestly_tripl
 
 
