@@ -91,7 +91,7 @@ def main():
     args = get_args()
     fieldnames = ['sequence', 'unique_id', 'orig_seqid', 'timepoint', 'mut_freq', 'is_seed', 'stops',
             'mutated_invariants', 'frameshifted', 'multiplicity', 'timepoints',
-            'timepoint_multiplicities', 'duplicates', ]
+            'timepoint_multiplicities', 'duplicates', 'affinity']
     if args.cluster_mapping:
         fieldnames += ['cluster_multiplicity', 'cluster_timepoints', 'cluster_timepoint_multiplicities', 'cluster_duplicates']
 
