@@ -124,7 +124,8 @@ def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta):
                 'seq': row['seq'],
                 'multiplicity': multiplicity,
                 'timepoints': [tp[0] or '' for tp in timepoints],
-                'timepoint_multiplicities': [tp[1] for tp in timepoints]}
+                'timepoint_multiplicities': [tp[1] for tp in timepoints],
+                'affinity': row.get('affinity')}
         # Currently arbitrary other upstream seqmeta isn't being merged in here, but could easily be
         yield result_row
 
@@ -164,7 +165,8 @@ def process_cluster(args, cluster_line, seed_id):
             'frameshifted':            [False] + [not x for x in cluster_line['in_frames']],
             'mutated_invariants':      [False] + cluster_line['mutated_invariants'],
             'stops':                   [False] + cluster_line['stops'],
-            'mut_freq':                  [0.0] + cluster_line['mut_freqs']}
+            'mut_freq':                  [0.0] + cluster_line['mut_freqs'],
+            'affinity':                 [None] + cluster_line['affinities']}
 
     for gene in 'vdj':
         for pos in ['start', 'end']:
@@ -284,7 +286,7 @@ def format_results(results):
 
 def write_seq_meta(args, cluster_data):
     to_keep = ['unique_id', 'sequence', 'is_seed', 'frameshifted', 'stops', 'mutated_invariants',
-            'mut_freq', 'timepoint', 'multiplicity', 'timepoints', 'timepoint_multiplicities', 'duplicates']
+            'mut_freq', 'timepoint', 'multiplicity', 'timepoints', 'timepoint_multiplicities', 'duplicates', 'affinity']
     with open(args.seqmeta_out, 'w') as outfile:
         writer = csv.DictWriter(outfile, fieldnames=to_keep, extrasaction='ignore')
         writer.writeheader()

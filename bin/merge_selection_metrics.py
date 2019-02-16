@@ -19,7 +19,8 @@ def seqmeta_reader(filename):
 
 def selection_metrics_reader(filename):
     with open(filename) as fh:
-        return json.load(fh)['events'][0]['tree-info']['lb']
+        events = json.load(fh)['events'][0]
+        return events.get('tree-info', {}).get('lb', {}) 
 
 
 # Args
@@ -53,8 +54,9 @@ def main():
     seqmeta = collections.defaultdict(lambda: {'tip': False, 'internal': True})
     seqmeta.update({k: merge(v, {'tip': True, 'internal': False}) for k, v in args.tip_seqmeta.items()})
     for metric in ['lbi', 'lbr']:
-        for seqid, val in args.selection_metrics[metric].items():
-            seqmeta[seqid].update({'sequence': seqid, 'unique_id': seqid, metric: val})
+        if args.selection_metrics.get(metric):
+            for seqid, val in args.selection_metrics[metric].items():
+                seqmeta[seqid].update({'sequence': seqid, 'unique_id': seqid, metric: val})
     for _, row in seqmeta.items():
         writer.writerow(row)
 
