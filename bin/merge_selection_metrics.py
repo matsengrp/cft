@@ -7,7 +7,9 @@ import csv
 import json
 import re
 import pprint
-
+import process_partis
+process_partis.insert_partis_path()
+import utils
 
 # File reading stuff
 # ------------------
@@ -18,9 +20,11 @@ def seqmeta_reader(filename):
         return {row['sequence']: row for row in reader}
 
 def selection_metrics_reader(filename):
-    with open(filename) as fh:
-        events = json.load(fh)['events'][0]
-        return events.get('tree-info', {}).get('lb', {}) 
+    _, annotation_list, _ = utils.read_output(filename)
+    if len(annotation_list) != 1:
+        raise Exception('expected one event from %s but got %d' % (filename, len(annotation_list)))
+    event = annotation_list[0]
+    return event.get('tree-info', {}).get('lb', {}) 
 
 
 # Args
