@@ -725,7 +725,7 @@ def add_cluster_analysis(w):
         'cft.tree.node:lbi': 'lbi', 'cft.tree.node:lbr': 'lbr'})
     def seqmeta(outdir, c):
         return env.Command(path.join(outdir, "seqmeta.csv"),
-            [c['tip_seqmeta'], c['selection_metrics']],
+            [c['tip_seqmeta'], c['selection_metrics'], c['asr_seqs']],
             "merge_selection_metrics.py $SOURCES $TARGET")
 
 
