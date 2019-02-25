@@ -36,6 +36,8 @@
    "db:cardinality": "db.cardinality:one"},
   {"db:ident": "cft.cluster:n_seqs",
    "db:cardinality": "db.cardinality:one"},
+  {"db:ident": "cft.cluster:n_seqs_multiplicity",
+   "db:cardinality": "db.cardinality:one"},
   {"db:ident": "cft.cluster:size",
    "db:cardinality": "db.cardinality:one"},
   {"db:ident": "cft.cluster:sorted_index",
