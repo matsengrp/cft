@@ -166,7 +166,7 @@ def process_cluster(args, cluster_line, seed_id):
             'mutated_invariants':      [False] + cluster_line['mutated_invariants'],
             'stops':                   [False] + cluster_line['stops'],
             'mut_freq':                  [0.0] + cluster_line['mut_freqs'],
-            'affinity':                 [None] + cluster_line['affinities']}
+            'affinity':                 [None] + cluster_line.get('affinities', [None for _ in cluster_line['unique_ids']])}
 
     for gene in 'vdj':
         for pos in ['start', 'end']:
