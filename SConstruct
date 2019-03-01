@@ -304,7 +304,7 @@ def get_alt_naive_probabilities(annotation):
 
 def partition_metadata(part, annotation_list, cp, best_plus_i, seed=None, other_id=None):
     i = cp.i_best + best_plus_i
-    naive_probabilities = None
+    naive_probabilities, seed_cluster_annotation = None, None
     if i == cp.i_best:
         seed_cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp)
         naive_probabilities = get_alt_naive_probabilities(seed_cluster_annotation)
@@ -317,7 +317,8 @@ def partition_metadata(part, annotation_list, cp, best_plus_i, seed=None, other_
             'largest_cluster_size': max(map(len, clusters)),
             'logprob': cp.logprobs[i],
             'partition-file': part['partition-file'],
-            'naive_probabilities': naive_probabilities
+            'naive_probabilities': naive_probabilities,
+            'seed_cluster_annotation': seed_cluster_annotation
             }
     if seed:
         meta['seed_cluster_size'] = seed_cluster_size(cp, best_plus_i, seed)
@@ -469,20 +470,27 @@ def add_cluster_analysis(w):
         if c['partition']['naive_probabilities']:
             
             def fix_file(target, source, env):
-                target = str(target[0])
+                targets = [str(target[0]), str(target[1])]
                 sig_figs = 3
-                with open(target, 'w') as nfile:
+                with open(targets[0], 'w') as fasta, open(targets[1], 'w') as cdr3_fasta:
                     for naive_seq, probability in c['partition']['naive_probabilities']:
                         aa_seq = translate_seqs.translate(naive_seq)
+                        aa_cdr3_bounds = [int(bound/3) for bound in [annotation['codon_positions']['v'], annotation['codon_positions']['j'] + 3]]
+                        aa_cdr3 = aa_seq[aa_cdr3_bounds[0] : aa_cdr3_bounds[1]]
                         for _ in range(int(probability*10**sig_figs)):
-                            nfile.write('>%s\n%s\n' % ('naive_w_probability_{}'.format(probability), aa_seq))
-
-            naive_probabilities_fname = path.join(outdir, 'naive_logo.fasta')
-            naive_logo_input = env.Command(naive_probabilities_fname, c['partition']['partition-file'], fix_file)
-
-            return env.Command( path.join(outdir, 'naive_logo.png'),
+                            fasta.write('>%s\n%s\n' % ('naive_w_probability_{}'.format(probability), aa_seq))
+                            cdr3_fasta.write('>%s\n%s\n' % ('naive_cdr3_w_probability_{}'.format(probability), aa_cdr3))
+            
+            annotation = c['partition']['seed_cluster_annotation']
+            seed_name = c['seed']['id'] 
+            naive_probabilities_fname = path.join(outdir, 'naive_logo_%s.fasta' % seed_name)
+            naive_cdr3_probabilities_fname = path.join(outdir, 'naive_logo_cdr3_%s.fasta' % seed_name)
+            naive_logo_input = env.Command([naive_probabilities_fname, naive_cdr3_probabilities_fname], c['partition']['partition-file'], fix_file)
+            
+            base_outdirs = [path.join(outdir, base_name.format(seed_name)) for base_name in ['naive_logo_{}', 'naive_logo_cdr3_{}']]
+            return env.Command( [outdir + '.png' for outdir in base_outdirs],
                                 naive_logo_input,
-                                'python bin/create_partis_naive_logo.py $SOURCE --output-base %s' % path.join(outdir, 'naive_logo'))
+                                'python bin/create_partis_naive_logo.py ${SOURCES[0]} --output-base=%s && python bin/create_partis_naive_logo.py ${SOURCES[1]} --output-base=%s' % (base_outdirs[0], base_outdirs[1]))
  
     # Sequence Alignment
     # ------------------
