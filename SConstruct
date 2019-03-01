@@ -38,6 +38,8 @@ import functools as fun
 import traceback
 import string
 
+from bin import process_partis, translate_seqs
+
 from os import path
 from warnings import warn
 
@@ -63,6 +65,7 @@ default_partis_path = path.join(os.getcwd(), 'partis')
 partis_path = os.environ.get('PARTIS', default_partis_path)
 sys.path.append(path.join(partis_path, 'python'))
 import utils as partisutils
+import glutils
 print("partis utils loading from:", partisutils.__file__)
 
 # Scons requirements
@@ -294,8 +297,17 @@ def seed_cluster(cp, best_plus_i, seed_id):
 def seed_cluster_size(cp, best_plus_i, seed_id):
     return len(seed_cluster(cp, best_plus_i, seed_id))
 
-def partition_metadata(part, cp, best_plus_i, seed=None, other_id=None):
+def get_alt_naive_probabilities(annotation):
+    alternatives = annotation.get('alternative-annotations', {})
+    naive_probabilities = alternatives.get('naive-seqs') if alternatives else None
+    return naive_probabilities if naive_probabilities and len(naive_probabilities) > 0 else None
+
+def partition_metadata(part, annotation_list, cp, best_plus_i, seed=None, other_id=None):
     i = cp.i_best + best_plus_i
+    naive_probabilities = None
+    if i == cp.i_best:
+        seed_cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp)
+        naive_probabilities = get_alt_naive_probabilities(seed_cluster_annotation)
     clusters = cp.partitions[i]
     meta = {'id': ('seed-' if seed else 'unseeded-') + (other_id + '-' if other_id else '') + 'part-' + str(best_plus_i),
             'clusters': clusters,
@@ -305,7 +317,7 @@ def partition_metadata(part, cp, best_plus_i, seed=None, other_id=None):
             'largest_cluster_size': max(map(len, clusters)),
             'logprob': cp.logprobs[i],
             'partition-file': part['partition-file'],
-            'cluster-annotation-file': part.get('cluster-annotation-file')
+            'naive_probabilities': naive_probabilities
             }
     if seed:
         meta['seed_cluster_size'] = seed_cluster_size(cp, best_plus_i, seed)
@@ -324,11 +336,9 @@ def with_other_partitions(node):
     return parts
 
 
-def valid_cluster(cp, part, clust):
+def valid_cluster(annotation_list, part, clust):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
     we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
-    #_, annotation_list, _ = partisutils.read_output(part['partition-file'], part.get('cluster-annotation-file'), dont_add_implicit_info=True)
-    _, annotation_list, _ = partisutils.read_output(part['partition-file'], dont_add_implicit_info=True)
     for line in annotation_list:
         if line.get('unique_ids') == clust:
             func_list = [partisutils.is_functional(line, iseq) for iseq in range(len(line['unique_ids']))]
@@ -336,29 +346,26 @@ def valid_cluster(cp, part, clust):
             return n_good_seqs > 2
     raise Exception('couldn\'t find requested uids %s in %s' % (clust, part['partition-file']))
 
-def valid_seed_partition(cp, part, best_plus_i, seed_id):
+def valid_seed_partition(annotation_list, cp, part, best_plus_i, seed_id):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
     we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
     clust = seed_cluster(cp, best_plus_i, seed_id)
-    return valid_cluster(cp, part, clust)
+    return valid_cluster(annotation_list, part, clust)
 
 # The actual nest construction for this
 
 # Try to read partition file; If fails, it is possibly because it's empty. Catch that case and warn
-def read_partition_file(part):
+def read_partition_file(part, c):
     try:
-        #_, _, cpath = partisutils.read_output(part['partition-file'], part.get('cluster-annotation-file'),
-        _, _, cpath = partisutils.read_output(part['partition-file'],
-                # lets try this
-                #dont_add_implicit_info=True, skip_annotations=True)
-                skip_annotations=True)
+        glfo = glutils.read_glfo(c['sample']['glfo-dir'], locus(c))
+        _, annotation_list, cpath = partisutils.read_output(part['partition-file'], glfo=glfo)
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
         print(''.join((' ' * 8) + line for line in lines))
         warn("Unable to parse partition file (see error above, ommitting from results): {}".format(part))
         return []
-    return cpath
+    return annotation_list, cpath
 
 # note we elide the nested partitions > clusters lists so as not to kill tripl when it tries to load them as a
 # value and can't hash
@@ -369,16 +376,16 @@ def partition(c):
     for actual analysis."""
     keep_partitions = []
     for part in with_other_partitions(c['seed']):
-        cp = read_partition_file(part)
+        annotation_list, cp = read_partition_file(part, c)
         if cp:
             # important to start from i_best
             for best_plus_i in range(len(cp.partitions) - cp.i_best):
-                meta = partition_metadata(part, cp, best_plus_i, seed=c['seed']['id'], other_id=part.get('other_id'))
+                meta = partition_metadata(part, annotation_list, cp, best_plus_i, seed=c['seed']['id'], other_id=part.get('other_id'))
                 # We only add clusters bigger than two, since we can only make trees if we have hits
                 if meta['seed_cluster_size'] > 10:
                     # if we have 10 sequences, assume enough of them will be good
                     keep_partitions.append(meta)
-                elif meta['seed_cluster_size'] > 2 and valid_seed_partition(cp, part, best_plus_i, c['seed']['id']):
+                elif meta['seed_cluster_size'] > 2 and valid_seed_partition(annotation_list, cp, part, best_plus_i, c['seed']['id']):
                     # if less than 10 sequences, make sure we still have enough sequences after health filters
                     keep_partitions.append(meta)
                 # Once we get a cluster of size 50, we don't need later cluster steps
@@ -389,7 +396,6 @@ def partition(c):
                 # partition steps to the same file.
                 break
     return keep_partitions
-
 
 
 # The cluster level
@@ -455,7 +461,29 @@ def add_cluster_analysis(w):
         return c['_process_partis'][2]
 
 
+    # Partis naive logo plot from alternative naive probabilities
+    # ----------------------------------------------------------
 
+    @w.add_target()
+    def naive_logo_plot(outdir, c):
+        if c['partition']['naive_probabilities']:
+            
+            def fix_file(target, source, env):
+                target = str(target[0])
+                sig_figs = 3
+                with open(target, 'w') as nfile:
+                    for naive_seq, probability in c['partition']['naive_probabilities']:
+                        aa_seq = translate_seqs.translate(naive_seq)
+                        for _ in range(int(probability*10**sig_figs)):
+                            nfile.write('>%s\n%s\n' % ('naive_w_probability_{}'.format(probability), aa_seq))
+
+            naive_probabilities_fname = path.join(outdir, 'naive_logo.fasta')
+            naive_logo_input = env.Command(naive_probabilities_fname, c['partition']['partition-file'], fix_file)
+
+            return env.Command( path.join(outdir, 'naive_logo.png'),
+                                naive_logo_input,
+                                'python bin/create_partis_naive_logo.py $SOURCE --output-base %s' % path.join(outdir, 'naive_logo'))
+ 
     # Sequence Alignment
     # ------------------
 
