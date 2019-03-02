@@ -469,23 +469,37 @@ def add_cluster_analysis(w):
     def naive_logo_plot(outdir, c):
         if c['partition']['naive_probabilities']:
             
-            def fix_file(target, source, env):
-                targets = [str(target[0]), str(target[1])]
-                sig_figs = 3
-                with open(targets[0], 'w') as fasta, open(targets[1], 'w') as cdr3_fasta:
-                    for naive_seq, probability in c['partition']['naive_probabilities']:
-                        aa_seq = translate_seqs.translate(naive_seq)
-                        aa_cdr3_bounds = [int(bound/3) for bound in [annotation['codon_positions']['v'], annotation['codon_positions']['j'] + 3]]
-                        aa_cdr3 = aa_seq[aa_cdr3_bounds[0] : aa_cdr3_bounds[1]]
-                        for _ in range(int(probability*10**sig_figs)):
-                            fasta.write('>%s\n%s\n' % ('naive_w_probability_{}'.format(probability), aa_seq))
-                            cdr3_fasta.write('>%s\n%s\n' % ('naive_cdr3_w_probability_{}'.format(probability), aa_cdr3))
-            
             annotation = c['partition']['seed_cluster_annotation']
             seed_name = c['seed']['id'] 
+
+            def write_seq_according_to_probability(naive_seq, probability, fasta, cdr3_fasta):
+                '''
+                Write the sequences into fastas according to their probability; this happens because the logo package
+                draws the height of the character according to its multiplicity at that site among the sequences in the file you give it
+                '''
+                aa_seq = translate_seqs.translate(naive_seq)
+                aa_cdr3_bounds = [int(bound/3) for bound in [annotation['codon_positions']['v'], annotation['codon_positions']['j'] + 3]]
+                aa_cdr3 = aa_seq[aa_cdr3_bounds[0] : aa_cdr3_bounds[1]]
+                sig_figs = 3
+                for _ in range(int(probability*10**sig_figs)):
+                    fasta.write('>%s\n%s\n' % ('naive_w_probability_{}'.format(probability), aa_seq))
+                    cdr3_fasta.write('>%s\n%s\n' % ('naive_cdr3_w_probability_{}'.format(probability), aa_cdr3))
+
+            def create_logo_input_fasta(target, source, env):
+                targets = [str(target[0]), str(target[1])]
+                with open(targets[0], 'w') as fasta, open(targets[1], 'w') as cdr3_fasta:
+                    most_prob_naive_length = len(annotation['naive_seq'])
+                    for naive_seq, probability in c['partition']['naive_probabilities']:
+                        # We are using the v and j codon position annotations from the most probable naive, so warn if one of the
+                        # alternatives is not the same length since this could mess up the cdr3 start and end.
+                        if len(naive_seq) != most_prob_naive_length:
+                            warn('Skipping: alternative naive sequence %s with length %d; differs in length from most probable naive sequence %s with length %d' % (naive_seq, len(naive_seq), annotation['naive_seq'], most_prob_naive_length))
+                            continue
+                        write_seq_according_to_probability(naive_seq, probability, fasta, cdr3_fasta)
+
             naive_probabilities_fname = path.join(outdir, 'naive_logo_%s.fasta' % seed_name)
             naive_cdr3_probabilities_fname = path.join(outdir, 'naive_logo_cdr3_%s.fasta' % seed_name)
-            naive_logo_input = env.Command([naive_probabilities_fname, naive_cdr3_probabilities_fname], c['partition']['partition-file'], fix_file)
+            naive_logo_input = env.Command([naive_probabilities_fname, naive_cdr3_probabilities_fname], c['partition']['partition-file'], create_logo_input_fasta)
             
             base_outdirs = [path.join(outdir, base_name.format(seed_name)) for base_name in ['naive_logo_{}', 'naive_logo_cdr3_{}']]
             return env.Command( [outdir + '.png' for outdir in base_outdirs],
