@@ -21,6 +21,7 @@ if __name__ == '__main__':
     subprocess.check_call(("rm " + args.output_base + ".fasta").split())
 
     options = w.LogoOptions()
+    options.color_scheme = w.colorscheme.chemistry
     options.unit_name = "probability"
     options.yaxis_label = "Probability"
     options.xaxis_label = "Site Position"
