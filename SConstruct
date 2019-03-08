@@ -308,6 +308,8 @@ def partition_metadata(part, annotation_list, cp, best_plus_i, seed=None, other_
     if i == cp.i_best:
         seed_cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp)
         naive_probabilities = get_alt_naive_probabilities(seed_cluster_annotation)
+    #annotation_list = annotation_list if not seed else None
+    #print('adding annotation_list***********' if not seed else '')
     clusters = cp.partitions[i]
     meta = {'id': ('seed-' if seed else 'unseeded-') + (other_id + '-' if other_id else '') + 'part-' + str(best_plus_i),
             'clusters': clusters,
@@ -319,6 +321,7 @@ def partition_metadata(part, annotation_list, cp, best_plus_i, seed=None, other_
             'partition-file': part['partition-file'],
             'naive_probabilities': naive_probabilities,
             'seed_cluster_annotation': seed_cluster_annotation
+     #       'annotation_list': annotation_list
             }
     if seed:
         meta['seed_cluster_size'] = seed_cluster_size(cp, best_plus_i, seed)
@@ -337,9 +340,12 @@ def with_other_partitions(node):
     return parts
 
 
-def valid_cluster(annotation_list, part, clust):
+def valid_cluster(annotation_list, part, clust, c=None):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
     we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
+    print('valid_cluster called')
+    if not annotation_list:
+        annotation_list, _ = read_partition_file(part, c)
     for line in annotation_list:
         if line.get('unique_ids') == clust:
             func_list = [partisutils.is_functional(line, iseq) for iseq in range(len(line['unique_ids']))]
@@ -378,6 +384,7 @@ def partition(c):
     keep_partitions = []
     for part in with_other_partitions(c['seed']):
         annotation_list, cp = read_partition_file(part, c)
+        print(type(annotation_list))
         if cp:
             # important to start from i_best
             for best_plus_i in range(len(cp.partitions) - cp.i_best):
@@ -822,9 +829,9 @@ def add_unseeded_analysis(w):
         """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
         for actual analysis."""
         def meta(part):
-            cp = read_partition_file(part)
+            annotation_list, cp = read_partition_file(part, c)
             if cp:
-                return sconsutils.merge_dicts(partition_metadata(part, cp, 0, other_id=part.get('other_id')),
+                return sconsutils.merge_dicts(partition_metadata(part, annotation_list, cp, 0, other_id=part.get('other_id')),
                                          {'cp': cp})
         return filter(None, map(meta, with_other_partitions(c['sample'])))
 
@@ -840,18 +847,17 @@ def add_unseeded_analysis(w):
     def cluster(c):
         part = c['partition']
         cp = part['cp']
+        print('unseeded cluster analysis')
         return [{'id': 'clust-' + str(i),
                  'sorted_index': i,
                  'unique_ids': clust,
                  'size': len(clust)}
                 for i, clust
                 # Sort by len (dec) and apply index i
-                in enumerate(sorted(c['partition']['clusters'], key=len, reverse=True))
+                in enumerate(sorted(part['clusters'], key=len, reverse=True))
                 # Select top N or any matching seeds of interest
-                if (len(clust) > 5) and (i < options['depth'] or has_seeds(clust, c)) and valid_cluster(cp, part, clust)]
+                if (len(clust) > 5) and (i < options['depth'] or has_seeds(clust, c)) and valid_cluster(None, part, clust, c)]
 
-
-    # Finally call out to the separate cluster analyses as defined above
     add_cluster_analysis(w)
 
     # end function
