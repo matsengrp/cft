@@ -104,11 +104,13 @@ def leaf_style(node, seqmeta, tp_colors, highlight_node=None):
             nstyle['fgcolor'] = tp_colors[seqmeta['timepoint']]
         nstyle['size'] = 14
         node.set_style(nstyle)
-    timepoints = filter(lambda x: x, seqmeta.get('cluster_timepoints', seqmeta['timepoints']).split(':'))
-    duplicities = [int(n) for n in seqmeta.get('cluster_timepoint_multiplicities', seqmeta['timepoint_multiplicities']).split(':') if n]
+    timepoints = seqmeta.get('cluster_timepoints', seqmeta['timepoints']).split(':')
+    duplicities = [int(n) for n in seqmeta.get('cluster_timepoint_multiplicities', seqmeta['timepoint_multiplicities']).split(':')]
     multiplicity = int(seqmeta.get('cluster_multiplicity', seqmeta['multiplicity']))
     percents = [d * 100 / multiplicity for d in duplicities]
     colors = [tp_colors[t] for t in timepoints]
+    if len(percents) != len(colors):
+        raise Exception('number of timepoints doesn\'t match number of multiplicities')
     pie_node = ete3.PieChartFace(percents, width=scale_node(multiplicity), height=scale_node(multiplicity),
             colors=colors, line_color='black')
     ete3.add_face_to_node(pie_node, node, column=0)

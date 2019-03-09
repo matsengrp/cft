@@ -96,7 +96,7 @@ def get_upstream_row(upstream_seqmeta, seqid):
     return row
 
 
-def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta):
+def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta, seqs_without_timepoints, ignore_timepoint_info):
     """"Merge upstream (pre-partis) metadata, indexed in a dict by unique_id, (potentially)
     including timepoint and multiplicity info, with the metadata output of process_partis (partis_seqmeta)."""
     # For each row of our partis sequence metadata (as output from process_partis)
@@ -111,7 +111,13 @@ def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta):
             dup_upstream_row = get_upstream_row(upstream_seqmeta, seqid)
             # pre-partis filtering multiplicity
             dup_multiplicity = int(dup_upstream_row.get('multiplicity', 1))
-            timepoints_dict[dup_upstream_row.get('timepoint')] += dup_multiplicity
+            if not ignore_timepoint_info:
+                if not dup_upstream_row.get('timepoint'):
+                    if seqid in seqs_without_timepoints:
+                        dup_upstream_row['timepoint'] = seqid
+                    else:
+                        raise Exception('Missing timepoint info for {}. \n Upstream seq meta row: {}'.format(dup_seqid, dup_upstream_row))
+                timepoints_dict[dup_upstream_row.get('timepoint')] += dup_multiplicity
         timepoints = sorted(timepoints_dict.items())
         multiplicity = sum(t[1] for t in timepoints)
         result_row = {
@@ -123,24 +129,25 @@ def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta):
                 'is_seed': row.get('is_seed'),
                 'seq': row['seq'],
                 'multiplicity': multiplicity,
-                'timepoints': [tp[0] or '' for tp in timepoints],
+                'timepoints': [tp[0] for tp in timepoints],
                 'timepoint_multiplicities': [tp[1] for tp in timepoints],
                 'affinity': row.get('affinity')}
+        if len(result_row['timepoints']) != len(result_row['timepoint_multiplicities']):
+            raise Exception('timepoints {} timepoint multiplicities {}'.format(result_row['timepoints'], result_row['timepoint_multiplicities']))
         # Currently arbitrary other upstream seqmeta isn't being merged in here, but could easily be
         yield result_row
 
 
-def downsample_sequences(args, sequences):
+def downsample_sequences(sequences, max_sequences, always_include):
     sequences = list(sequences)
-    if args.max_sequences:
-        always_include = set(args.always_include + [args.inferred_naive_name])
+    if max_sequences:
         always_include_seqs = filter(lambda x: x.get('unique_id') in always_include, sequences)
         rest_seqs = filter(lambda x: x.get('unique_id') not in always_include, sequences)
         # first take the always keep, then take as many as you can of the remaining seqs, in order of highest multiplicity
         return always_include_seqs + \
                sorted(rest_seqs,
                       # Sort by negative so we take the highest multiplicity (lowest neg value) first 
-                      key=lambda seqmeta: - seqmeta['multiplicity'])[0:args.max_sequences - len(always_include_seqs)]
+                      key=lambda seqmeta: - seqmeta['multiplicity'])[0:max_sequences - len(always_include_seqs)]
     else:
         return sequences
 
@@ -166,7 +173,7 @@ def process_cluster(args, cluster_line, seed_id):
             'mutated_invariants':      [False] + cluster_line['mutated_invariants'],
             'stops':                   [False] + cluster_line['stops'],
             'mut_freq':                  [0.0] + cluster_line['mut_freqs'],
-            'affinity':                 [None] + cluster_line['affinities']}
+            'affinity':                 [None] + cluster_line.get('affinities', [None for _ in cluster_line['unique_ids']])}
 
     for gene in 'vdj':
         for pos in ['start', 'end']:
@@ -180,11 +187,14 @@ def process_cluster(args, cluster_line, seed_id):
 
     n_seqs = len(sequences)
 
+
+    always_include = set(args.always_include + [args.inferred_naive_name])
+
     # apply merging of multiplicity info here (or flesh out with default values otherwise)
-    sequences = merge_upstream_seqmeta(sequences, args.upstream_seqmeta)
+    sequences = merge_upstream_seqmeta(sequences, args.upstream_seqmeta, always_include, args.ignore_timepoint_info)
 
     # apply sequence downsampling here
-    sequences = downsample_sequences(args, sequences)
+    sequences = downsample_sequences(sequences, args.max_sequences, always_include)
 
     cluster = merge(
             subset_dict(cluster_line, ['naive_seq', 'v_per_gene_support', 'd_per_gene_support', 'j_per_gene_support']),
@@ -211,7 +221,7 @@ def processed_data(args):
     """Uses args to find the correct partition, cluster pair and all associated information. Cluster
     information is returned as by process_cluster."""
 
-    print("calling utils.read_output with args:", args.partition_file, args.glfo)
+    #print("calling utils.read_output with args:", args.partition_file, args.glfo)
     file_glfo, annotation_list, cpath = utils.read_output(args.partition_file, glfo=args.glfo)
     if annotation_list is None:
         raise Exception('cluster annotation file not found')
@@ -400,6 +410,10 @@ def parse_args():
     other_args.add_argument(
         '--inferred-naive-name',
         help='see scons option help')
+    other_args.add_argument(
+        '--ignore-timepoint-info',
+        help='ignore the timepoints associated with sequences in the metadata file (used for simulation data or incomplete timepoint information)',
+        action="store_true")
     # --indel-reversed-seqs
     # --remove-mutated-invariants
 
