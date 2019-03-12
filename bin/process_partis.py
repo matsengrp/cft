@@ -111,13 +111,17 @@ def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta, seqs_without_timepo
             dup_upstream_row = get_upstream_row(upstream_seqmeta, seqid)
             # pre-partis filtering multiplicity
             dup_multiplicity = int(dup_upstream_row.get('multiplicity', 1))
-            if not ignore_timepoint_info:
-                if not dup_upstream_row.get('timepoint'):
-                    if seqid in seqs_without_timepoints:
-                        dup_upstream_row['timepoint'] = seqid
-                    else:
-                        raise Exception('Missing timepoint info for {}. \n Upstream seq meta row: {}'.format(dup_seqid, dup_upstream_row))
-                timepoints_dict[dup_upstream_row.get('timepoint')] += dup_multiplicity
+            if not dup_upstream_row.get('timepoint'):
+                should_not_have_timepoint = seqid in seqs_without_timepoints # stored as a variable for readability on the next line
+                if ignore_timepoint_info or should_not_have_timepoint:
+                    # if we explicitly run with --ignore-timepoint-info, or the sequence is not expected to have timepoint
+                    # info, like a naive sequence (or seed?), then we assign a dummy timepoint so multiplicity is calculated even in the absence of timepoint data.
+                    dup_upstream_row['timepoint'] = 'no-timepoint'
+                else:
+                    # otherwise, we expect all seqs to have timepoint information and crash if they don't
+                    raise Exception('Missing timepoint info for {}. \n Upstream seq meta row: {}'.format(dup_seqid, dup_upstream_row))
+            # we have handled any case with missing timepoint info above, so this should always work
+            timepoints_dict[dup_upstream_row['timepoint']] += dup_multiplicity
         timepoints = sorted(timepoints_dict.items())
         multiplicity = sum(t[1] for t in timepoints)
         result_row = {
