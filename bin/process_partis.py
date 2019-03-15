@@ -91,12 +91,14 @@ def seqs(args, cluster_line):
 
 def get_upstream_row(upstream_seqmeta, seqid):
     upstream_seqmeta = upstream_seqmeta or {}
-    row = upstream_seqmeta.get(seqid, {'timepoint': '', 'multiplicity': 1})
+    # if we do not have timepoint info, then we assign a dummy timepoint so multiplicity is calculated even in the absence of timepoint data.
+    default_row = {'timepoint': 'no-timepoint', 'multiplicity': 1}
+    row = merge(default_row, upstream_seqmeta.get(seqid, {}))
     row['sequence'] = seqid
     return row
 
 
-def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta, seqs_without_timepoints, ignore_timepoint_info):
+def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta):
     """"Merge upstream (pre-partis) metadata, indexed in a dict by unique_id, (potentially)
     including timepoint and multiplicity info, with the metadata output of process_partis (partis_seqmeta)."""
     # For each row of our partis sequence metadata (as output from process_partis)
@@ -110,24 +112,15 @@ def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta, seqs_without_timepo
         for dup_seqid in seqids:
             dup_upstream_row = get_upstream_row(upstream_seqmeta, seqid)
             # pre-partis filtering multiplicity
-            dup_multiplicity = int(dup_upstream_row.get('multiplicity', 1))
-            if not dup_upstream_row.get('timepoint'):
-                should_not_have_timepoint = seqid in seqs_without_timepoints # stored as a variable for readability on the next line
-                if ignore_timepoint_info or should_not_have_timepoint:
-                    # if we explicitly run with --ignore-timepoint-info, or the sequence is not expected to have timepoint
-                    # info, like a naive sequence (or seed?), then we assign a dummy timepoint so multiplicity is calculated even in the absence of timepoint data.
-                    dup_upstream_row['timepoint'] = 'no-timepoint'
-                else:
-                    # otherwise, we expect all seqs to have timepoint information and crash if they don't
-                    raise Exception('Missing timepoint info for {}. \n Upstream seq meta row: {}'.format(dup_seqid, dup_upstream_row))
-            # we have handled any case with missing timepoint info above, so this should always work
+            dup_multiplicity = int(dup_upstream_row['multiplicity'])
+            # we have handled any case with missing timepoint info in get_upstream_row, so this should always work
             timepoints_dict[dup_upstream_row['timepoint']] += dup_multiplicity
         timepoints = sorted(timepoints_dict.items())
         multiplicity = sum(t[1] for t in timepoints)
         result_row = {
                 'unique_id': row['unique_id'],
                 'sequence': seqid,
-                'timepoint': upstream_row.get('timepoint'),
+                'timepoint': upstream_row['timepoint'],
                 'duplicates': seqids,
                 'mut_freq': row['mut_freq'],
                 'is_seed': row.get('is_seed'),
@@ -136,8 +129,6 @@ def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta, seqs_without_timepo
                 'timepoints': [tp[0] for tp in timepoints],
                 'timepoint_multiplicities': [tp[1] for tp in timepoints],
                 'affinity': row.get('affinity')}
-        if len(result_row['timepoints']) != len(result_row['timepoint_multiplicities']):
-            raise Exception('timepoints {} timepoint multiplicities {}'.format(result_row['timepoints'], result_row['timepoint_multiplicities']))
         # Currently arbitrary other upstream seqmeta isn't being merged in here, but could easily be
         yield result_row
 
@@ -191,12 +182,10 @@ def process_cluster(args, cluster_line, seed_id):
 
     n_seqs = len(sequences)
 
+    # apply merging of multiplicity info here (or flesh out with default values otherwise)
+    sequences = merge_upstream_seqmeta(sequences, args.upstream_seqmeta)
 
     always_include = set(args.always_include + [args.inferred_naive_name])
-
-    # apply merging of multiplicity info here (or flesh out with default values otherwise)
-    sequences = merge_upstream_seqmeta(sequences, args.upstream_seqmeta, always_include, args.ignore_timepoint_info)
-
     # apply sequence downsampling here
     sequences = downsample_sequences(sequences, args.max_sequences, always_include)
 
@@ -414,10 +403,6 @@ def parse_args():
     other_args.add_argument(
         '--inferred-naive-name',
         help='see scons option help')
-    other_args.add_argument(
-        '--ignore-timepoint-info',
-        help='ignore the timepoints associated with sequences in the metadata file (used for simulation data or incomplete timepoint information)',
-        action="store_true")
     # --indel-reversed-seqs
     # --remove-mutated-invariants
 
