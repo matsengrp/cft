@@ -66,7 +66,7 @@ partis_path = os.environ.get('PARTIS', default_partis_path)
 sys.path.append(path.join(partis_path, 'python'))
 import utils as partisutils
 import glutils
-print("partis utils loading from:", partisutils.__file__)
+#print("partis utils loading from:", partisutils.__file__)
 
 # Scons requirements
 from SCons.Script import Environment
@@ -304,12 +304,9 @@ def get_alt_naive_probabilities(annotation):
 
 def partition_metadata(part, annotation_list, cp, best_plus_i, seed=None, other_id=None):
     i = cp.i_best + best_plus_i
-    naive_probabilities, seed_cluster_annotation = None, None
-    if i == cp.i_best:
+    seed_cluster_annotation = None
+    if i == cp.i_best and seed:
         seed_cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp)
-        naive_probabilities = get_alt_naive_probabilities(seed_cluster_annotation)
-    #annotation_list = annotation_list if not seed else None
-    #print('adding annotation_list***********' if not seed else '')
     clusters = cp.partitions[i]
     meta = {'id': ('seed-' if seed else 'unseeded-') + (other_id + '-' if other_id else '') + 'part-' + str(best_plus_i),
             'clusters': clusters,
@@ -319,9 +316,7 @@ def partition_metadata(part, annotation_list, cp, best_plus_i, seed=None, other_
             'largest_cluster_size': max(map(len, clusters)),
             'logprob': cp.logprobs[i],
             'partition-file': part['partition-file'],
-            'naive_probabilities': naive_probabilities,
             'seed_cluster_annotation': seed_cluster_annotation
-     #       'annotation_list': annotation_list
             }
     if seed:
         meta['seed_cluster_size'] = seed_cluster_size(cp, best_plus_i, seed)
@@ -340,12 +335,9 @@ def with_other_partitions(node):
     return parts
 
 
-def valid_cluster(annotation_list, part, clust, c=None):
+def valid_cluster(annotation_list, part, clust):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
     we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
-    print('valid_cluster called')
-    if not annotation_list:
-        annotation_list, _ = read_partition_file(part, c)
     for line in annotation_list:
         if line.get('unique_ids') == clust:
             func_list = [partisutils.is_functional(line, iseq) for iseq in range(len(line['unique_ids']))]
@@ -384,7 +376,6 @@ def partition(c):
     keep_partitions = []
     for part in with_other_partitions(c['seed']):
         annotation_list, cp = read_partition_file(part, c)
-        print(type(annotation_list))
         if cp:
             # important to start from i_best
             for best_plus_i in range(len(cp.partitions) - cp.i_best):
@@ -417,8 +408,12 @@ def partition(c):
 @w.add_nest(label_func=lambda d: d['id'])
 def cluster(c):
     part = c['partition']
+    if part['seed_cluster_annotation']:
+        naive_probabilities = get_alt_naive_probabilities(part['seed_cluster_annotation'])
     return [{'id': 'seed-cluster',
-             'size': part['seed_cluster_size']}]
+             'size': part['seed_cluster_size'],
+             'annotation': part['seed_cluster_annotation'],
+             'naive_probabilities': naive_probabilities}]
 
 
 def add_cluster_analysis(w):
@@ -477,13 +472,13 @@ def add_cluster_analysis(w):
         '''
         Write partis alternative naives to a fasta in order of probability
         '''
-        if c['partition']['naive_probabilities']:
+        if c['cluster']['naive_probabilities']:
             seed_name = c['seed']['id'] 
 
             def write_naive_fastas(target, source, env):
                 targets = [str(fname) for fname in target]
                 with open(targets[0], 'w') as ranked_fasta, open(targets[1], 'w') as aa_ranked_fasta:
-                    naives_sorted_by_prob = sorted(c['partition']['naive_probabilities'], key=lambda x: x[1], reverse=True)
+                    naives_sorted_by_prob = sorted(c['cluster']['naive_probabilities'], key=lambda x: x[1], reverse=True)
                     for rank, (naive_seq, probability) in enumerate(naives_sorted_by_prob):
                         aa_seq = translate_seqs.translate(naive_seq)
                         ranked_fasta.write('>%s\n%s\n' % ('naive_{}_probability_{}'.format(rank, probability), naive_seq))
@@ -499,9 +494,9 @@ def add_cluster_analysis(w):
         '''
         Create logo plot according to probabilities
         '''
-        if c['partition']['naive_probabilities']:
+        if c['cluster']['naive_probabilities']:
             
-            annotation = c['partition']['seed_cluster_annotation']
+            annotation = c['cluster']['annotation']
             seed_name = c['seed']['id'] 
 
             def write_seq_according_to_probability(seq, probability, f):
@@ -518,7 +513,6 @@ def add_cluster_analysis(w):
                 return [(sfo['seq'], float(sfo['name'].split('_probability_')[1])) for sfo in seqfos]
 
             def write_logo_input(target, source, env):
-                print(str(source[1]))
                 alternative_naives = alternative_naives_with_probabilities(str(source[1]))
                 targets = [str(fname) for fname in target]
                 with open(targets[0], 'w') as logo_input, open(targets[1], 'w') as cdr3_logo_input:
@@ -879,16 +873,24 @@ def add_unseeded_analysis(w):
     def cluster(c):
         part = c['partition']
         cp = part['cp']
-        print('unseeded cluster analysis')
-        return [{'id': 'clust-' + str(i),
-                 'sorted_index': i,
-                 'unique_ids': clust,
-                 'size': len(clust)}
-                for i, clust
-                # Sort by len (dec) and apply index i
-                in enumerate(sorted(part['clusters'], key=len, reverse=True))
-                # Select top N or any matching seeds of interest
-                if (len(clust) > 5) and (i < options['depth'] or has_seeds(clust, c)) and valid_cluster(None, part, clust, c)]
+        clusters = []
+        # Sort by len (dec) and apply index i
+        for i, clust in enumerate(sorted(part['clusters'], key=len, reverse=True)):
+            # Select top N or any matching seeds of interest
+            if (len(clust) > 5) and (i < options['depth'] or has_seeds(clust, c)):
+                annotation_list, _ = read_partition_file(part, c)
+                if valid_cluster(annotation_list, part, clust):
+                    cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp, cp.i_best, i)
+                    # It seems like we might only need to check that one of these clusters has alternative naive info and then  we could assume it is the case for
+                    # all of them (unless --queries was set for --calculate-alternative-naive-seqs). Leaving it as is for now but may speed up the SConstruct process to do this later. (EH)
+                    naive_probabilities = get_alt_naive_probabilities(cluster_annotation)       
+                    cluster_meta = {'id': 'clust-' + str(i),
+                                    'sorted_index': i,
+                                    'unique_ids': clust,
+                                    'size': len(clust),
+                                    'annotation': cluster_annotation,
+                                    'naive_probabilities': naive_probabilities}
+        return clusters
 
     add_cluster_analysis(w)
 
