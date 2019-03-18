@@ -444,7 +444,6 @@ def add_cluster_analysis(w):
                     ' --paths-relative-to ' + dataset_outdir(c) +
                     ' --namespace cft.cluster' +
                     ' --inferred-naive-name ' + options['inferred_naive_name'] +
-                   (' --ignore-timepoint-info ' if options['is_simulated_data'] else '') +
                   ((" --always-include " + ','.join(c['sample']['seeds'])) if c['sample'].get('seeds') else '') +
                    (' --partition {}'.format(c['partition']['step']) if c.get('seed') else '') +
                    (' --cluster {}'.format(c['cluster']['sorted_index']) if not c.get('seed') else '') +

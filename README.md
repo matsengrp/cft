@@ -175,7 +175,7 @@ These are mostly installed via the `conda` command; `pip` is only used for packa
 conda install python=2.7
 conda install biopython pyqt scons
 conda install -c r r-rcolorbrewer 
-conda install -c etetoolkit ete3
+conda install -c bioconda ete3
 conda install -c conda-forge nestly
 conda install -c conda-forge yaml
 conda install --force scipy=0.17.0
