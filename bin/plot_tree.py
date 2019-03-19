@@ -54,9 +54,9 @@ def timepoint_colors(annotations):
         return set(filter(lambda x: x, annotation.get('cluster_timepoints',
             annotation['timepoints']).split(':')))
     timepoints = sorted(reduce(set.union, (annotation_timepoints(x) for x in annotations.values()), set()))
-    palette = colorbrewer.RdYlBu[11] # this is the max # of colors in this set
-    colors = ['#%02x%02x%02x' % palette[i%11] for i in range(len(timepoints))]
+    palette = ['#%02x%02x%02x' % c for c in colorbrewer.RdYlBu[min(max(len(timepoints), 3), 11)]] 
     # note:      ^^^ this bit    converts into a hex
+    colors = [palette[i%11] for i in range(len(timepoints))]
     return dict(zip(timepoints, colors))
 
 
@@ -106,12 +106,12 @@ def leaf_style(node, seqmeta, tp_colors, highlight_node=None):
         nstyle['size'] = 14
         node.set_style(nstyle)
     timepoints = seqmeta.get('cluster_timepoints', seqmeta['timepoints']).split(':')
-    duplicities = [int(n) for n in seqmeta.get('cluster_timepoint_multiplicities', seqmeta['timepoint_multiplicities']).split(':')]
+    duplicities = [int(n) if n else 0 for n in seqmeta.get('cluster_timepoint_multiplicities', seqmeta['timepoint_multiplicities']).split(':')]
     multiplicity = int(seqmeta.get('cluster_multiplicity', seqmeta['multiplicity']))
+    if len(timepoints) != len(duplicities):
+        raise Exception('number of timepoints: {} doesn\'t match number of multiplicities: {}'.format(len(timepoints), len(duplicities)))
     percents = [d * 100 / multiplicity for d in duplicities]
     colors = [tp_colors[t] for t in timepoints]
-    if len(percents) != len(colors):
-        raise Exception('number of timepoints: {} doesn\'t match number of multiplicities: {}'.format(len(percents), len(colors)))
     pie_node = ete3.PieChartFace(percents, width=scale_node(multiplicity), height=scale_node(multiplicity),
             colors=colors, line_color='black')
     ete3.add_face_to_node(pie_node, node, column=0)
