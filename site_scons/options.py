@@ -63,12 +63,6 @@ Script.AddOption('--inferred-naive-name',
         default='inferred_naive',
         help="""What do we call the partis-inferred naive sequence when we inject it among the other (input) sequences.""")
 
-Script.AddOption('--is-simulated-data',
-        dest='is_simulated_data',
-        action='store_true',
-        default=False,
-        help="""Allows special behavior for simulated data, like ignoring timepoint information.""")
-
 Script.AddOption('--fasttree-png',
         dest='fasttree_png',
         action='store_true',
@@ -88,7 +82,6 @@ def get_options(env):
         dataset_tag = env.GetOption('dataset_tag') or ('test' if test_run else None),
         always_build_metadata = not env.GetOption('lazy_metadata'),
         inferred_naive_name = env.GetOption('inferred_naive_name'),
-        is_simulated_data = env.GetOption('is_simulated_data'),
         outdir_base = env.GetOption('outdir'),
         fasttree_png = env.GetOption('fasttree_png'))
 
