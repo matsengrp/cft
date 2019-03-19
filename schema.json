@@ -34,7 +34,7 @@
    "db:cardinality": "db.cardinality:one"},
   {"db:ident": "cft.cluster:has_seed",
    "db:cardinality": "db.cardinality:one"},
-  {"db:ident": "cft.cluster:n_seqs",
+  {"db:ident": "cft.cluster:n_unique_seqs",
    "db:cardinality": "db.cardinality:one"},
   {"db:ident": "cft.cluster:n_total_reads",
    "db:cardinality": "db.cardinality:one"},

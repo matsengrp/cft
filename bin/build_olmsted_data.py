@@ -81,7 +81,7 @@ clonal_family_pull_pattern = [
       "cft.cluster:id",
       "cft.cluster:naive_seq",
       "cft.cluster:has_seed",
-      "cft.cluster:n_seqs",
+      "cft.cluster:n_unique_seqs",
       "cft.cluster:n_sampled_seqs",
       "cft.cluster:size",
       "cft.cluster:sorted_index",

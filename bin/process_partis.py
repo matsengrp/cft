@@ -192,7 +192,7 @@ def process_cluster(args, cluster_line, seed_id):
     if args.remove_frameshifts or args.remove_stops or args.remove_mutated_invariants:
         sequences = apply_filters(args, sequences)
 
-    n_seqs = len(sequences)
+    n_unique_seqs = len(sequences)
 
 
     always_include = set(args.always_include + [args.inferred_naive_name])
@@ -209,7 +209,7 @@ def process_cluster(args, cluster_line, seed_id):
              'cdr3_start': cluster_line['codon_positions']['v'],
              'has_seed': seed_id in cluster_line['unique_ids'],
              # total in cluster output from partis
-             'n_seqs' : n_seqs,
+             'n_unique_seqs' : n_unique_seqs,
              # n_total_reads represents the sum of all sequence multiplicities in the cluster
              'n_total_reads' : n_total_reads,
              # Should also add mean_mut_freq etc here
@@ -273,7 +273,7 @@ def processed_data(args):
 def write_cluster_meta(args, cluster_data):
     def attrs(base):
         return [base + '_' + k for k in ['gene', 'start', 'end', 'per_gene_support']]
-    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'n_seqs', 'n_total_reads', 'last_modified', 'partition_file',
+    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'n_unique_seqs', 'n_total_reads', 'last_modified', 'partition_file',
         'cdr3_start', 'cdr3_length', 'mean_mut_freq'] + attrs('v') + attrs('d') + attrs('j')
     doc = subset_dict(cluster_data, to_keep)
     for gene in 'vdj':
