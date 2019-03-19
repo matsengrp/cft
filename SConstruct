@@ -474,10 +474,10 @@ def add_cluster_analysis(w):
         if c['cluster']['naive_probabilities']:
             seed_name = c['seed']['id'] 
 
+            naives_sorted_by_prob =  list(sorted(c['cluster']['naive_probabilities'], key=lambda x: x[1], reverse=True))
             def write_naive_fastas(target, source, env):
                 targets = [str(fname) for fname in target]
                 with open(targets[0], 'w') as ranked_fasta, open(targets[1], 'w') as aa_ranked_fasta:
-                    naives_sorted_by_prob = sorted(c['cluster']['naive_probabilities'], key=lambda x: x[1], reverse=True)
                     for rank, (naive_seq, probability) in enumerate(naives_sorted_by_prob):
                         aa_seq = translate_seqs.translate(naive_seq)
                         ranked_fasta.write('>%s\n%s\n' % ('naive_{}_probability_{}'.format(rank, probability), naive_seq))
@@ -533,10 +533,11 @@ def add_cluster_analysis(w):
             naive_logo_input = env.Command([logo_input_fname, cdr3_logo_input_fname], c['alternative_naive_probabilities'], write_logo_input)
 
             base_outdirs = [path.join(outdir, base_name.format(seed_name)) for base_name in ['naive_logo_{}', 'naive_logo_cdr3_{}']]
-            return env.Command( [outdir + '.png' for outdir in base_outdirs],
+            logo_plots = env.Command( [outdir + '.png' for outdir in base_outdirs],
                                 naive_logo_input,
                                 'python bin/create_partis_naive_logo.py ${SOURCES[0]} --output-base=%s && python bin/create_partis_naive_logo.py ${SOURCES[1]} --output-base=%s' % (base_outdirs[0], base_outdirs[1]))
-            
+            env.Depends(logo_plots, 'bin/create_partis_naive_logo.py')
+            return logo_plots
 
     # Sequence Alignment
     # ------------------
@@ -889,6 +890,7 @@ def add_unseeded_analysis(w):
                                     'size': len(clust),
                                     'annotation': cluster_annotation,
                                     'naive_probabilities': naive_probabilities}
+                    clusters.append(cluster_meta)
         return clusters
 
     add_cluster_analysis(w)
