@@ -99,7 +99,7 @@ def get_upstream_row(upstream_seqmeta, seqid):
 def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta, seqs_without_timepoints, ignore_timepoint_info):
     """"Merge upstream (pre-partis) metadata, indexed in a dict by unique_id, (potentially)
     including timepoint and multiplicity info, with the metadata output of process_partis (partis_seqmeta)."""
-    n_seqs_multiplicity = 0
+    n_total_reads = 0
     # For each row of our partis sequence metadata (as output from process_partis)
     sequences = [] 
     for row in partis_seqmeta:
@@ -126,7 +126,7 @@ def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta, seqs_without_timepo
             timepoints_dict[dup_upstream_row['timepoint']] += dup_multiplicity
         timepoints = sorted(timepoints_dict.items())
         multiplicity = sum(t[1] for t in timepoints)
-        n_seqs_multiplicity += multiplicity
+        n_total_reads += multiplicity
         result_row = {
                 'unique_id': row['unique_id'],
                 'sequence': seqid,
@@ -143,7 +143,7 @@ def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta, seqs_without_timepo
             raise Exception('timepoints {} timepoint multiplicities {}'.format(result_row['timepoints'], result_row['timepoint_multiplicities']))
         # Currently arbitrary other upstream seqmeta isn't being merged in here, but could easily be
         sequences.append(result_row)
-    return sequences, n_seqs_multiplicity 
+    return sequences, n_total_reads 
 
 
 def downsample_sequences(sequences, max_sequences, always_include):
@@ -198,7 +198,7 @@ def process_cluster(args, cluster_line, seed_id):
     always_include = set(args.always_include + [args.inferred_naive_name])
 
     # apply merging of multiplicity info here (or flesh out with default values otherwise)
-    sequences, n_seqs_multiplicity = merge_upstream_seqmeta(sequences, args.upstream_seqmeta, always_include, args.ignore_timepoint_info)
+    sequences, n_total_reads = merge_upstream_seqmeta(sequences, args.upstream_seqmeta, always_include, args.ignore_timepoint_info)
 
     # apply sequence downsampling here
     sequences = downsample_sequences(sequences, args.max_sequences, always_include)
@@ -210,8 +210,8 @@ def process_cluster(args, cluster_line, seed_id):
              'has_seed': seed_id in cluster_line['unique_ids'],
              # total in cluster output from partis
              'n_seqs' : n_seqs,
-             # n_seqs_multiplicity represents the sum of all sequence multiplicities in the cluster
-             'n_seqs_multiplicity' : n_seqs_multiplicity,
+             # n_total_reads represents the sum of all sequence multiplicities in the cluster
+             'n_total_reads' : n_total_reads,
              # Should also add mean_mut_freq etc here
              'mean_mut_freq': numpy.mean(cluster_line['mut_freqs']),
              # Should be equal unless downsampled
@@ -273,7 +273,7 @@ def processed_data(args):
 def write_cluster_meta(args, cluster_data):
     def attrs(base):
         return [base + '_' + k for k in ['gene', 'start', 'end', 'per_gene_support']]
-    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'n_seqs', 'n_seqs_multiplicity', 'last_modified', 'partition_file',
+    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'n_seqs', 'n_total_reads', 'last_modified', 'partition_file',
         'cdr3_start', 'cdr3_length', 'mean_mut_freq'] + attrs('v') + attrs('d') + attrs('j')
     doc = subset_dict(cluster_data, to_keep)
     for gene in 'vdj':
