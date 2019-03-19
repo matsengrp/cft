@@ -411,6 +411,7 @@ def cluster(c):
     if part['seed_cluster_annotation']:
         naive_probabilities = get_alt_naive_probabilities(part['seed_cluster_annotation'])
     return [{'id': 'seed-cluster',
+             'seed_name': c['seed']['id'],
              'size': part['seed_cluster_size'],
              'annotation': part['seed_cluster_annotation'],
              'naive_probabilities': naive_probabilities}]
@@ -472,7 +473,7 @@ def add_cluster_analysis(w):
         Write partis alternative naives to a fasta in order of probability
         '''
         if c['cluster']['naive_probabilities']:
-            seed_name = c['seed']['id'] 
+            cluster_name = c['cluster'].get('seed_name', c['cluster']['id'])
 
             naives_sorted_by_prob =  list(sorted(c['cluster']['naive_probabilities'], key=lambda x: x[1], reverse=True))
             def write_naive_fastas(target, source, env):
@@ -483,8 +484,8 @@ def add_cluster_analysis(w):
                         ranked_fasta.write('>%s\n%s\n' % ('naive_{}_probability_{}'.format(rank, probability), naive_seq))
                         aa_ranked_fasta.write('>%s\n%s\n' % ('naive_{}_probability_{}'.format(rank, probability), aa_seq))
             
-            naive_probs_fname = path.join(outdir, 'ranked_naive_probabilities_%s.fasta' % seed_name)
-            aa_naive_probs_fname = path.join(outdir, 'ranked_aa_naive_probabilities_%s.fasta' % seed_name)
+            naive_probs_fname = path.join(outdir, 'ranked_naive_probabilities_%s.fasta' % cluster_name)
+            aa_naive_probs_fname = path.join(outdir, 'ranked_aa_naive_probabilities_%s.fasta' % cluster_name)
 
             return env.Command([naive_probs_fname, aa_naive_probs_fname], c['partition']['partition-file'], write_naive_fastas)
     
@@ -496,46 +497,22 @@ def add_cluster_analysis(w):
         if c['cluster']['naive_probabilities']:
             
             annotation = c['cluster']['annotation']
-            seed_name = c['seed']['id'] 
+            cluster_name = c['cluster'].get('seed_name', c['cluster']['id'])  
 
-            def write_seq_according_to_probability(seq, probability, f):
-                '''
-                Write the sequences into fastas according to their probability; this happens because the logo package
-                draws the height of the character according to its multiplicity at that site among the sequences in the file you give it
-                '''
-                sig_figs = 3
-                for _ in range(int(probability*10**sig_figs)):
-                    f.write('>%s\n%s\n' % ('naive_w_probability_{}'.format(probability), seq))
-            
-            def alternative_naives_with_probabilities(f):
-                seqfos = partisutils.read_fastx(f)
-                return [(sfo['seq'], float(sfo['name'].split('_probability_')[1])) for sfo in seqfos]
-
-            def write_logo_input(target, source, env):
-                alternative_naives = alternative_naives_with_probabilities(str(source[1]))
-                targets = [str(fname) for fname in target]
-                with open(targets[0], 'w') as logo_input, open(targets[1], 'w') as cdr3_logo_input:
-                    aa_length_most_prob_naive = int(len(annotation['naive_seq'])/3)
-                    for aa_seq, probability in alternative_naives:
-                        write_seq_according_to_probability(aa_seq, probability, logo_input)
-                        # We are using the v and j codon position annotations from the most probable naive, so warn if one of the
-                        # alternatives is not the same length since this could mess up the cdr3 start and end.
-                        if len(aa_seq) != aa_length_most_prob_naive:
-                            warn('Skipping: alternative naive sequence with length %d; differs in length from most probable naive sequence with length %d' % (len(aa_seq), aa_length_most_prob_naive))
-                            continue
-                        aa_cdr3_bounds = [int(bound/3) for bound in [annotation['codon_positions']['v'], annotation['codon_positions']['j'] + 3]]
-                        aa_cdr3 = aa_seq[aa_cdr3_bounds[0] : aa_cdr3_bounds[1]]
-                        write_seq_according_to_probability(aa_cdr3, probability, cdr3_logo_input)
-            
-            logo_input_fname = path.join(outdir, 'naive_logo_%s.fasta' % seed_name)
-            cdr3_logo_input_fname = path.join(outdir, 'naive_logo_cdr3_%s.fasta' % seed_name)
-
-            naive_logo_input = env.Command([logo_input_fname, cdr3_logo_input_fname], c['alternative_naive_probabilities'], write_logo_input)
-
-            base_outdirs = [path.join(outdir, base_name.format(seed_name)) for base_name in ['naive_logo_{}', 'naive_logo_cdr3_{}']]
-            logo_plots = env.Command( [outdir + '.png' for outdir in base_outdirs],
-                                naive_logo_input,
-                                'python bin/create_partis_naive_logo.py ${SOURCES[0]} --output-base=%s && python bin/create_partis_naive_logo.py ${SOURCES[1]} --output-base=%s' % (base_outdirs[0], base_outdirs[1]))
+            aa_input_fasta_path = str(c['alternative_naive_probabilities'][1])
+            aa_cdr3_start, aa_cdr3_end = int(annotation['codon_positions']['v']/3), int((annotation['codon_positions']['j'] + 3)/3)
+            aa_naive_len = int(len(annotation['naive_seq'])/3)
+            logo_out, cdr3_logo_out = 'naive_logo_{}.png'.format(cluster_name), 'naive_logo_cdr3_{}.png'.format(cluster_name) 
+            logo_plots = env.Command( [path.join(outdir, logo_out), path.join(outdir, cdr3_logo_out)],
+                                aa_input_fasta_path,
+                                'python bin/create_partis_naive_logo.py $SOURCE' +
+                                ' --aa-cdr3-start=%d' % aa_cdr3_start +
+                                ' --aa-cdr3-end=%d' % aa_cdr3_end +
+                                ' --aa-naive-len=%d' % aa_naive_len +
+                                ' --logo-fname=%s' % logo_out +
+                                ' --cdr3-logo-fname=%s' % cdr3_logo_out +
+                                ' --outdir=%s' % outdir )
+ 
             env.Depends(logo_plots, 'bin/create_partis_naive_logo.py')
             return logo_plots
 
