@@ -18,25 +18,20 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-def insert_partis_path():
-    """
-    Figure out where partis is so that partis utils and glutils ccan be loaded below
-    """
-    partis_path = os.environ.get('PARTIS')
-    if not partis_path or not os.path.exists(partis_path):
-        msg = """\
-        Must set environment variable PARTIS to point to an `partis` installation.
-        You can clone the partis repo with,
-            git clone --depth 1 git@github.com:psathyrella/partis.git
-            export  PARTIS=$PWD/partis
-        """
-        print(textwrap.dedent(msg))
-        sys.exit(1)
 
-    sys.path.insert(1, os.path.join(partis_path, 'python'))
-    return partis_path
+# Figure out where partis is so that partis utils and glutils ccan be loaded below
+partis_path = os.environ.get('PARTIS')
+if not partis_path or not os.path.exists(partis_path):
+    msg = """\
+    Must set environment variable PARTIS to point to an `partis` installation.
+    You can clone the partis repo with,
+        git clone --depth 1 git@github.com:psathyrella/partis.git
+        export  PARTIS=$PWD/partis
+    """
+    print(textwrap.dedent(msg))
+    sys.exit(1)
 
-partis_path = insert_partis_path()
+sys.path.insert(1, os.path.join(partis_path, 'python'))
 import utils
 import glutils
 import clusterpath
