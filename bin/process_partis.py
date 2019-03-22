@@ -91,7 +91,9 @@ def seqs(args, cluster_line):
 
 def get_upstream_row(upstream_seqmeta, seqid):
     upstream_seqmeta = upstream_seqmeta or {}
-    row = upstream_seqmeta.get(seqid, {'timepoint': '', 'multiplicity': 1})
+    # if we do not have timepoint info, then we assign a dummy timepoint so multiplicity is calculated even in the absence of timepoint data.
+    default_row = {'timepoint': 'no-timepoint', 'multiplicity': 1}
+    row = merge(default_row, upstream_seqmeta.get(seqid, {}))
     row['sequence'] = seqid
     return row
 
@@ -99,7 +101,9 @@ def get_upstream_row(upstream_seqmeta, seqid):
 def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta):
     """"Merge upstream (pre-partis) metadata, indexed in a dict by unique_id, (potentially)
     including timepoint and multiplicity info, with the metadata output of process_partis (partis_seqmeta)."""
+    n_total_reads = 0
     # For each row of our partis sequence metadata (as output from process_partis)
+    sequences = [] 
     for row in partis_seqmeta:
         seqid = row['unique_id']
         # We get the corresponding row of the upstream metadata (which contains our full lenght sequence multiplicities...)
@@ -110,37 +114,38 @@ def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta):
         for dup_seqid in seqids:
             dup_upstream_row = get_upstream_row(upstream_seqmeta, seqid)
             # pre-partis filtering multiplicity
-            dup_multiplicity = int(dup_upstream_row.get('multiplicity', 1))
-            timepoints_dict[dup_upstream_row.get('timepoint')] += dup_multiplicity
+            dup_multiplicity = int(dup_upstream_row['multiplicity'])
+            # we have handled any case with missing timepoint info in get_upstream_row, so this should always work
+            timepoints_dict[dup_upstream_row['timepoint']] += dup_multiplicity
         timepoints = sorted(timepoints_dict.items())
         multiplicity = sum(t[1] for t in timepoints)
+        n_total_reads += multiplicity
         result_row = {
                 'unique_id': row['unique_id'],
                 'sequence': seqid,
-                'timepoint': upstream_row.get('timepoint'),
+                'timepoint': upstream_row['timepoint'],
                 'duplicates': seqids,
                 'mut_freq': row['mut_freq'],
                 'is_seed': row.get('is_seed'),
                 'seq': row['seq'],
                 'multiplicity': multiplicity,
-                'timepoints': [tp[0] or '' for tp in timepoints],
+                'timepoints': [tp[0] for tp in timepoints],
                 'timepoint_multiplicities': [tp[1] for tp in timepoints],
                 'affinity': row.get('affinity')}
         # Currently arbitrary other upstream seqmeta isn't being merged in here, but could easily be
-        yield result_row
+        sequences.append(result_row)
+    return sequences, n_total_reads 
 
 
-def downsample_sequences(args, sequences):
-    sequences = list(sequences)
-    if args.max_sequences:
-        always_include = set(args.always_include + [args.inferred_naive_name])
+def downsample_sequences(sequences, max_sequences, always_include):
+    if max_sequences:
         always_include_seqs = filter(lambda x: x.get('unique_id') in always_include, sequences)
         rest_seqs = filter(lambda x: x.get('unique_id') not in always_include, sequences)
         # first take the always keep, then take as many as you can of the remaining seqs, in order of highest multiplicity
         return always_include_seqs + \
                sorted(rest_seqs,
                       # Sort by negative so we take the highest multiplicity (lowest neg value) first 
-                      key=lambda seqmeta: - seqmeta['multiplicity'])[0:args.max_sequences - len(always_include_seqs)]
+                      key=lambda seqmeta: - seqmeta['multiplicity'])[0:max_sequences - len(always_include_seqs)]
     else:
         return sequences
 
@@ -166,7 +171,7 @@ def process_cluster(args, cluster_line, seed_id):
             'mutated_invariants':      [False] + cluster_line['mutated_invariants'],
             'stops':                   [False] + cluster_line['stops'],
             'mut_freq':                  [0.0] + cluster_line['mut_freqs'],
-            'affinity':                 [None] + cluster_line['affinities']}
+            'affinity':                 [None] + cluster_line.get('affinities', [None for _ in cluster_line['unique_ids']])}
 
     for gene in 'vdj':
         for pos in ['start', 'end']:
@@ -178,13 +183,14 @@ def process_cluster(args, cluster_line, seed_id):
     if args.remove_frameshifts or args.remove_stops or args.remove_mutated_invariants:
         sequences = apply_filters(args, sequences)
 
-    n_seqs = len(sequences)
+    n_unique_seqs = len(sequences)
 
     # apply merging of multiplicity info here (or flesh out with default values otherwise)
-    sequences = merge_upstream_seqmeta(sequences, args.upstream_seqmeta)
+    sequences, n_total_reads = merge_upstream_seqmeta(sequences, args.upstream_seqmeta)
 
+    always_include = set(args.always_include + [args.inferred_naive_name])
     # apply sequence downsampling here
-    sequences = downsample_sequences(args, sequences)
+    sequences = downsample_sequences(sequences, args.max_sequences, always_include)
 
     cluster = merge(
             subset_dict(cluster_line, ['naive_seq', 'v_per_gene_support', 'd_per_gene_support', 'j_per_gene_support']),
@@ -192,7 +198,9 @@ def process_cluster(args, cluster_line, seed_id):
              'cdr3_start': cluster_line['codon_positions']['v'],
              'has_seed': seed_id in cluster_line['unique_ids'],
              # total in cluster output from partis
-             'n_seqs' : n_seqs,
+             'n_unique_seqs' : n_unique_seqs,
+             # n_total_reads represents the sum of all sequence multiplicities in the cluster
+             'n_total_reads' : n_total_reads,
              # Should also add mean_mut_freq etc here
              'mean_mut_freq': numpy.mean(cluster_line['mut_freqs']),
              # Should be equal unless downsampled
@@ -211,7 +219,7 @@ def processed_data(args):
     """Uses args to find the correct partition, cluster pair and all associated information. Cluster
     information is returned as by process_cluster."""
 
-    print("calling utils.read_output with args:", args.partition_file, args.glfo)
+    #print("calling utils.read_output with args:", args.partition_file, args.glfo)
     file_glfo, annotation_list, cpath = utils.read_output(args.partition_file, glfo=args.glfo)
     if annotation_list is None:
         raise Exception('cluster annotation file not found')
@@ -254,7 +262,7 @@ def processed_data(args):
 def write_cluster_meta(args, cluster_data):
     def attrs(base):
         return [base + '_' + k for k in ['gene', 'start', 'end', 'per_gene_support']]
-    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'n_seqs', 'last_modified', 'partition_file',
+    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'n_unique_seqs', 'n_total_reads', 'last_modified', 'partition_file',
         'cdr3_start', 'cdr3_length', 'mean_mut_freq'] + attrs('v') + attrs('d') + attrs('j')
     doc = subset_dict(cluster_data, to_keep)
     for gene in 'vdj':
