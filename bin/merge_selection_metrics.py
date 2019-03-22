@@ -7,7 +7,7 @@ import csv
 import json
 import re
 import pprint
-
+import yaml
 
 # File reading stuff
 # ------------------
@@ -19,8 +19,8 @@ def seqmeta_reader(filename):
 
 def selection_metrics_reader(filename):
     with open(filename) as fh:
-        events = json.load(fh)['events'][0]
-        return events.get('tree-info', {}).get('lb', {}) 
+        tree_metrics = yaml.load(fh)
+        return tree_metrics
 
 
 # Args

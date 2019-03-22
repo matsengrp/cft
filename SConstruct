@@ -713,7 +713,7 @@ def add_cluster_analysis(w):
         return env.Command(
             [path.join(outdir, "selection-metrics.yaml")],
             [path.join(baseoutdir, 'asr.nwk')],  # sources
-            "%s/bin/get-tree-metrics.py --treefname ${SOURCES[0]} --outfname ${TARGETS[0]}" % (partis_path)
+            "%s/bin/get-tree-metrics.py ${SOURCES[0]} ${TARGETS[0]}" % (partis_path)
         )
 
     @w.add_target(ingest=True, attr_map={'bio.seq:id': 'sequence', 'cft.timepoint:id': 'timepoint',
