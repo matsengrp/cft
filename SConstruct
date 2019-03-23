@@ -304,10 +304,13 @@ def get_alt_naive_probabilities(annotation):
 
 def partition_metadata(part, annotation_list, cp, best_plus_i, seed=None, other_id=None):
     i = cp.i_best + best_plus_i
-    seed_cluster_annotation = None
-    if i == cp.i_best and seed:
-        seed_cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp)
     clusters = cp.partitions[i]
+
+    seed_cluster_annotation = None
+    # There usually only exist / we usually only care about annotations for the best partition
+    if seed and i == cp.i_best:
+        seed_cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp)
+    
     meta = {'id': ('seed-' if seed else 'unseeded-') + (other_id + '-' if other_id else '') + 'part-' + str(best_plus_i),
             'clusters': clusters,
             # Should cluster step be partition step?
@@ -316,6 +319,8 @@ def partition_metadata(part, annotation_list, cp, best_plus_i, seed=None, other_
             'largest_cluster_size': max(map(len, clusters)),
             'logprob': cp.logprobs[i],
             'partition-file': part['partition-file'],
+            # For unseeded clusters, we need the annotation_list to determine which are valid clusters (see valid_cluster)
+            'annotation_list': annotation_list if not seed else None,
             'seed_cluster_annotation': seed_cluster_annotation
             }
     if seed:
@@ -368,7 +373,7 @@ def read_partition_file(part, c):
 
 # note we elide the nested partitions > clusters lists so as not to kill tripl when it tries to load them as a
 # value and can't hash
-@w.add_nest(metadata=lambda c, d: {'clusters': 'elided'})
+@w.add_nest(metadata=lambda c, d: {'clusters': 'elided', 'seed_cluster_annotation': 'elided'})
 @wrap_test_run()
 def partition(c):
     """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
@@ -408,12 +413,14 @@ def partition(c):
 @w.add_nest(label_func=lambda d: d['id'])
 def cluster(c):
     part = c['partition']
-    if part['seed_cluster_annotation']:
-        naive_probabilities = get_alt_naive_probabilities(part['seed_cluster_annotation'])
+    naive_probabilities = None
+    seed_cluster_annotation = part.get('seed_cluster_annotation')
+    if seed_cluster_annotation:
+        naive_probabilities = get_alt_naive_probabilities(seed_cluster_annotation)
     return [{'id': 'seed-cluster',
              'seed_name': c['seed']['id'],
              'size': part['seed_cluster_size'],
-             'annotation': part['seed_cluster_annotation'],
+             'annotation': seed_cluster_annotation,
              'naive_probabilities': naive_probabilities}]
 
 
@@ -477,6 +484,10 @@ def add_cluster_analysis(w):
 
             naives_sorted_by_prob =  list(sorted(c['cluster']['naive_probabilities'], key=lambda x: x[1], reverse=True))
             def write_naive_fastas(target, source, env):
+                '''
+                This is the action for this target. Because it is a function, not a file being executed,
+                the rules SCons follows for determining whether to rebuild this target are less well defined.
+                '''
                 targets = [str(fname) for fname in target]
                 with open(targets[0], 'w') as ranked_fasta, open(targets[1], 'w') as aa_ranked_fasta:
                     for rank, (naive_seq, probability) in enumerate(naives_sorted_by_prob):
@@ -826,7 +837,7 @@ def add_unseeded_analysis(w):
     # Setting up the partition nest level
 
     # Each c["partition"] value actually points to the annotations for that partition... a little weird but...
-    @w.add_nest(metadata=lambda c, d: {'clusters': 'elided', 'cp': 'elided'})
+    @w.add_nest(metadata=lambda c, d: {'clusters': 'elided', 'cp': 'elided', 'annotation_list': 'elided'})
     @wrap_test_run()
     def partition(c):
         """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
@@ -855,7 +866,7 @@ def add_unseeded_analysis(w):
         for i, clust in enumerate(sorted(part['clusters'], key=len, reverse=True)):
             # Select top N or any matching seeds of interest
             if (len(clust) > 5) and (i < options['depth'] or has_seeds(clust, c)):
-                annotation_list, _ = read_partition_file(part, c)
+                annotation_list = part['annotation_list']
                 if valid_cluster(annotation_list, part, clust):
                     cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp, cp.i_best, i)
                     # It seems like we might only need to check that one of these clusters has alternative naive info and then  we could assume it is the case for
