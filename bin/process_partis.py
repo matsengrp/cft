@@ -91,9 +91,11 @@ def seqs(args, cluster_line):
 
 def get_upstream_row(upstream_seqmeta, seqid):
     upstream_seqmeta = upstream_seqmeta or {}
-    # if we do not have timepoint info, then we assign a dummy timepoint so multiplicity is calculated even in the absence of timepoint data.
-    default_row = {'timepoint': 'no-timepoint', 'multiplicity': 1}
+    default_row = {'multiplicity': 1}
     row = merge(default_row, upstream_seqmeta.get(seqid, {}))
+    timepoint = row.get('timepoint')
+    # if we do not have timepoint info (including when timepoint == ''), then we assign a dummy timepoint so multiplicity is calculated even in the absence of timepoint data.
+    row['timepoint'] = timepoint if timepoint and timepoint is not '' else 'no-timepoint'
     row['sequence'] = seqid
     return row
 
