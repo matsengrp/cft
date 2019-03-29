@@ -371,8 +371,8 @@ def read_partition_file(part, c):
         return []
     return annotation_list, cpath
 
-# note we elide the nested partitions > clusters lists so as not to kill tripl when it tries to load them as a
-# value and can't hash
+# note we elide the nested partitions > clusters lists (as well as the seed cluster annotation)
+# so as not to kill tripl when it tries to load them as a value and can't hash 
 @w.add_nest(metadata=lambda c, d: {'clusters': 'elided', 'seed_cluster_annotation': 'elided'})
 @wrap_test_run()
 def partition(c):
@@ -837,6 +837,9 @@ def add_unseeded_analysis(w):
     # Setting up the partition nest level
 
     # Each c["partition"] value actually points to the annotations for that partition... a little weird but...
+    # We elide the annotations here because we pass them through in order to avoid re-reading them from
+    # the partition file and because we don't need to write them to the metadata for the partition.
+    # See https://github.com/matsengrp/cft/pull/270#discussion_r267502415 for details on why we decided to do things this way.
     @w.add_nest(metadata=lambda c, d: {'clusters': 'elided', 'cp': 'elided', 'annotation_list': 'elided'})
     @wrap_test_run()
     def partition(c):
