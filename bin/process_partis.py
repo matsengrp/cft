@@ -215,7 +215,32 @@ def process_cluster(args, cluster_line, seed_id):
             cluster[gene+'_'+pos] = cluster_line['regional_bounds'][gene][pos.startswith('e')]
     return cluster
 
+def choose_cluster(partition_file, annotation_list, cpath, ipart=None, i_cluster=None, unique_ids=None):
+    """Given a partition file and associated cluster annotation file, there may be multiple
+    clusters one might extract data for. These options allow you to specify a selection."""
+        
+    # partition index is i_best unless specified
+    if not ipart:
+        ipart = cpath.i_best 
 
+    # select cluster; unique_ids takes highest precedence
+    if unique_ids:
+        cluster_unique_ids = unique_ids
+    # default to seed, when possibile
+    elif cpath.seed_unique_id and not i_cluster:
+        cluster_unique_ids = next(cluster for cluster in cpath.partitions[ipart] if cpath.seed_unique_id in cluster)
+    # otherwise, assume we have args.cluster or default it to 0
+    else:
+        clusters = sorted(cpath.partitions[ipart], key=len, reverse=True)
+        cluster_unique_ids = clusters[i_cluster or 0]
+
+    # Get cluster annotation and put together into
+    annotations = [l for l in annotation_list if l['unique_ids'] == cluster_unique_ids]
+    if len(annotations) == 0:
+        raise ValueError('requested uids %s not found in %s' % (cluster_unique_ids, partition_file))  # it was a value error before, so I'm leaving it at that
+    elif len(annotations) > 1:
+        print '%s more than one annotation with requested uids %s found in %s' % (utils.color('red', 'warning'), cluster_unique_ids, partition_file)  # shouldn't be possible
+    return annotations[0]
 
 def processed_data(args):
     """Uses args to find the correct partition, cluster pair and all associated information. Cluster
@@ -227,28 +252,10 @@ def processed_data(args):
         raise Exception('cluster annotation file not found')
     if file_glfo:  # will only be set if we're reading a yaml file
         args.glfo = file_glfo
-
-    # select partition, relative to best partition
+   
     ipart = cpath.i_best + args.partition
+    cluster_annotation = choose_cluster(args.partition_file, annotation_list, cpath, ipart, args.cluster, args.unique_ids)
 
-    # select cluster; unique_ids takes highest precedence
-    if args.unique_ids:
-        cluster_unique_ids = args.unique_ids
-    # default to seed, when possibile
-    elif cpath.seed_unique_id and not args.cluster:
-        cluster_unique_ids = next(cluster for cluster in cpath.partitions[ipart] if cpath.seed_unique_id in cluster)
-    # otherwise, assume we have args.cluster or default it to 0
-    else:
-        clusters = sorted(cpath.partitions[ipart], key=len, reverse=True)
-        cluster_unique_ids = clusters[args.cluster or 0]
-
-    # Get cluster annotation and put together into
-    annotations = [l for l in annotation_list if l['unique_ids'] == cluster_unique_ids]
-    if len(annotations) == 0:
-        raise ValueError('requested uids %s not found in %s' % (cluster_unique_ids, args.partition_file))  # it was a value error before, so I'm leaving it at that
-    elif len(annotations) > 1:
-        print '%s more than one annotation with requested uids %s found in %s' % (utils.color('red', 'warning'), cluster_unique_ids, args.partition_file)  # shouldn't be possible
-    cluster_annotation = annotations[0]
     data = {'n_clusters': len(cpath.partitions[ipart]),
             'logprob': cpath.logprobs[ipart],
             'partition_file': args.partition_file,
@@ -258,8 +265,6 @@ def processed_data(args):
     # Process the annotation file specific details/data
     data.update(process_cluster(args, cluster_annotation, cpath.seed_unique_id))
     return data
-
-
 
 def write_cluster_meta(args, cluster_data):
     def attrs(base):

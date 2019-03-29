@@ -181,6 +181,7 @@ conda install -c conda-forge yaml
 conda install --force scipy=0.17.0
 conda install -c bioconda fasttree
 conda install -c anaconda gcc
+pip install weblogo
 ```
 
 Some have found it necessary to add the anaconda-installed GNU compiler (GCC) to their paths similar to this:

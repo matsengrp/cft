@@ -1,9 +1,15 @@
 #!/usr/bin/env python
 
 import argparse
-from Bio import SeqIO, SeqRecord, Seq
+from Bio import SeqIO, SeqRecord, Seq, Alphabet
 import json
 
+def translate(s):
+    '''
+    Assume we are in frame and translate DNA to amino acids.
+    '''
+    coding_dna = Seq.Seq(s[:(3*int(len(s)/3))], Alphabet.IUPAC.ambiguous_dna)
+    return str(coding_dna.translate())
 
 def get_frame(metadata_handle):
     metadata = json.load(metadata_handle)
