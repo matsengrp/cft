@@ -91,9 +91,11 @@ def seqs(args, cluster_line):
 
 def get_upstream_row(upstream_seqmeta, seqid):
     upstream_seqmeta = upstream_seqmeta or {}
-    # if we do not have timepoint info, then we assign a dummy timepoint so multiplicity is calculated even in the absence of timepoint data.
-    default_row = {'timepoint': 'no-timepoint', 'multiplicity': 1}
+    default_row = {'multiplicity': 1}
     row = merge(default_row, upstream_seqmeta.get(seqid, {}))
+    timepoint = row.get('timepoint')
+    # if we do not have timepoint info (including when timepoint == ''), then we assign a dummy timepoint so multiplicity is calculated even in the absence of timepoint data.
+    row['timepoint'] = timepoint if timepoint and timepoint is not '' else 'no-timepoint'
     row['sequence'] = seqid
     return row
 
@@ -101,7 +103,9 @@ def get_upstream_row(upstream_seqmeta, seqid):
 def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta):
     """"Merge upstream (pre-partis) metadata, indexed in a dict by unique_id, (potentially)
     including timepoint and multiplicity info, with the metadata output of process_partis (partis_seqmeta)."""
+    n_total_reads = 0
     # For each row of our partis sequence metadata (as output from process_partis)
+    sequences = [] 
     for row in partis_seqmeta:
         seqid = row['unique_id']
         # We get the corresponding row of the upstream metadata (which contains our full lenght sequence multiplicities...)
@@ -117,6 +121,7 @@ def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta):
             timepoints_dict[dup_upstream_row['timepoint']] += dup_multiplicity
         timepoints = sorted(timepoints_dict.items())
         multiplicity = sum(t[1] for t in timepoints)
+        n_total_reads += multiplicity
         result_row = {
                 'unique_id': row['unique_id'],
                 'sequence': seqid,
@@ -130,11 +135,11 @@ def merge_upstream_seqmeta(partis_seqmeta, upstream_seqmeta):
                 'timepoint_multiplicities': [tp[1] for tp in timepoints],
                 'affinity': row.get('affinity')}
         # Currently arbitrary other upstream seqmeta isn't being merged in here, but could easily be
-        yield result_row
+        sequences.append(result_row)
+    return sequences, n_total_reads 
 
 
 def downsample_sequences(sequences, max_sequences, always_include):
-    sequences = list(sequences)
     if max_sequences:
         always_include_seqs = filter(lambda x: x.get('unique_id') in always_include, sequences)
         rest_seqs = filter(lambda x: x.get('unique_id') not in always_include, sequences)
@@ -180,10 +185,10 @@ def process_cluster(args, cluster_line, seed_id):
     if args.remove_frameshifts or args.remove_stops or args.remove_mutated_invariants:
         sequences = apply_filters(args, sequences)
 
-    n_seqs = len(sequences)
+    n_unique_seqs = len(sequences)
 
     # apply merging of multiplicity info here (or flesh out with default values otherwise)
-    sequences = merge_upstream_seqmeta(sequences, args.upstream_seqmeta)
+    sequences, n_total_reads = merge_upstream_seqmeta(sequences, args.upstream_seqmeta)
 
     always_include = set(args.always_include + [args.inferred_naive_name])
     # apply sequence downsampling here
@@ -195,7 +200,9 @@ def process_cluster(args, cluster_line, seed_id):
              'cdr3_start': cluster_line['codon_positions']['v'],
              'has_seed': seed_id in cluster_line['unique_ids'],
              # total in cluster output from partis
-             'n_seqs' : n_seqs,
+             'n_unique_seqs' : n_unique_seqs,
+             # n_total_reads represents the sum of all sequence multiplicities in the cluster
+             'n_total_reads' : n_total_reads,
              # Should also add mean_mut_freq etc here
              'mean_mut_freq': numpy.mean(cluster_line['mut_freqs']),
              # Should be equal unless downsampled
@@ -262,7 +269,7 @@ def processed_data(args):
 def write_cluster_meta(args, cluster_data):
     def attrs(base):
         return [base + '_' + k for k in ['gene', 'start', 'end', 'per_gene_support']]
-    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'n_seqs', 'last_modified', 'partition_file',
+    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'n_unique_seqs', 'n_total_reads', 'last_modified', 'partition_file',
         'cdr3_start', 'cdr3_length', 'mean_mut_freq'] + attrs('v') + attrs('d') + attrs('j')
     doc = subset_dict(cluster_data, to_keep)
     for gene in 'vdj':

@@ -51,8 +51,7 @@ def iter_lineage(tree, pattern):
 def timepoint_colors(annotations):
     # Should really improve this sort so that we're fully chronological
     def annotation_timepoints(annotation):
-        return set(filter(lambda x: x, annotation.get('cluster_timepoints',
-            annotation['timepoints']).split(':')))
+        return set(annotation.get('cluster_timepoints', annotation['timepoints']).split(':'))
     timepoints = sorted(reduce(set.union, (annotation_timepoints(x) for x in annotations.values()), set()))
     palette = ['#%02x%02x%02x' % c for c in colorbrewer.RdYlBu[min(max(len(timepoints), 3), 11)]] 
     # note:      ^^^ this bit    converts into a hex

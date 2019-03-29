@@ -7,7 +7,7 @@ import csv
 import json
 import re
 import pprint
-
+import yaml
 
 # File reading stuff
 # ------------------
@@ -17,10 +17,13 @@ def seqmeta_reader(filename):
         reader = csv.DictReader(fh)
         return {row['sequence']: row for row in reader}
 
-def selection_metrics_reader(filename):
+def yaml_reader(filename):
     with open(filename) as fh:
-        events = json.load(fh)['events'][0]
-        return events.get('tree-info', {}).get('lb', {}) 
+        try:
+            result = yaml.load(fh)
+        except yaml.YAMLError, e:
+            raise
+        return result if result else {}
 
 
 # Args
@@ -29,7 +32,7 @@ def selection_metrics_reader(filename):
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('tip_seqmeta', type=seqmeta_reader)
-    parser.add_argument('selection_metrics', type=selection_metrics_reader)
+    parser.add_argument('selection_metrics', type=yaml_reader)
     parser.add_argument('seqmeta_out', type=argparse.FileType('w'))
     args = parser.parse_args()
     return args

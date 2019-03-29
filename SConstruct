@@ -782,9 +782,9 @@ def add_cluster_analysis(w):
         new_partis_infile = env.Command(new_partis_infname, c['asr_seqs'], fix_file)
 
         return env.Command(
-            [path.join(outdir, "selection-metric-annotations.yaml")],
-            [new_partis_infile, path.join(baseoutdir, 'asr.nwk')],  # sources
-            "%s/bin/partis annotate --locus %s --parameter-dir %s --all-seqs-simultaneous --get-tree-metrics --infname ${SOURCES[0]} --treefname ${SOURCES[1]} --outfname ${TARGETS[0]}" % (partis_path, locus(c), c['sample']['parameter-dir'])
+            [path.join(outdir, "selection-metrics.yaml")],
+            [path.join(baseoutdir, 'asr.nwk')],  # sources
+            "%s/bin/get-tree-metrics.py ${SOURCES[0]} ${TARGETS[0]}" % (partis_path)
         )
 
     @w.add_target(ingest=True, attr_map={'bio.seq:id': 'sequence', 'cft.timepoint:id': 'timepoint',
