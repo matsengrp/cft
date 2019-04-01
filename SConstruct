@@ -781,11 +781,13 @@ def add_cluster_analysis(w):
         new_partis_infname = path.join(baseoutdir, 'asr-with-only-Ns.fa')
         new_partis_infile = env.Command(new_partis_infname, c['asr_seqs'], fix_file)
 
-        return env.Command(
+        tree_metrics = env.Command(
             [path.join(outdir, "selection-metrics.yaml")],
             [path.join(baseoutdir, 'asr.nwk')],  # sources
             "%s/bin/get-tree-metrics.py ${SOURCES[0]} ${TARGETS[0]}" % (partis_path)
         )
+        env.Depends(tree_metrics, "partis/bin/get-tree-metrics.py")
+        return tree_metrics
 
     @w.add_target(ingest=True, attr_map={'bio.seq:id': 'sequence', 'cft.timepoint:id': 'timepoint',
         'cft.seq:timepoint': 'timepoint', 'cft.seq:timepoints': 'timepoints', 'cft.seq:cluster_timepoints': 'cluster_timepoints',
