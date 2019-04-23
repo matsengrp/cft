@@ -361,7 +361,9 @@ def valid_seed_partition(annotation_list, cp, part, best_plus_i, seed_id):
 # Try to read partition file; If fails, it is possibly because it's empty. Catch that case and warn
 def read_partition_file(part, c):
     try:
-        glfo = glutils.read_glfo(c['sample']['glfo-dir'], locus(c))
+        glfo = c['sample'].get('glfo-dir')
+        if glfo:
+            glfo = glutils.read_glfo(c['sample']['glfo-dir'], locus(c))
         _, annotation_list, cpath = partisutils.read_output(part['partition-file'], glfo=glfo)
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
