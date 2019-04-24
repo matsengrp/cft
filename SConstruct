@@ -448,7 +448,7 @@ def add_cluster_analysis(w):
                     ' --partition-file ${SOURCES[0]}' +
                     #' --cluster-annotation-file ${SOURCES[1]}' +
                    (' --upstream-seqmeta ${SOURCES[1]}' if perseq_metafile else '') +
-                    ' --parameter-dir ' + c['sample']['parameter-dir'] +
+                   (' --parameter-dir ' + c['sample']['parameter-dir'] if c['sample'].get('glfo-dir') else '') +
                     ' --locus ' + locus(c) +
                     ' --max-sequences 10000' +
                     ' --paths-relative-to ' + dataset_outdir(c) +
