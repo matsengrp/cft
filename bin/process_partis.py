@@ -239,6 +239,8 @@ def choose_cluster(partition_file, annotation_list, cpath, ipart=None, i_cluster
     
     #choose the largest cluster across all partitions
     if largest_cluster_across_partitions:
+        if any([arg is not None for arg in (ipart, i_cluster, unique_ids)]):
+            raise Exception('Doesn\'t make sense to specify and of --partition, --cluster, --unique-ids when you use --largest-cluster-across-partitions as it will disregard those options and choose the largest cluster across all partitions.')
         return choose_largest_cluster_across_partitions(annotation_list, cpath.seed_unique_id)
     
     # partition index is i_best unless specified
