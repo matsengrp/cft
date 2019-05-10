@@ -215,10 +215,32 @@ def process_cluster(args, cluster_line, seed_id):
             cluster[gene+'_'+pos] = cluster_line['regional_bounds'][gene][pos.startswith('e')]
     return cluster
 
-def choose_cluster(partition_file, annotation_list, cpath, ipart=None, i_cluster=None, unique_ids=None):
+def choose_largest_cluster_across_partitions(annotation_list, seed):
+    '''
+    Sometimes we'd like to choose the largest cluster across all partitions (not just within a given partition such as the most likely one). 
+    This does that, and makes sure to restrict this to seed containing clusters if is a seed unique id.
+    '''
+    sorted_clusters = sorted(annotation_list, key=lambda l: len(l['unique_ids']), reverse=True)
+    if seed is None:
+        largest_cluster = sorted_clusters[0]
+        print('using largest cluster: {}'.format(len(largest_cluster['unique_ids'])))
+    else:
+        seed_containing_clusters = [c for c in sorted_clusters if seed in c['unique_ids']]
+        if len(seed_containing_clusters) > 0:
+            largest_cluster = seed_containing_clusters[0]
+            print('using largest cluster with seed {}: {}'.format(seed, len(largest_cluster['unique_ids'])))
+        else:
+            raise Exception(' --largest-cluster-across-partitions specified for a seeded partition and no clusters contain the seed. This should not happen, as both the seed info and the cluster ids are coming from partis here. Make sure the partition file specified is a valid partition that includes the seed sequence.')
+    return largest_cluster
+ 
+def choose_cluster(partition_file, annotation_list, cpath, ipart=None, i_cluster=None, unique_ids=None, largest_cluster_across_partitions=False):
     """Given a partition file and associated cluster annotation file, there may be multiple
     clusters one might extract data for. These options allow you to specify a selection."""
-        
+    
+    #choose the largest cluster across all partitions
+    if largest_cluster_across_partitions:
+        return choose_largest_cluster_across_partitions(annotation_list, cpath.seed_unique_id)
+    
     # partition index is i_best unless specified
     if not ipart:
         ipart = cpath.i_best 
@@ -254,7 +276,7 @@ def processed_data(args):
         args.glfo = file_glfo
    
     ipart = cpath.i_best + args.partition
-    cluster_annotation = choose_cluster(args.partition_file, annotation_list, cpath, ipart, args.cluster, args.unique_ids)
+    cluster_annotation = choose_cluster(args.partition_file, annotation_list, cpath, ipart, args.cluster, args.unique_ids, args.largest_cluster_across_partitions)
 
     data = {'n_clusters': len(cpath.partitions[ipart]),
             'logprob': cpath.logprobs[ipart],
@@ -370,6 +392,10 @@ def parse_args():
         type=int,
         help="""index of cluster in partition-file after sorting by cluster size; defaults to seed cluster if
         seeded and 0 (the largest cluster) otherwise.""")
+    cluster_selection_args.add_argument(
+        '--largest-cluster-across-partitions',
+        help='select the largest cluster across all partitions. Must include seed if partis was run with a seed.',
+        action="store_true")
     # add a non sorted version?
     cluster_selection_args.add_argument(
         '--unique-ids',
@@ -378,7 +404,6 @@ def parse_args():
         '--unique-ids-file',
         help='select a specific cluster using its unique_ids signature in a single line in a file',
         type=lambda x: file(x).read().strip())
-
 
     other_args = parser.add_argument_group(title="Other options")
     other_args.add_argument(
