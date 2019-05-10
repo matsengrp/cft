@@ -212,33 +212,30 @@ def process_cluster(args, cluster_line, seed_id):
             cluster[gene+'_'+pos] = cluster_line['regional_bounds'][gene][pos.startswith('e')]
     return cluster
 
-def choose_largest_cluster_across_partitions(annotation_list, seed):
+def find_largest_cluster_across_partitions(cpath, annotation_list):
     '''
     Sometimes we'd like to choose the largest cluster across all partitions (not just within a given partition such as the most likely one). 
     This does that, and makes sure to restrict this to seed containing clusters if is a seed unique id.
     '''
-    sorted_clusters = sorted(annotation_list, key=lambda l: len(l['unique_ids']), reverse=True)
-    if seed is None:
-        largest_cluster = sorted_clusters[0]
-        print('using largest cluster: {}'.format(len(largest_cluster['unique_ids'])))
-    else:
-        seed_containing_clusters = [c for c in sorted_clusters if seed in c['unique_ids']]
-        if len(seed_containing_clusters) > 0:
-            largest_cluster = seed_containing_clusters[0]
-            print('using largest cluster with seed {}: {}'.format(seed, len(largest_cluster['unique_ids'])))
-        else:
-            raise Exception(' --largest-cluster-across-partitions specified for a seeded partition and no clusters contain the seed. This should not happen, as both the seed info and the cluster ids are coming from partis here. Make sure the partition file specified is a valid partition that includes the seed sequence.')
-    return largest_cluster
+    seed = cpath.seed_unique_id
+    largest_cluster_len = 0
+    for i, partition in enumerate(cpath.partitions):
+        clusters_by_size = sorted(partition, key=len, reverse=True)
+        if seed is not None:
+            clusters_by_size = list(filter(lambda c: seed in c, clusters_by_size))
+            if len(clusters_by_size) == 0:
+                raise Exception(' --largest-cluster-across-partitions specified for a seeded partition and no clusters contain the seed. This should not happen, as both the seed info and the cluster ids are coming from partis here. Make sure the partition file specified is a valid partition that includes the seed sequence.')
+        uids_largest_cluster_in_partition = clusters_by_size[0]
+        if len(uids_largest_cluster_in_partition) > largest_cluster_len:
+            uids_largest_cluster = uids_largest_cluster_in_partition
+            largest_cluster_len = len(uids_largest_cluster_in_partition)
+            ipart = i
+    print(len(uids_largest_cluster))
+    return uids_largest_cluster, ipart
  
-def choose_cluster(partition_file, annotation_list, cpath, ipart=None, i_cluster=None, unique_ids=None, largest_cluster_across_partitions=False):
+def choose_cluster(partition_file, annotation_list, cpath, ipart=None, i_cluster=None, unique_ids=None):
     """Given a partition file and associated cluster annotation file, there may be multiple
     clusters one might extract data for. These options allow you to specify a selection."""
-    
-    #choose the largest cluster across all partitions
-    if largest_cluster_across_partitions:
-        if any([arg is not None for arg in (ipart, i_cluster, unique_ids)]):
-            raise Exception('Doesn\'t make sense to specify and of --partition, --cluster, --unique-ids when you use --largest-cluster-across-partitions as it will disregard those options and choose the largest cluster across all partitions.')
-        return choose_largest_cluster_across_partitions(annotation_list, cpath.seed_unique_id)
     
     # partition index is i_best unless specified
     if not ipart:
@@ -274,12 +271,20 @@ def processed_data(args):
         raise Exception('no annotations in %s (probably because cluster annotation file wasn\'t found)' % args.partition_file)
 
     ipart = cpath.i_best + args.partition
-    cluster_annotation = choose_cluster(args.partition_file, annotation_list, cpath, ipart, args.cluster, args.unique_ids, args.largest_cluster_across_partitions)
+    unique_ids = args.unique_ids
 
+    #find the largest cluster across all partitions
+    if args.largest_cluster_across_partitions:
+        if any([arg is not None for arg in (args.cluster, args.unique_ids)]) or args.partition != 0:
+            raise Exception('Doesn\'t make sense to specify any of --partition, --cluster, --unique-ids when you use --largest-cluster-across-partitions as it will disregard those options and choose the largest cluster across all partitions.')
+        unique_ids, ipart = find_largest_cluster_across_partitions(cpath, annotation_list)
+    
+    cluster_annotation = choose_cluster(args.partition_file, annotation_list, cpath, ipart, args.cluster, unique_ids)
+    
     data = {'n_clusters': len(cpath.partitions[ipart]),
             'logprob': cpath.logprobs[ipart],
             'partition_file': args.partition_file,
-            'last_modified': time.ctime(os.path.getmtime(args.partition_file))}
+            'last_modified': time.ctime(os.path.getmtime(args.partition_file))}    
     if args.seqs_out:
         data['seqs_file'] = os.path.relpath(args.seqs_out, args.paths_relative_to)
     # Process the annotation file specific details/data
