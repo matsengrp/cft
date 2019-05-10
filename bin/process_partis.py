@@ -58,7 +58,7 @@ def csv_reader(index=None, filter_by=None):
 
 
 
-default_germline_sets = os.path.join(partis_path, 'data/germlines/human')
+default_glfo_dir = os.path.join(partis_path, 'data/germlines/human')  # this should only be used as a last resort (e.g. you've completely lost the germline sets corresponding to your deprecated csv output files)
 
 def as_dict_rows(column_dict, columns=None):
     columns = columns or column_dict.keys()
@@ -161,9 +161,6 @@ def merge(d1, d2):
     return d
 
 def process_cluster(args, cluster_line, seed_id):
-    #print("calling utils.add_implicit_info with args:", args.glfo, cluster_line)
-    #utils.add_implicit_info(args.glfo, cluster_line)
-
     cluster_sequences = {
             'unique_id':             [args.inferred_naive_name] + cluster_line['unique_ids'],
             'seq': [cluster_line['naive_seq']] + seqs(args, cluster_line),
@@ -270,13 +267,12 @@ def processed_data(args):
     """Uses args to find the correct partition, cluster pair and all associated information. Cluster
     information is returned as by process_cluster."""
 
-    #print("calling utils.read_output with args:", args.partition_file, args.glfo)
-    file_glfo, annotation_list, cpath = utils.read_output(args.partition_file, glfo=args.glfo)
+    glfo = None if utils.getsuffix(args.partition_file) == '.yaml' else glutils.read_glfo(args.glfo_dir if args.glfo_dir else default_glfo_dir, args.locus)
+    #print("calling utils.read_output with args:", args.partition_file, glfo)
+    glfo, annotation_list, cpath = utils.read_output(args.partition_file, glfo=glfo)  # returns glfo from the file if it's there, otherwise it returns the one we passed in
     if annotation_list is None:
-        raise Exception('cluster annotation file not found')
-    if file_glfo:  # will only be set if we're reading a yaml file
-        args.glfo = file_glfo
-   
+        raise Exception('no annotations in %s (probably because cluster annotation file wasn\'t found)' % args.partition_file)
+
     ipart = cpath.i_best + args.partition
     cluster_annotation = choose_cluster(args.partition_file, annotation_list, cpath, ipart, args.cluster, args.unique_ids, args.largest_cluster_across_partitions)
 
@@ -377,7 +373,10 @@ def parse_args():
         description="""These arguments (as passed to partis) are required in order to process the data correctly.""")
     partis_args.add_argument(
         '--parameter-dir',
-        help='parameter dir path, as passed to partis (if omitted, gls assumed to be ' + default_germline_sets + ')')
+        help='DEPRECATED use --glfo-dir instead')
+    partis_args.add_argument(
+        '--glfo-dir',
+        help='path to germline info, only necessary for deprecated .csv output files (if omitted, defaults to %s, which may or may not work)' %  default_glfo_dir)
     partis_args.add_argument('--locus',
         help='again, as passed to partis',
         required=True)
@@ -449,9 +448,12 @@ def parse_args():
     args = parser.parse_args()
     # default paths_relative_to is just whatever the output dir is
     args.unique_ids = args.unique_ids or args.unique_ids_file
-    # default germline set (discouraged)
-    args.germline_sets = os.path.join(args.parameter_dir, 'hmm/germline-sets') if args.parameter_dir else default_germline_sets
-    args.glfo = glutils.read_glfo(args.germline_sets, args.locus)
+    if args.parameter_dir is not None:
+        if args.glfo_dir is None:
+            args.glfo_dir = os.path.join(args.parameter_dir, 'hmm', glutils.glfo_dir)  # thre reason you should be passing --glfo-dir instead is to avoid these path shenanigans, since partis writes the glfo-dir to the meta info yaml file, so you can just use that
+        else:
+            raise Exception('doesn\'t make sense to pass both --parameter-dir and --glfo-dir (just use the latter)')
+        delattr(args, 'parameter_dir')
 
     return args
 

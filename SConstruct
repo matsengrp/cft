@@ -361,10 +361,8 @@ def valid_seed_partition(annotation_list, cp, part, best_plus_i, seed_id):
 # Try to read partition file; If fails, it is possibly because it's empty. Catch that case and warn
 def read_partition_file(part, c):
     try:
-        glfo = c['sample'].get('glfo-dir')
-        if glfo:
-            glfo = glutils.read_glfo(c['sample']['glfo-dir'], locus(c))
-        _, annotation_list, cpath = partisutils.read_output(part['partition-file'], glfo=glfo)
+        glfo = None if partisutils.getsuffix(part['partition-file']) == '.yaml' else glutils.read_glfo(c['sample']['glfo-dir'], locus(c))
+        glfo, annotation_list, cpath = partisutils.read_output(part['partition-file'], glfo=glfo)
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
@@ -435,7 +433,6 @@ def add_cluster_analysis(w):
     @w.add_metadata()
     def _process_partis(outdir, c):
         # Should get this to explicitly depend on cluster0.fa
-        #sources = [c['partition']['partition-file'], c['partition'].get('cluster-annotation-file')]
         sources = [c['partition']['partition-file']]
         perseq_metafile = c['sample'].get('per-sequence-meta-file')
         if perseq_metafile:
@@ -446,9 +443,8 @@ def add_cluster_analysis(w):
                 'process_partis.py' +
                     ' --remove-stops --remove-frameshifts --remove-mutated-invariants' +
                     ' --partition-file ${SOURCES[0]}' +
-                    #' --cluster-annotation-file ${SOURCES[1]}' +
                    (' --upstream-seqmeta ${SOURCES[1]}' if perseq_metafile else '') +
-                   (' --parameter-dir ' + c['sample']['parameter-dir'] if c['sample'].get('glfo-dir') else '') +
+                   (' --glfo-dir ' + c['sample']['glfo-dir'] if partisutils.getsuffix(c['partition']['partition-file']) == '.csv' else '') +
                     ' --locus ' + locus(c) +
                     ' --max-sequences 10000' +
                     ' --paths-relative-to ' + dataset_outdir(c) +
