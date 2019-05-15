@@ -220,17 +220,17 @@ def find_largest_cluster_across_partitions(cpath, annotation_list):
     seed = cpath.seed_unique_id
     largest_cluster_len = 0
     for i, partition in enumerate(cpath.partitions):
-        clusters_by_size = sorted(partition, key=len, reverse=True)
+        clusters_by_size = sorted(partition, key=lambda cluster: len(set(cluster)), reverse=True)
         if seed is not None:
             clusters_by_size = list(filter(lambda c: seed in c, clusters_by_size))
             if len(clusters_by_size) == 0:
                 raise Exception(' --largest-cluster-across-partitions specified for a seeded partition and no clusters contain the seed. This should not happen, as both the seed info and the cluster ids are coming from partis here. Make sure the partition file specified is a valid partition that includes the seed sequence.')
         uids_largest_cluster_in_partition = clusters_by_size[0]
-        if len(uids_largest_cluster_in_partition) > largest_cluster_len:
+        unique_id_count = len(set(uids_largest_cluster_in_partition))
+        if unique_id_count > largest_cluster_len:
             uids_largest_cluster = uids_largest_cluster_in_partition
-            largest_cluster_len = len(uids_largest_cluster_in_partition)
+            largest_cluster_len = unique_id_count
             ipart = i
-    print(len(uids_largest_cluster))
     return uids_largest_cluster, ipart
  
 def choose_cluster(partition_file, annotation_list, cpath, ipart=None, i_cluster=None, unique_ids=None):
