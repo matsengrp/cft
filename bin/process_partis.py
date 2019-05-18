@@ -179,6 +179,15 @@ def process_cluster(args, cluster_line, seed_id):
     cluster_cols = ['v_gene', 'd_gene', 'j_gene', 'cdr3_length']
 
     sequences = as_dict_rows(cluster_sequences)
+    
+    if args.largest_cluster_across_partitions:
+        '''
+        Deduplicate sequence records. When using largest_cluster_across_partitions for seeded clusters, we may end up with duplicate sequences in 
+        these clusters because of how partis partitions seed clusters. If this option used, beware that this deduplication pays no respect to which 
+        duplicate record is preserved of two with the same unique id.
+        '''
+        sequence_records_by_uniq_id = {record['unique_id']: record for record in sequences}
+        sequences = sequence_records_by_uniq_id.values()
     if args.remove_frameshifts or args.remove_stops or args.remove_mutated_invariants:
         sequences = apply_filters(args, sequences)
 
