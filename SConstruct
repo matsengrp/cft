@@ -319,8 +319,6 @@ def partition_metadata(part, annotation_list, cp, best_plus_i, seed=None, other_
             'largest_cluster_size': max(map(len, clusters)),
             'logprob': cp.logprobs[i],
             'partition-file': part['partition-file'],
-            # For unseeded clusters, we need the annotation_list to determine which are valid clusters (see valid_cluster)
-            'annotation_list': annotation_list if not seed else None,
             'seed_cluster_annotation': seed_cluster_annotation
             }
     if seed:
@@ -410,7 +408,7 @@ def partition(c):
 
 # This is a little silly, but gives us the right semantics for partitions > clusters
 #w.add('cluster', ['cluster'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
-@w.add_nest(label_func=lambda d: d['id'])
+@w.add_nest(label_func=lambda d: d['id'], metadata=lambda c, d: {'annotation': 'elided', 'naive_probabilities': 'elided'})
 def cluster(c):
     part = c['partition']
     naive_probabilities = None
@@ -840,7 +838,7 @@ def add_unseeded_analysis(w):
     # We elide the annotations here because we pass them through in order to avoid re-reading them from
     # the partition file and because we don't need to write them to the metadata for the partition.
     # See https://github.com/matsengrp/cft/pull/270#discussion_r267502415 for details on why we decided to do things this way.
-    @w.add_nest(metadata=lambda c, d: {'clusters': 'elided', 'cp': 'elided', 'annotation_list': 'elided'})
+    @w.add_nest(metadata=lambda c, d: {'clusters': 'elided', 'cp': 'elided' })
     @wrap_test_run()
     def partition(c):
         """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
@@ -848,8 +846,7 @@ def add_unseeded_analysis(w):
         def meta(part):
             annotation_list, cp = read_partition_file(part, c)
             if cp:
-                return sconsutils.merge_dicts(partition_metadata(part, annotation_list, cp, 0, other_id=part.get('other_id')),
-                                         {'cp': cp})
+                return partition_metadata(part, annotation_list, cp, 0, other_id=part.get('other_id'))
         return filter(None, map(meta, with_other_partitions(c['sample'])))
 
     def has_seeds(cluster, c):
@@ -860,16 +857,15 @@ def add_unseeded_analysis(w):
 
     # Add cluster nesting level
 
-    @w.add_nest(label_func=lambda d: d['id'])
+    @w.add_nest(label_func=lambda d: d['id'], metadata=lambda c, d: {'unique_ids': 'elided', 'annotation': 'elided', 'naive_probabilities': 'elided'})
     def cluster(c):
         part = c['partition']
-        cp = part['cp']
         clusters = []
         # Sort by len (dec) and apply index i
         for i, clust in enumerate(sorted(part['clusters'], key=len, reverse=True)):
             # Select top N or any matching seeds of interest
             if (len(clust) > 5) and (i < options['depth'] or has_seeds(clust, c)):
-                annotation_list = part['annotation_list']
+                annotation_list, cp = read_partition_file(part, c)  # Here we reread the partition file instead of caching annotations of the partition along with its metadata above in partition_metadata. This saves on memory and slows the process down, but we are restricted by memory use more than time at the moment.
                 if valid_cluster(annotation_list, part, clust):
                     cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp, cp.i_best, i)
                     # It seems like we might only need to check that one of these clusters has alternative naive info and then  we could assume it is the case for
