@@ -179,6 +179,15 @@ def process_cluster(args, cluster_line, seed_id):
     cluster_cols = ['v_gene', 'd_gene', 'j_gene', 'cdr3_length']
 
     sequences = as_dict_rows(cluster_sequences)
+    
+    if args.largest_cluster_across_partitions:
+        '''
+        Deduplicate sequence records. When using largest_cluster_across_partitions for seeded clusters, we may end up with duplicate sequences in 
+        these clusters because of how partis partitions seed clusters. If this option used, beware that this deduplication pays no respect to which 
+        duplicate record is preserved of two with the same unique id.
+        '''
+        sequence_records_by_uniq_id = {record['unique_id']: record for record in sequences}
+        sequences = sequence_records_by_uniq_id.values()
     if args.remove_frameshifts or args.remove_stops or args.remove_mutated_invariants:
         sequences = apply_filters(args, sequences)
 
@@ -220,17 +229,17 @@ def find_largest_cluster_across_partitions(cpath, annotation_list):
     seed = cpath.seed_unique_id
     largest_cluster_len = 0
     for i, partition in enumerate(cpath.partitions):
-        clusters_by_size = sorted(partition, key=len, reverse=True)
+        clusters_by_size = sorted(partition, key=lambda cluster: len(set(cluster)), reverse=True)
         if seed is not None:
             clusters_by_size = list(filter(lambda c: seed in c, clusters_by_size))
             if len(clusters_by_size) == 0:
                 raise Exception(' --largest-cluster-across-partitions specified for a seeded partition and no clusters contain the seed. This should not happen, as both the seed info and the cluster ids are coming from partis here. Make sure the partition file specified is a valid partition that includes the seed sequence.')
         uids_largest_cluster_in_partition = clusters_by_size[0]
-        if len(uids_largest_cluster_in_partition) > largest_cluster_len:
+        unique_id_count = len(set(uids_largest_cluster_in_partition))
+        if unique_id_count > largest_cluster_len:
             uids_largest_cluster = uids_largest_cluster_in_partition
-            largest_cluster_len = len(uids_largest_cluster_in_partition)
+            largest_cluster_len = unique_id_count
             ipart = i
-    print(len(uids_largest_cluster))
     return uids_largest_cluster, ipart
  
 def choose_cluster(partition_file, annotation_list, cpath, ipart=None, i_cluster=None, unique_ids=None):
