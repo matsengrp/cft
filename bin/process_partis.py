@@ -33,6 +33,7 @@ if not partis_path or not os.path.exists(partis_path):
 
 sys.path.insert(1, os.path.join(partis_path, 'python'))
 import utils
+import indelutils
 import glutils
 import clusterpath
 
@@ -151,6 +152,25 @@ def downsample_sequences(sequences, max_sequences, always_include):
     else:
         return sequences
 
+def match_indels_in_uid_seq(cluster_line, match_indels_in_uid, glfo):
+    iseq_to_match = cluster_line['unique_ids'].index(match_indels_in_uid)
+    ifos_to_match = cluster_line['indelfos'][iseq_to_match]['indels']
+    if len(ifos_to_match) > 1:
+        raise Exception('{} has more than 1 indel. We don\'t have a good way of matching more than one indel between two seqs right now. Use an id of a sequence with exactly one indel or make a suggestion for a good default in this case, or adapt get_iseqs_with_compatible_indels in partis/python/indelutils.py'.format(match_indels_in_uid))
+    elif len(ifos_to_match) < 1:
+        raise Exception('{} has no indel. Use an id of a sequence with exactly one indel.'.format(match_indels_in_uid))
+    else:
+        ifo_to_match = ifos_to_match[0]
+    cluster_line = indelutils.restrict_to_compatible_indels(cluster_line, ifo_to_match, glfo)
+    if cluster_line is None:
+        raise Exception('No indels in cluster annotation for cluster containing {} matched {}'.format(match_indels_in_uid, ifo_to_match))
+    return cluster_line
+
+def check_seed_for_indels(cluster_line, seed_id):
+    iseq_seed = cluster_line['unique_ids'].index(seed_id)
+    ifos = cluster_line['indelfos'][iseq_seed]['indels']
+    if len(ifos) > 0:
+        raise Exception('indel in seed sequence {}. Options are 1. Look at the annotation for this cluster and find the indel in the seed. Rerun process_partis.py with --match-indels-in-uid <uid-of-seq-containing-indel-of-interest> to process only sequences containing that specific indel for further analysis of the indel 2. Run with --ignore-seed-indels'.format(seed_id))
 
 def subset_dict(d, keys):
     return {k: d[k] for k in keys if k in d}
@@ -160,7 +180,14 @@ def merge(d1, d2):
     d.update(d2)
     return d
 
-def process_cluster(args, cluster_line, seed_id):
+def process_cluster(args, cluster_line, seed_id, glfo):
+    if not args.match_indels_in_uid and not args.ignore_seed_indels:
+        check_seed_for_indels(cluster_line, seed_id)
+    
+    if args.match_indels_in_uid:
+        cluster_line = match_indels_in_uid_seq(cluster_line, args.match_indels_in_uid, glfo)
+        cluster_line['unique_ids'] = map(lambda i: i if i == args.match_indels_in_uid else '{}_indel_filtered'.format(i), cluster_line['unique_ids']) 
+
     cluster_sequences = {
             'unique_id':             [args.inferred_naive_name] + cluster_line['unique_ids'],
             'seq': [cluster_line['naive_seq']] + seqs(args, cluster_line),
@@ -297,7 +324,7 @@ def processed_data(args):
     if args.seqs_out:
         data['seqs_file'] = os.path.relpath(args.seqs_out, args.paths_relative_to)
     # Process the annotation file specific details/data
-    data.update(process_cluster(args, cluster_annotation, cpath.seed_unique_id))
+    data.update(process_cluster(args, cluster_annotation, cpath.seed_unique_id, glfo))
     return data
 
 def write_cluster_meta(args, cluster_data):
@@ -420,31 +447,41 @@ def parse_args():
         help='select a specific cluster using its unique_ids signature in a single line in a file',
         type=lambda x: file(x).read().strip())
 
-    other_args = parser.add_argument_group(title="Other options")
-    other_args.add_argument(
+    seqs_args = parser.add_argument_group(title="Options regarding methods for choosing sequences to be included or left out of the cluster of interest.")
+    seqs_args.add_argument(
+        '--match-indels-in-uid',
+        help='process only sequences matching the one indel in the sequence corresponding to the uid passed here in the annotation chosen in choose_cluster()',
+        type=str)
+    seqs_args.add_argument(
+        '--ignore-seed-indels',
+        help='If --match-indels-in-uid has not been set, this allows processing of a seed cluster (without filtering) where there is an indel in the seed sequence.',
+        action="store_true")
+    seqs_args.add_argument(
         '--remove-frameshifts',
         help='if set, removes seqs with frameshifted indels from output',
         action="store_true")
-    other_args.add_argument(
+    seqs_args.add_argument(
         '--remove-stops',
         help='if set, removes seqs with stop codons from output',
         action="store_true")
-    other_args.add_argument(
+    seqs_args.add_argument(
         '--remove-mutated-invariants',
         help='if set, removes seqs with mutated "invariant" regions from output',
         action="store_true")
-    other_args.add_argument(
+    seqs_args.add_argument(
         '--indel-reversed-seqs',
         help='if set, uses the "indel_reversed_seqs" output of partis instead of "seqs"',
         action="store_true")
-    other_args.add_argument(
+    seqs_args.add_argument(
         '--max-sequences',
         help="""if set, downsamples semi-randomly, with preference towards sequences with higher multiplicity
         and order output by partis""",
         type=int)
-    other_args.add_argument(
+    seqs_args.add_argument(
         '--always-include',
         type=lambda x: x.split(','), help='comma separated list of ids to keep if --max-sequences is set', default=[])
+    
+    other_args = parser.add_argument_group(title="Other options")
     other_args.add_argument(
         '--paths-relative-to',
         default='.',
@@ -455,8 +492,6 @@ def parse_args():
     other_args.add_argument(
         '--inferred-naive-name',
         help='see scons option help')
-    # --indel-reversed-seqs
-    # --remove-mutated-invariants
 
     # parse args and decorate with derived values
     args = parser.parse_args()
