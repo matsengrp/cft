@@ -22,6 +22,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '--output-path', type=str, required=True,
         help="The PNG output file path.")
+    parser.add_argument(
+        '--size', type=int, default=900,
+        help="size in pixels of png")
 
     args = parser.parse_args()
 
@@ -31,7 +34,7 @@ if __name__ == '__main__':
     with open(args.ids_path) as f:
         ids = f.readlines()
     ids = [id.rstrip("\n") for id in ids]
-
+    
     for leaf_node in tree.get_leaves():
         if leaf_node.name in ([args.naive, args.seed] if args.seed else [args.naive]):
             color = "blue"
@@ -48,4 +51,4 @@ if __name__ == '__main__':
     ts.show_leaf_name = False
     ts.show_scale = False
 
-    tree.render(args.output_path, tree_style=ts)
+    tree.render(args.output_path, tree_style=ts, w=args.size)
