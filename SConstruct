@@ -165,7 +165,7 @@ def dataset_metadata(infile):
             d = yaml.load(fp)
     label = (options['dataset_tag'] + '-' if options['dataset_tag'] else '') + d['id']
     outdir = path.join(options['outdir_base'], label)
-    return sconsutils.merge_dicts(d, {'id': d['id'] + '-' + time.strftime('%Y.%m.%d'), 'label': label, 'outdir': outdir})
+    return sconsutils.merge_dicts(d, {'id': label + '-' + time.strftime('%Y.%m.%d'), 'label': label, 'outdir': outdir})
 
 @w.add_nest(full_dump= True,
         label_func= lambda d: d['label'],
@@ -206,8 +206,8 @@ def wrap_test_run(take_n=2):
 
 
 def keep_sample(sample):
-    return sample.get('partition-file') or \
-           [seed for seed in sample.get('seeds', {}).values() if seed.get('partition-file')]
+    return (sample.get('partition-file') and options['only_seeds'] is None) or \
+           [seed for seed_id, seed in sample.get('seeds', {}).items() if seed.get('partition-file') and (options['only_seeds'] is None or seed_id in options['only_seeds'])]
 
 def samples(c):
     return {sample_id: sample
@@ -264,7 +264,7 @@ def locus(c):
 def seed(c):
     return [sconsutils.merge_dicts(seed, {'id': seed_id})
             for seed_id, seed in samples(c)[c['sample']['id']].get('seeds', {}).items()
-            if seed.get('partition-file')]
+            if seed.get('partition-file') and (options['only_seeds'] is None or seed_id in options['only_seeds'])]
 
 # Some accessor helpers
 
@@ -377,17 +377,22 @@ def partition(c):
     """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
     for actual analysis."""
     keep_partitions = []
+    seed_id = c['seed']['id']
+    if options['only_seeds'] is not None and seed_id not in options['only_seeds']:
+        return [] 
     for part in with_other_partitions(c['seed']):
         annotation_list, cp = read_partition_file(part, c)
         if cp:
             # important to start from i_best
             for best_plus_i in range(len(cp.partitions) - cp.i_best):
-                meta = partition_metadata(part, annotation_list, cp, best_plus_i, seed=c['seed']['id'], other_id=part.get('other_id'))
+
+                meta = partition_metadata(part, annotation_list, cp, best_plus_i, seed=seed_id, other_id=part.get('other_id'))
+                
                 # We only add clusters bigger than two, since we can only make trees if we have hits
                 if meta['seed_cluster_size'] > 10:
                     # if we have 10 sequences, assume enough of them will be good
                     keep_partitions.append(meta)
-                elif meta['seed_cluster_size'] > 2 and valid_seed_partition(annotation_list, cp, part, best_plus_i, c['seed']['id']):
+                elif meta['seed_cluster_size'] > 2 and valid_seed_partition(annotation_list, cp, part, best_plus_i, seed_id):
                     # if less than 10 sequences, make sure we still have enough sequences after health filters
                     keep_partitions.append(meta)
                 # Once we get a cluster of size 50, we don't need later cluster steps
@@ -435,8 +440,11 @@ def add_cluster_analysis(w):
         perseq_metafile = c['sample'].get('per-sequence-meta-file')
         if perseq_metafile:
             sources.append(perseq_metafile)
+        cluster_seqs_fname = 'cluster_seqs.fa'
+        if options['match_indels_in_uid']:
+            cluster_seqs_fname = '{}_indel_filtered_cluster_seqs.fa'.format(options['match_indels_in_uid'])
         return env.Command(
-                [path.join(outdir, x) for x in ['partis_metadata.json', 'cluster_seqs.fa', 'partis_seqmeta.csv']],
+                [path.join(outdir, x) for x in ['partis_metadata.json', cluster_seqs_fname, 'partis_seqmeta.csv']],
                 sources,
                 'process_partis.py' +
                     ' --remove-stops --remove-frameshifts --remove-mutated-invariants' +
@@ -448,6 +456,8 @@ def add_cluster_analysis(w):
                     ' --paths-relative-to ' + dataset_outdir(c) +
                     ' --namespace cft.cluster' +
                     ' --inferred-naive-name ' + options['inferred_naive_name'] +
+                  ((' --match-indels-in-uid ' + options['match_indels_in_uid']) if options['match_indels_in_uid'] is not None else '')  +
+                   (' --ignore-seed-indels' if options['ignore_seed_indels'] else '') +
                   ((" --always-include " + ','.join(c['sample']['seeds'])) if c['sample'].get('seeds') else '') +
                    (' --partition {}'.format(c['partition']['step']) if c.get('seed') else '') +
                    (' --cluster {}'.format(c['cluster']['sorted_index']) if not c.get('seed') else '') +
