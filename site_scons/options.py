@@ -17,6 +17,22 @@ Script.AddOption('--depth',
         help="""How many clonal families should we process per unseeded sample and locus? Defaults to 20,
         unless this is a test run in which case it defaults to 3.""")
 
+Script.AddOption('--only-seeds',
+        dest='only_seeds',
+        metavar='LIST',
+        default=None,
+        help="""Specify ':' separated list of partis seeds to process only those seed containing clusters.""")
+
+Script.AddOption('--match-indels-in-uid',
+        dest='match_indels_in_uid',
+        default=None,
+        help="""process only sequences matching the one indel in the sequence corresponding to the uid passed here in the annotation chosen in choose_cluster()""")
+
+Script.AddOption('--ignore-seed-indels',
+        dest='ignore_seed_indels',
+        action="store_true",
+        help="""If --match-indels-in-uid has not been set, this allows processing of a seed cluster (without filtering) where there is an indel in the seed sequence.""")
+        
 Script.AddOption('--asr-progs',
         dest='asr_progs',
         metavar='LIST',
@@ -72,14 +88,22 @@ Script.AddOption('--fasttree-png',
 
 def get_options(env):
     # prefer realpath so that running latest vs explicit vN doesn't require rerun; also need for defaults below
-    test_run = env.GetOption("test_run")
+    test_run, dataset_tag, match_indels_in_uid = env.GetOption("test_run"), env.GetOption('dataset_tag'), env.GetOption('match_indels_in_uid')
+    user_tag = (dataset_tag if dataset_tag else '')
+    test_tag = ('test' if test_run else '')
+    match_indels_in_uid_tag = ('match-indels-in-uid-{}'.format(match_indels_in_uid) if match_indels_in_uid else '')
+    print(filter(None, [user_tag, test_tag, match_indels_in_uid_tag]))
+    tag = '_'.join(filter(None, [user_tag, test_tag, match_indels_in_uid_tag]))
     return dict(
         infiles = env.GetOption('infiles').split(':'),
         depth = int(env.GetOption('depth') or (3 if test_run else 30)),
+        only_seeds = env.GetOption('only_seeds').split(':'),
+        ignore_seed_indels = env.GetOption('ignore_seed_indels'),
+        match_indels_in_uid = env.GetOption('match_indels_in_uid'),
         test_run = test_run,
         asr_progs = env.GetOption('asr_progs').split(':'),
         prune_strategies = env.GetOption('prune_strategies').split(':'),
-        dataset_tag = env.GetOption('dataset_tag') or ('test' if test_run else None),
+        dataset_tag = tag,
         always_build_metadata = not env.GetOption('lazy_metadata'),
         inferred_naive_name = env.GetOption('inferred_naive_name'),
         outdir_base = env.GetOption('outdir'),
