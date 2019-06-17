@@ -181,7 +181,7 @@ def merge(d1, d2):
     return d
 
 def process_cluster(args, cluster_line, seed_id, glfo):
-    if not args.match_indels_in_uid and not args.ignore_seed_indels:
+    if seed_id is not None and not args.match_indels_in_uid and not args.ignore_seed_indels:
         check_seed_for_indels(cluster_line, seed_id)
     
     if args.match_indels_in_uid:
