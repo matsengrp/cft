@@ -92,12 +92,11 @@ def get_options(env):
     user_tag = (dataset_tag if dataset_tag else '')
     test_tag = ('test' if test_run else '')
     match_indels_in_uid_tag = ('match-indels-in-uid-{}'.format(match_indels_in_uid) if match_indels_in_uid else '')
-    print(filter(None, [user_tag, test_tag, match_indels_in_uid_tag]))
     tag = '_'.join(filter(None, [user_tag, test_tag, match_indels_in_uid_tag]))
     return dict(
         infiles = env.GetOption('infiles').split(':'),
         depth = int(env.GetOption('depth') or (3 if test_run else 30)),
-        only_seeds = env.GetOption('only_seeds').split(':'),
+        only_seeds = env.GetOption('only_seeds').split(':') if env.GetOption('only_seeds') is not None else None,
         ignore_seed_indels = env.GetOption('ignore_seed_indels'),
         match_indels_in_uid = env.GetOption('match_indels_in_uid'),
         test_run = test_run,
