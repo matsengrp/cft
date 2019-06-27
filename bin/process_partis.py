@@ -186,7 +186,7 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     
     if args.match_indels_in_uid:
         cluster_line = match_indels_in_uid_seq(cluster_line, args.match_indels_in_uid, glfo)
-        cluster_line['unique_ids'] = map(lambda i: i if i == args.match_indels_in_uid else '{}_indel_filtered'.format(i), cluster_line['unique_ids']) 
+        cluster_line['unique_ids'] = map(lambda i: '{}_indel_filtered'.format(i), cluster_line['unique_ids']) 
 
     cluster_sequences = {
             'unique_id':             [args.inferred_naive_name] + cluster_line['unique_ids'],
