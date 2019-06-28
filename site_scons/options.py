@@ -17,6 +17,11 @@ Script.AddOption('--depth',
         help="""How many clonal families should we process per unseeded sample and locus? Defaults to 20,
         unless this is a test run in which case it defaults to 3.""")
 
+Script.AddOption('--process-all-partis-partition-steps',
+        dest="process_all_partis_partition_steps",
+        action="store_true",
+        help="""By default only the best partis partition step is processed (cp.i_best). Use this to process all partition steps.""")
+
 Script.AddOption('--only-seeds',
         dest='only_seeds',
         metavar='LIST',
@@ -96,6 +101,7 @@ def get_options(env):
     return dict(
         infiles = env.GetOption('infiles').split(':'),
         depth = int(env.GetOption('depth') or (3 if test_run else 30)),
+        process_all_partis_partition_steps = env.GetOption('process_all_partis_partition_steps'),
         only_seeds = env.GetOption('only_seeds').split(':') if env.GetOption('only_seeds') is not None else None,
         ignore_seed_indels = env.GetOption('ignore_seed_indels'),
         match_indels_in_uid = env.GetOption('match_indels_in_uid'),

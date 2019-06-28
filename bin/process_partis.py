@@ -166,11 +166,12 @@ def match_indels_in_uid_seq(cluster_line, match_indels_in_uid, glfo):
         raise Exception('No indels in cluster annotation for cluster containing {} matched {}'.format(match_indels_in_uid, ifo_to_match))
     return cluster_line
 
-def check_seed_for_indels(cluster_line, seed_id):
+def check_seed_for_indels(cluster_line, seed_id, partition_file):
     iseq_seed = cluster_line['unique_ids'].index(seed_id)
     ifos = cluster_line['indelfos'][iseq_seed]['indels']
     if len(ifos) > 0:
-        raise Exception('indel in seed sequence {}. Options are 1. Look at the annotation for this cluster and find the indel in the seed. Rerun process_partis.py with --match-indels-in-uid <uid-of-seq-containing-indel-of-interest> to process only sequences containing that specific indel for further analysis of the indel 2. Run with --ignore-seed-indels'.format(seed_id))
+        print(ifos)
+        raise Exception('indel in seed sequence {}. Options are 1. Look at the annotation for this cluster and find the indel in the seed. Rerun process_partis.py with --match-indels-in-uid <uid-of-seq-containing-indel-of-interest> to process only sequences containing that specific indel for further analysis of the indel 2. Run with --ignore-seed-indels. PS check out {}'.format(seed_id, partition_file))
 
 def subset_dict(d, keys):
     return {k: d[k] for k in keys if k in d}
@@ -182,7 +183,7 @@ def merge(d1, d2):
 
 def process_cluster(args, cluster_line, seed_id, glfo):
     if seed_id is not None and not args.match_indels_in_uid and not args.ignore_seed_indels:
-        check_seed_for_indels(cluster_line, seed_id)
+        check_seed_for_indels(cluster_line, seed_id, args.partition_file)
     
     if args.match_indels_in_uid:
         cluster_line = match_indels_in_uid_seq(cluster_line, args.match_indels_in_uid, glfo)
@@ -306,7 +307,7 @@ def processed_data(args):
     if annotation_list is None:
         raise Exception('no annotations in %s (probably because cluster annotation file wasn\'t found)' % args.partition_file)
 
-    ipart = cpath.i_best + args.partition
+    ipart = args.partition
     unique_ids = args.unique_ids
 
     #find the largest cluster across all partitions
