@@ -301,9 +301,11 @@ def get_alt_naive_probabilities(annotation):
     naive_probabilities = alternatives.get('naive-seqs') if alternatives else None
     return naive_probabilities if naive_probabilities and len(naive_probabilities) > 0 else None
 
+def partition_steps(cp):
+    return range(len(cp.partitions)) if options['process_all_partis_partition_steps'] else [cp.i_best]
+
 def partition_metadata(part, annotation_list, cp, i_step, seed=None, other_id=None):
     clusters = cp.partitions[i_step]
-    print('partition_metadata', i_step)
     seed_cluster_annotation = None
     # There usually only exist / we usually only care about annotations for the best partition
     if seed and i_step == cp.i_best:
@@ -339,7 +341,6 @@ def with_other_partitions(node):
 def valid_cluster(annotation_list, part, clust, i):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
     we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
-    print('valid cluster', i)
     for line in annotation_list:
         if line.get('unique_ids') == clust:
             func_list = [partisutils.is_functional(line, iseq) for iseq in range(len(line['unique_ids']))]
@@ -371,7 +372,6 @@ def read_partition_file(part, c):
 # note we elide the nested partitions > clusters lists (as well as the seed cluster annotation)
 # so as not to kill tripl when it tries to load them as a value and can't hash 
 @w.add_nest(metadata=lambda c, d: {'clusters': 'elided', 'seed_cluster_annotation': 'elided'})
-@wrap_test_run()
 def partition(c):
     """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
     for actual analysis."""
@@ -382,10 +382,8 @@ def partition(c):
     for part in with_other_partitions(c['seed']):
         annotation_list, cp = read_partition_file(part, c)
         if cp:
-            for i_step in range(len(cp.partitions)) if options['process_all_partis_partition_steps'] else [cp.i_best]:
-                print('part step', i_step, 'is best:', i_step == cp.i_best)
+            for i_step in partition_steps(cp):
                 meta = partition_metadata(part, annotation_list, cp, i_step, seed=seed_id, other_id=part.get('other_id'))
-                
                 # We only add clusters bigger than two, since we can only make trees if we have hits
                 if meta['seed_cluster_size'] > 10:
                     # if we have 10 sequences, assume enough of them will be good
@@ -393,13 +391,6 @@ def partition(c):
                 elif meta['seed_cluster_size'] > 2 and valid_seed_partition(annotation_list, cp, part, i_step, seed_id):
                     # if less than 10 sequences, make sure we still have enough sequences after health filters
                     keep_partitions.append(meta)
-                # Once we get a cluster of size 50, we don't need later cluster steps
-                #if meta['seed_cluster_size'] >= 50:
-                    #break
-                # Ignore the break above... For now, we break as soon as we get a single
-                # cluster until psathyrella is able to fix partis to export cluster annotations for all
-                # partition steps to the same file.
-                break
     return keep_partitions
 
 
@@ -847,19 +838,14 @@ def add_unseeded_analysis(w):
     # the partition file and because we don't need to write them to the metadata for the partition.
     # See https://github.com/matsengrp/cft/pull/270#discussion_r267502415 for details on why we decided to do things this way.
     @w.add_nest(metadata=lambda c, d: {'clusters': 'elided', 'cp': 'elided' })
-    @wrap_test_run()
     def partition(c):
         """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
         for actual analysis."""
-        #def meta(part):
         keep_partitions = []
         for partition_run in with_other_partitions(c['sample']):
             annotation_list, cp = read_partition_file(partition_run, c)
             if cp:
-                print('unseeded', cp.i_best)
-                partition_steps = range(len(cp.partitions)) if options['process_all_partis_partition_steps'] else [cp.i_best]
-                keep_partitions += [partition_metadata(partition_run, annotation_list, cp, i_step, other_id=partition_run.get('other_id')) for i_step in partition_steps]
-        #return filter(None, map(meta, with_other_partitions(c['sample'])))
+                keep_partitions += [partition_metadata(partition_run, annotation_list, cp, i_step, other_id=partition_run.get('other_id')) for i_step in partition_steps(cp)]
         return keep_partitions
 
     def has_seeds(cluster, c):
@@ -877,7 +863,6 @@ def add_unseeded_analysis(w):
         # Sort by len (dec) and apply index i
         for i, clust in enumerate(sorted(part['clusters'], key=len, reverse=True)):
             # Select top N or any matching seeds of interest
-            print(i)
             if (len(clust) > 5) and (i < options['depth'] or has_seeds(clust, c)):
                 annotation_list, cp = read_partition_file(part, c)  # Here we reread the partition file instead of caching annotations of the partition along with its metadata above in partition_metadata. This saves on memory and slows the process down, but we are restricted by memory use more than time at the moment.
                 if valid_cluster(annotation_list, part, clust, i):
