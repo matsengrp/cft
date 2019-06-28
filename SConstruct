@@ -307,9 +307,8 @@ def partition_steps(cp):
 def partition_metadata(part, annotation_list, cp, i_step, seed=None, other_id=None):
     clusters = cp.partitions[i_step]
     seed_cluster_annotation = None
-    # There usually only exist / we usually only care about annotations for the best partition
-    if seed and i_step == cp.i_best:
-        seed_cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp)
+    if seed:
+        seed_cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp, i_step)
     
     meta = {'id': ('seed-' if seed else 'unseeded-') + (other_id + '-' if other_id else '') + 'part-' + str(i_step),
             'clusters': clusters,
@@ -338,7 +337,7 @@ def with_other_partitions(node):
     return parts
 
 
-def valid_cluster(annotation_list, part, clust, i):
+def valid_cluster(annotation_list, part, clust):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
     we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
     for line in annotation_list:
@@ -352,7 +351,7 @@ def valid_seed_partition(annotation_list, cp, part, i_step, seed_id):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
     we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
     clust = seed_cluster(cp, i_step, seed_id)
-    return valid_cluster(annotation_list, part, clust, 'seed')
+    return valid_cluster(annotation_list, part, clust)
 
 # The actual nest construction for this
 
@@ -438,6 +437,7 @@ def add_cluster_analysis(w):
                 'process_partis.py' +
                     ' --remove-stops --remove-frameshifts --remove-mutated-invariants' +
                     ' --partition-file ${SOURCES[0]}' +
+                    ' --partition {}'.format(c['partition']['step']) +
                    (' --upstream-seqmeta ${SOURCES[1]}' if perseq_metafile else '') +
                    (' --glfo-dir ' + c['sample']['glfo-dir'] if partisutils.getsuffix(c['partition']['partition-file']) == '.csv' else '') +
                     ' --locus ' + locus(c) +
@@ -448,7 +448,6 @@ def add_cluster_analysis(w):
                   ((' --match-indels-in-uid ' + options['match_indels_in_uid']) if options['match_indels_in_uid'] is not None else '')  +
                    (' --ignore-seed-indels' if options['ignore_seed_indels'] else '') +
                   ((" --always-include " + ','.join(c['sample']['seeds'])) if c['sample'].get('seeds') else '') +
-                   (' --partition {}'.format(c['partition']['step']) if c.get('seed') else '') +
                    (' --cluster {}'.format(c['cluster']['sorted_index']) if not c.get('seed') else '') +
                     ' --cluster-meta-out ${TARGETS[0]}' +
                     ' --seqs-out ${TARGETS[1]}' +
@@ -865,8 +864,8 @@ def add_unseeded_analysis(w):
             # Select top N or any matching seeds of interest
             if (len(clust) > 5) and (i < options['depth'] or has_seeds(clust, c)):
                 annotation_list, cp = read_partition_file(part, c)  # Here we reread the partition file instead of caching annotations of the partition along with its metadata above in partition_metadata. This saves on memory and slows the process down, but we are restricted by memory use more than time at the moment.
-                if valid_cluster(annotation_list, part, clust, i):
-                    cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp, cp.i_best, i)
+                if valid_cluster(annotation_list, part, clust):
+                    cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp, part['step'], i)
                     # It seems like we might only need to check that one of these clusters has alternative naive info and then  we could assume it is the case for
                     # all of them (unless --queries was set for --calculate-alternative-naive-seqs). Leaving it as is for now but may speed up the SConstruct process to do this later. (EH)
                     naive_probabilities = get_alt_naive_probabilities(cluster_annotation)       

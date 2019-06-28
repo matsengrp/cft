@@ -275,7 +275,7 @@ def choose_cluster(partition_file, annotation_list, cpath, ipart=None, i_cluster
     clusters one might extract data for. These options allow you to specify a selection."""
     
     # partition index is i_best unless specified
-    if not ipart:
+    if ipart is None:
         ipart = cpath.i_best 
 
     # select cluster; unique_ids takes highest precedence
@@ -307,12 +307,12 @@ def processed_data(args):
     if annotation_list is None:
         raise Exception('no annotations in %s (probably because cluster annotation file wasn\'t found)' % args.partition_file)
 
-    ipart = args.partition
+    ipart = args.partition if args.partition is not None else cpath.i_best
     unique_ids = args.unique_ids
 
     #find the largest cluster across all partitions
     if args.largest_cluster_across_partitions:
-        if any([arg is not None for arg in (args.cluster, args.unique_ids)]) or args.partition != 0:
+        if any([arg is not None for arg in (args.cluster, args.unique_ids, args.partition)]):
             raise Exception('Doesn\'t make sense to specify any of --partition, --cluster, --unique-ids when you use --largest-cluster-across-partitions as it will disregard those options and choose the largest cluster across all partitions.')
         unique_ids, ipart = find_largest_cluster_across_partitions(cpath, annotation_list)
     
@@ -428,8 +428,8 @@ def parse_args():
         clusters one might extract data for. These options allow you to specify a selection.""")
     cluster_selection_args.add_argument(
         '--partition',
-        type=int, default=0,
-        help='"best plus" index; defaults to 0 (best partition); 1 selects the next partition step, etc.')
+        type=int,
+        help='partition step index.')
     cluster_selection_args.add_argument(
         '--cluster',
         type=int,
