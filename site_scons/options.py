@@ -20,7 +20,7 @@ Script.AddOption('--depth',
 Script.AddOption('--process-all-partis-partition-steps',
         dest="process_all_partis_partition_steps",
         action="store_true",
-        help="""By default only the best partis partition step is processed (cp.i_best). Use this to process all partition steps.""")
+        help="""If this is set, all partition steps are processed. By default only the best partis partition step is processed (cp.i_best).""")
 
 Script.AddOption('--only-seeds',
         dest='only_seeds',

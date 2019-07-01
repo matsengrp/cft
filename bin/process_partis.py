@@ -170,7 +170,7 @@ def check_seed_for_indels(cluster_line, seed_id, partition_file):
     iseq_seed = cluster_line['unique_ids'].index(seed_id)
     ifos = cluster_line['indelfos'][iseq_seed]['indels']
     if len(ifos) > 0:
-        print(ifos)
+        print([indelutils.get_dbg_str(ifo) for ifo in ifos])
         raise Exception('indel in seed sequence {}. Options are 1. Look at the annotation for this cluster and find the indel in the seed. Rerun process_partis.py with --match-indels-in-uid <uid-of-seq-containing-indel-of-interest> to process only sequences containing that specific indel for further analysis of the indel 2. Run with --ignore-seed-indels. PS check out {}'.format(seed_id, partition_file))
 
 def subset_dict(d, keys):
