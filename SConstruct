@@ -336,6 +336,9 @@ def with_other_partitions(node):
                   if part.get('partition-file')]
     return parts
 
+def meets_min_cluster_size(size, seed_cluster=False):
+    """By default just checks for >= 3 sequences for seed clusters (otherwise, we can't build a tree downstream) and >= 6 for unseeded (somewhat arbitrary, though we often dont see smaller especially without processing all partition steps). This simple function exists just to track different min cluster sizes in one place"""
+    return size >= (3 if seed_cluster else 6)
 
 def valid_cluster(annotation_list, part, clust):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
@@ -344,14 +347,18 @@ def valid_cluster(annotation_list, part, clust):
         if line.get('unique_ids') == clust:
             func_list = [partisutils.is_functional(line, iseq) for iseq in range(len(line['unique_ids']))]
             n_good_seqs = func_list.count(True)
-            return n_good_seqs > 2
+            return meets_min_cluster_size(n_good_seqs, seed_cluster=True)
     raise Exception('couldn\'t find requested uids %s in %s' % (clust, part['partition-file']))
 
-def valid_seed_partition(annotation_list, cp, part, i_step, seed_id):
-    """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
+def valid_seed_partition(annotation_list, cp, part, i_step, seed_id, seed_cluster_size, max_size_to_check=10):
+    """If seed cluster size is less than max_size_to_check, read the corresponding cluster annotation and return True iff after applying our health metric filters
     we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
-    clust = seed_cluster(cp, i_step, seed_id)
-    return valid_cluster(annotation_list, part, clust)
+    if seed_cluster_size > max_size_to_check:
+        return True
+    elif meets_min_cluster_size(seed_cluster_size, seed_cluster=True):  
+        clust = seed_cluster(cp, i_step, seed_id)
+        return valid_cluster(annotation_list, part, clust)
+    return False
 
 # The actual nest construction for this
 
@@ -383,12 +390,7 @@ def partition(c):
         if cp:
             for i_step in partition_steps(cp):
                 meta = partition_metadata(part, annotation_list, cp, i_step, seed=seed_id, other_id=part.get('other_id'))
-                # We only add clusters bigger than two, since we can only make trees if we have hits
-                if meta['seed_cluster_size'] > 10:
-                    # if we have 10 sequences, assume enough of them will be good
-                    keep_partitions.append(meta)
-                elif meta['seed_cluster_size'] > 2 and valid_seed_partition(annotation_list, cp, part, i_step, seed_id):
-                    # if less than 10 sequences, make sure we still have enough sequences after health filters
+                if valid_seed_partition(annotation_list, cp, part, i_step, seed_id, meta['seed_cluster_size']):
                     keep_partitions.append(meta)
     return keep_partitions
 
@@ -847,23 +849,19 @@ def add_unseeded_analysis(w):
                 keep_partitions += [partition_metadata(partition_run, annotation_list, cp, i_step, other_id=partition_run.get('other_id')) for i_step in partition_steps(cp)]
         return keep_partitions
 
-    def has_seeds(cluster, c):
-        """Manual selection of seeds to check for from Laura; If this becomes generally useful can put in a
-        data hook."""
-        # Is the len(clusters) check working here?
-        return any((('BF520.1-ig' + x) in cluster) for x in ['h', 'k']) and len(cluster) > 2
-
     # Add cluster nesting level
-
     @w.add_nest(label_func=lambda d: d['id'], metadata=lambda c, d: {'unique_ids': 'elided', 'annotation': 'elided', 'naive_probabilities': 'elided'})
     def cluster(c):
         part = c['partition']
         clusters = []
+        annotation_list = None
         # Sort by len (dec) and apply index i
         for i, clust in enumerate(sorted(part['clusters'], key=len, reverse=True)):
             # Select top N or any matching seeds of interest
-            if (len(clust) > 5) and (i < options['depth'] or has_seeds(clust, c)):
-                annotation_list, cp = read_partition_file(part, c)  # Here we reread the partition file instead of caching annotations of the partition along with its metadata above in partition_metadata. This saves on memory and slows the process down, but we are restricted by memory use more than time at the moment.
+            if (i < options['depth']) and meets_min_cluster_size((len(clust)):
+                if annotation_list is None:
+                    # Here we reread the partition file instead of caching annotations of the partition along with its metadata above in partition_metadata. This saves on memory and slows the process down, but we are restricted by memory use more than time at the moment.
+                    annotation_list, cp = read_partition_file(part, c)
                 if valid_cluster(annotation_list, part, clust):
                     cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp, part['step'], i)
                     # It seems like we might only need to check that one of these clusters has alternative naive info and then  we could assume it is the case for
