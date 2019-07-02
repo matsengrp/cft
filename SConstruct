@@ -858,7 +858,7 @@ def add_unseeded_analysis(w):
         # Sort by len (dec) and apply index i
         for i, clust in enumerate(sorted(part['clusters'], key=len, reverse=True)):
             # Select top N or any matching seeds of interest
-            if (i < options['depth']) and meets_min_cluster_size((len(clust)):
+            if (i < options['depth']) and meets_min_cluster_size(len(clust)):
                 if annotation_list is None:
                     # Here we reread the partition file instead of caching annotations of the partition along with its metadata above in partition_metadata. This saves on memory and slows the process down, but we are restricted by memory use more than time at the moment.
                     annotation_list, cp = read_partition_file(part, c)
