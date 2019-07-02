@@ -287,42 +287,41 @@ def is_unmerged(c):
 # going through partitions until we find a seeded cluster that does.
 # In general though, we'll end up with one partition per seed; the "best" according to the logprob.
 
-def seed_cluster(cp, best_plus_i, seed_id):
-    i = cp.i_best + best_plus_i
-    for cluster in cp.partitions[i]:
+def seed_cluster(cp, i_part_step, seed_id):
+    for cluster in cp.partitions[i_part_step]:
         if seed_id in cluster:
             return cluster
     warn("unable to find seed cluster in partition")
 
-def seed_cluster_size(cp, best_plus_i, seed_id):
-    return len(seed_cluster(cp, best_plus_i, seed_id))
+def seed_cluster_size(cp, i_part_step, seed_id):
+    return len(seed_cluster(cp, i_part_step, seed_id))
 
 def get_alt_naive_probabilities(annotation):
     alternatives = annotation.get('alternative-annotations', {})
     naive_probabilities = alternatives.get('naive-seqs') if alternatives else None
     return naive_probabilities if naive_probabilities and len(naive_probabilities) > 0 else None
 
-def partition_metadata(part, annotation_list, cp, best_plus_i, seed=None, other_id=None):
-    i = cp.i_best + best_plus_i
-    clusters = cp.partitions[i]
+def partition_steps(cp):
+    return range(len(cp.partitions)) if options['process_all_partis_partition_steps'] else [cp.i_best]
 
+def partition_metadata(part, annotation_list, cp, i_step, seed=None, other_id=None):
+    clusters = cp.partitions[i_step]
     seed_cluster_annotation = None
-    # There usually only exist / we usually only care about annotations for the best partition
-    if seed and i == cp.i_best:
-        seed_cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp)
+    if seed:
+        seed_cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp, i_step)
     
-    meta = {'id': ('seed-' if seed else 'unseeded-') + (other_id + '-' if other_id else '') + 'part-' + str(best_plus_i),
+    meta = {'id': ('seed-' if seed else 'unseeded-') + (other_id + '-' if other_id else '') + 'part-' + str(i_step),
             'clusters': clusters,
             # Should cluster step be partition step?
-            'step': best_plus_i,
+            'step': i_step,
             'n_clusters': len(clusters),
             'largest_cluster_size': max(map(len, clusters)),
-            'logprob': cp.logprobs[i],
+            'logprob': cp.logprobs[i_step],
             'partition-file': part['partition-file'],
             'seed_cluster_annotation': seed_cluster_annotation
             }
     if seed:
-        meta['seed_cluster_size'] = seed_cluster_size(cp, best_plus_i, seed)
+        meta['seed_cluster_size'] = seed_cluster_size(cp, i_step, seed)
     return sconsutils.merge_dicts(meta, part.get('meta') or {})
 
 # Whenever we iterate over partitions, we always want to assume there could be an `other-partitions` mapping,
@@ -337,6 +336,9 @@ def with_other_partitions(node):
                   if part.get('partition-file')]
     return parts
 
+def meets_min_cluster_size(size, seed_cluster=False):
+    """By default just checks for >= 3 sequences for seed clusters (otherwise, we can't build a tree downstream) and >= 6 for unseeded (somewhat arbitrary, though we often dont see smaller especially without processing all partition steps). This simple function exists just to track different min cluster sizes in one place"""
+    return size >= (3 if seed_cluster else 6)
 
 def valid_cluster(annotation_list, part, clust):
     """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
@@ -345,14 +347,18 @@ def valid_cluster(annotation_list, part, clust):
         if line.get('unique_ids') == clust:
             func_list = [partisutils.is_functional(line, iseq) for iseq in range(len(line['unique_ids']))]
             n_good_seqs = func_list.count(True)
-            return n_good_seqs > 2
+            return meets_min_cluster_size(n_good_seqs, seed_cluster=True)
     raise Exception('couldn\'t find requested uids %s in %s' % (clust, part['partition-file']))
 
-def valid_seed_partition(annotation_list, cp, part, best_plus_i, seed_id):
-    """Reads the corresponding cluster annotation and return True iff after applying our health metric filters
+def valid_seed_partition(annotation_list, cp, part, i_step, seed_id, seed_cluster_size, max_size_to_check=10):
+    """If seed cluster size is less than max_size_to_check, read the corresponding cluster annotation and return True iff after applying our health metric filters
     we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
-    clust = seed_cluster(cp, best_plus_i, seed_id)
-    return valid_cluster(annotation_list, part, clust)
+    if seed_cluster_size > max_size_to_check:
+        return True
+    elif meets_min_cluster_size(seed_cluster_size, seed_cluster=True):  
+        clust = seed_cluster(cp, i_step, seed_id)
+        return valid_cluster(annotation_list, part, clust)
+    return False
 
 # The actual nest construction for this
 
@@ -372,7 +378,6 @@ def read_partition_file(part, c):
 # note we elide the nested partitions > clusters lists (as well as the seed cluster annotation)
 # so as not to kill tripl when it tries to load them as a value and can't hash 
 @w.add_nest(metadata=lambda c, d: {'clusters': 'elided', 'seed_cluster_annotation': 'elided'})
-@wrap_test_run()
 def partition(c):
     """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
     for actual analysis."""
@@ -383,25 +388,10 @@ def partition(c):
     for part in with_other_partitions(c['seed']):
         annotation_list, cp = read_partition_file(part, c)
         if cp:
-            # important to start from i_best
-            for best_plus_i in range(len(cp.partitions) - cp.i_best):
-
-                meta = partition_metadata(part, annotation_list, cp, best_plus_i, seed=seed_id, other_id=part.get('other_id'))
-                
-                # We only add clusters bigger than two, since we can only make trees if we have hits
-                if meta['seed_cluster_size'] > 10:
-                    # if we have 10 sequences, assume enough of them will be good
+            for i_step in partition_steps(cp):
+                meta = partition_metadata(part, annotation_list, cp, i_step, seed=seed_id, other_id=part.get('other_id'))
+                if valid_seed_partition(annotation_list, cp, part, i_step, seed_id, meta['seed_cluster_size']):
                     keep_partitions.append(meta)
-                elif meta['seed_cluster_size'] > 2 and valid_seed_partition(annotation_list, cp, part, best_plus_i, seed_id):
-                    # if less than 10 sequences, make sure we still have enough sequences after health filters
-                    keep_partitions.append(meta)
-                # Once we get a cluster of size 50, we don't need later cluster steps
-                #if meta['seed_cluster_size'] >= 50:
-                    #break
-                # Ignore the break above... For now, we break as soon as we get a single
-                # cluster until psathyrella is able to fix partis to export cluster annotations for all
-                # partition steps to the same file.
-                break
     return keep_partitions
 
 
@@ -449,6 +439,7 @@ def add_cluster_analysis(w):
                 'process_partis.py' +
                     ' --remove-stops --remove-frameshifts --remove-mutated-invariants' +
                     ' --partition-file ${SOURCES[0]}' +
+                    ' --partition {}'.format(c['partition']['step']) +
                    (' --upstream-seqmeta ${SOURCES[1]}' if perseq_metafile else '') +
                    (' --glfo-dir ' + c['sample']['glfo-dir'] if partisutils.getsuffix(c['partition']['partition-file']) == '.csv' else '') +
                     ' --locus ' + locus(c) +
@@ -459,7 +450,6 @@ def add_cluster_analysis(w):
                   ((' --match-indels-in-uid ' + options['match_indels_in_uid']) if options['match_indels_in_uid'] is not None else '')  +
                    (' --ignore-seed-indels' if options['ignore_seed_indels'] else '') +
                   ((" --always-include " + ','.join(c['sample']['seeds'])) if c['sample'].get('seeds') else '') +
-                   (' --partition {}'.format(c['partition']['step']) if c.get('seed') else '') +
                    (' --cluster {}'.format(c['cluster']['sorted_index']) if not c.get('seed') else '') +
                     ' --cluster-meta-out ${TARGETS[0]}' +
                     ' --seqs-out ${TARGETS[1]}' +
@@ -849,35 +839,31 @@ def add_unseeded_analysis(w):
     # the partition file and because we don't need to write them to the metadata for the partition.
     # See https://github.com/matsengrp/cft/pull/270#discussion_r267502415 for details on why we decided to do things this way.
     @w.add_nest(metadata=lambda c, d: {'clusters': 'elided', 'cp': 'elided' })
-    @wrap_test_run()
     def partition(c):
         """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
         for actual analysis."""
-        def meta(part):
-            annotation_list, cp = read_partition_file(part, c)
+        keep_partitions = []
+        for partition_run in with_other_partitions(c['sample']):
+            annotation_list, cp = read_partition_file(partition_run, c)
             if cp:
-                return partition_metadata(part, annotation_list, cp, 0, other_id=part.get('other_id'))
-        return filter(None, map(meta, with_other_partitions(c['sample'])))
-
-    def has_seeds(cluster, c):
-        """Manual selection of seeds to check for from Laura; If this becomes generally useful can put in a
-        data hook."""
-        # Is the len(clusters) check working here?
-        return any((('BF520.1-ig' + x) in cluster) for x in ['h', 'k']) and len(cluster) > 2
+                keep_partitions += [partition_metadata(partition_run, annotation_list, cp, i_step, other_id=partition_run.get('other_id')) for i_step in partition_steps(cp)]
+        return keep_partitions
 
     # Add cluster nesting level
-
     @w.add_nest(label_func=lambda d: d['id'], metadata=lambda c, d: {'unique_ids': 'elided', 'annotation': 'elided', 'naive_probabilities': 'elided'})
     def cluster(c):
         part = c['partition']
         clusters = []
+        annotation_list = None
         # Sort by len (dec) and apply index i
         for i, clust in enumerate(sorted(part['clusters'], key=len, reverse=True)):
             # Select top N or any matching seeds of interest
-            if (len(clust) > 5) and (i < options['depth'] or has_seeds(clust, c)):
-                annotation_list, cp = read_partition_file(part, c)  # Here we reread the partition file instead of caching annotations of the partition along with its metadata above in partition_metadata. This saves on memory and slows the process down, but we are restricted by memory use more than time at the moment.
+            if (i < options['depth']) and meets_min_cluster_size(len(clust)):
+                if annotation_list is None:
+                    # Here we reread the partition file instead of caching annotations of the partition along with its metadata above in partition_metadata. This saves on memory and slows the process down, but we are restricted by memory use more than time at the moment.
+                    annotation_list, cp = read_partition_file(part, c)
                 if valid_cluster(annotation_list, part, clust):
-                    cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp, cp.i_best, i)
+                    cluster_annotation = process_partis.choose_cluster(part['partition-file'], annotation_list, cp, part['step'], i)
                     # It seems like we might only need to check that one of these clusters has alternative naive info and then  we could assume it is the case for
                     # all of them (unless --queries was set for --calculate-alternative-naive-seqs). Leaving it as is for now but may speed up the SConstruct process to do this later. (EH)
                     naive_probabilities = get_alt_naive_probabilities(cluster_annotation)       

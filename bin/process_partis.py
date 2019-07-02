@@ -166,11 +166,12 @@ def match_indels_in_uid_seq(cluster_line, match_indels_in_uid, glfo):
         raise Exception('No indels in cluster annotation for cluster containing {} matched {}'.format(match_indels_in_uid, ifo_to_match))
     return cluster_line
 
-def check_seed_for_indels(cluster_line, seed_id):
+def check_seed_for_indels(cluster_line, seed_id, partition_file):
     iseq_seed = cluster_line['unique_ids'].index(seed_id)
     ifos = cluster_line['indelfos'][iseq_seed]['indels']
     if len(ifos) > 0:
-        raise Exception('indel in seed sequence {}. Options are 1. Look at the annotation for this cluster and find the indel in the seed. Rerun process_partis.py with --match-indels-in-uid <uid-of-seq-containing-indel-of-interest> to process only sequences containing that specific indel for further analysis of the indel 2. Run with --ignore-seed-indels'.format(seed_id))
+        print([indelutils.get_dbg_str(ifo) for ifo in ifos])
+        raise Exception('indel in seed sequence {}. Options are 1. Look at the annotation for this cluster and find the indel in the seed. Rerun process_partis.py with --match-indels-in-uid <uid-of-seq-containing-indel-of-interest> to process only sequences containing that specific indel for further analysis of the indel 2. Run with --ignore-seed-indels. PS check out {}'.format(seed_id, partition_file))
 
 def subset_dict(d, keys):
     return {k: d[k] for k in keys if k in d}
@@ -182,11 +183,11 @@ def merge(d1, d2):
 
 def process_cluster(args, cluster_line, seed_id, glfo):
     if seed_id is not None and not args.match_indels_in_uid and not args.ignore_seed_indels:
-        check_seed_for_indels(cluster_line, seed_id)
+        check_seed_for_indels(cluster_line, seed_id, args.partition_file)
     
     if args.match_indels_in_uid:
         cluster_line = match_indels_in_uid_seq(cluster_line, args.match_indels_in_uid, glfo)
-        cluster_line['unique_ids'] = map(lambda i: i if i == args.match_indels_in_uid else '{}_indel_filtered'.format(i), cluster_line['unique_ids']) 
+        cluster_line['unique_ids'] = map(lambda i: '{}_indel_filtered'.format(i), cluster_line['unique_ids']) 
 
     cluster_sequences = {
             'unique_id':             [args.inferred_naive_name] + cluster_line['unique_ids'],
@@ -274,7 +275,7 @@ def choose_cluster(partition_file, annotation_list, cpath, ipart=None, i_cluster
     clusters one might extract data for. These options allow you to specify a selection."""
     
     # partition index is i_best unless specified
-    if not ipart:
+    if ipart is None:
         ipart = cpath.i_best 
 
     # select cluster; unique_ids takes highest precedence
@@ -306,12 +307,12 @@ def processed_data(args):
     if annotation_list is None:
         raise Exception('no annotations in %s (probably because cluster annotation file wasn\'t found)' % args.partition_file)
 
-    ipart = cpath.i_best + args.partition
+    ipart = args.partition if args.partition is not None else cpath.i_best
     unique_ids = args.unique_ids
 
     #find the largest cluster across all partitions
     if args.largest_cluster_across_partitions:
-        if any([arg is not None for arg in (args.cluster, args.unique_ids)]) or args.partition != 0:
+        if any([arg is not None for arg in (args.cluster, args.unique_ids, args.partition)]):
             raise Exception('Doesn\'t make sense to specify any of --partition, --cluster, --unique-ids when you use --largest-cluster-across-partitions as it will disregard those options and choose the largest cluster across all partitions.')
         unique_ids, ipart = find_largest_cluster_across_partitions(cpath, annotation_list)
     
@@ -427,8 +428,8 @@ def parse_args():
         clusters one might extract data for. These options allow you to specify a selection.""")
     cluster_selection_args.add_argument(
         '--partition',
-        type=int, default=0,
-        help='"best plus" index; defaults to 0 (best partition); 1 selects the next partition step, etc.')
+        type=int,
+        help='partition step index.')
     cluster_selection_args.add_argument(
         '--cluster',
         type=int,
