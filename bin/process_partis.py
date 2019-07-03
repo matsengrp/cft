@@ -78,7 +78,7 @@ def apply_filters(args, cluster_line):
             return False
         else:
             return True
-    return filter(filter_fn, range(cluster_line['seqs']))
+    return filter(filter_fn, range(len(cluster_line['seqs'])))
 
 
 def seqs(args, cluster_line):
@@ -130,18 +130,16 @@ def merge_upstream_seqmeta(cluster_line, upstream_seqmeta):
     return cluster_line, n_total_reads 
 
 
-def downsample_sequences(sequences, max_sequences, always_include):
-    if max_sequences:
-        always_include_seqs = filter(lambda x: x.get('unique_id') in always_include, sequences)
-        rest_seqs = filter(lambda x: x.get('unique_id') not in always_include, sequences)
-        # first take the always keep, then take as many as you can of the remaining seqs, in order of highest multiplicity
-        downsampled_seqs = always_include_seqs + \
-               sorted(rest_seqs,
-                      # Sort by negative so we take the highest multiplicity (lowest neg value) first 
-                      key=lambda seqmeta: - seqmeta['multiplicity'])[0:max_sequences - len(always_include_seqs)]
-    else:
-        downsampled_seqs = sequences
-    return downsampled_seqs, len(downsampled_seqs)
+def downsample_iseqs_by_multiplicity(cluster_line, max_sequences_count, always_include):
+    """ First take the always keep, then take as many as you can of the remaining seqs, in order of highest multiplicity """
+    always_include_iseqs = [iseq for iseq in range(len(cluster_line['seqs'])) if cluster_line['unique_ids'][iseq] in always_include]
+    rest_iseqs = [iseq for iseq in range(len(cluster_line['seqs'])) if cluster_line['unique_ids'][iseq] not in always_include] 
+    remaining_seqs_to_take_count = max_sequences_count - len(always_include_seqs)
+    downsampled_iseqs = always_include_iseqs + \
+                        sorted(rest_iseqs,
+                        key=lambda iseq: cluster_line['multiplicities'][iseq], # Sort by multiplicity
+                        reverse=True)[:remaining_seqs_to_take_count]           # Descending order
+    return downsampled_iseqs
 
 def match_indels_in_uid_seq(cluster_line, match_indels_in_uid):
     iseq_to_match = cluster_line['unique_ids'].index(match_indels_in_uid)
@@ -176,7 +174,7 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     if seed_id is not None and not args.match_indels_in_uid and not args.ignore_seed_indels:
         check_seed_for_indels(cluster_line, seed_id, args.partition_file)
     #assume we want all seqs in cluster
-    iseqs_to_keep = set(range(cluster_line['seqs']))
+    iseqs_to_keep = set(range(len(cluster_line['seqs'])))
     # various cases where we downsample cluster sequences
     if args.match_indels_in_uid:
         #cluster_line['unique_ids'] = map(lambda i: '{}_indel_filtered'.format(i), cluster_line['unique_ids']) 
@@ -198,8 +196,9 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     # apply sequence downsampling here
     n_unique_seqs = len(iseqs_to_keep)
     always_include = set(args.always_include + [args.inferred_naive_name])
-    #TODO:APPLY THIS TO CLUSTER LINE
-    sequences, n_sampled_seqs = downsample_sequences(sequences, args.max_sequences, always_include)
+    if args.max_sequences:
+        iseqs_to_keep = downsample_iseqs_by_multiplicity(cluster_line, args.max_sequences, always_include)
+    n_sampled_seqs = len(i_seqs_to_keep)
 
     #filter cluster line to i_seqs_to_keep
     cluster_line = utils.restrict_to_iseqs(cluster_line, iseqs_to_keep, glfo) 
