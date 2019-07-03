@@ -68,17 +68,17 @@ def as_dict_rows(column_dict, columns=None):
     return [{c: column_dict[c][i] for c in columns}
             for i in range(max(column_lengths))]
 
-def apply_filters(args, sequences):
-    def filter_fn(sequence):
-        if args.remove_frameshifts and sequence['frameshifted']:
+def apply_filters(args, cluster_line):
+    def filter_fn(iseq):
+        if args.remove_frameshifts and not cluster_line['in_frames'][iseq]:
             return False
-        elif args.remove_stops and sequence['stops']:
+        elif args.remove_stops and cluster_line['stops'][iseq]:
             return False
-        elif args.remove_mutated_invariants and sequence['mutated_invariants']:
+        elif args.remove_mutated_invariants and cluster_line['mutated_invariants'][iseq]:
             return False
         else:
             return True
-    return filter(filter_fn, sequences)
+    return filter(filter_fn, range(cluster_line))
 
 
 def seqs(args, cluster_line):
@@ -152,7 +152,7 @@ def downsample_sequences(sequences, max_sequences, always_include):
     else:
         return sequences
 
-def match_indels_in_uid_seq(cluster_line, match_indels_in_uid, glfo):
+def match_indels_in_uid_seq(cluster_line, match_indels_in_uid):
     iseq_to_match = cluster_line['unique_ids'].index(match_indels_in_uid)
     ifos_to_match = cluster_line['indelfos'][iseq_to_match]['indels']
     if len(ifos_to_match) > 1:
@@ -161,10 +161,10 @@ def match_indels_in_uid_seq(cluster_line, match_indels_in_uid, glfo):
         raise Exception('{} has no indel. Use an id of a sequence with exactly one indel.'.format(match_indels_in_uid))
     else:
         ifo_to_match = ifos_to_match[0]
-    cluster_line = indelutils.restrict_to_compatible_indels(cluster_line, ifo_to_match, glfo)
-    if cluster_line is None:
+    i_seqs_to_keep = get_iseqs_with_compatible_indels(cluster_line, ifo_to_match)
+    if len(i_seqs_to_keep) < 1:
         raise Exception('No indels in cluster annotation for cluster containing {} matched {}'.format(match_indels_in_uid, ifo_to_match))
-    return cluster_line
+    return i_seqs_to_keep 
 
 def check_seed_for_indels(cluster_line, seed_id, partition_file):
     iseq_seed = cluster_line['unique_ids'].index(seed_id)
@@ -184,10 +184,24 @@ def merge(d1, d2):
 def process_cluster(args, cluster_line, seed_id, glfo):
     if seed_id is not None and not args.match_indels_in_uid and not args.ignore_seed_indels:
         check_seed_for_indels(cluster_line, seed_id, args.partition_file)
-    
+    #assume we want all seqs in cluster
+    iseqs_to_keep = set(range(cluster_line))
+    # various cases where we downsample cluster sequences
     if args.match_indels_in_uid:
-        cluster_line = match_indels_in_uid_seq(cluster_line, args.match_indels_in_uid, glfo)
         cluster_line['unique_ids'] = map(lambda i: '{}_indel_filtered'.format(i), cluster_line['unique_ids']) 
+        i_seqs_to_keep = iseqs_to_keep & set(match_indels_in_uid_seq(cluster_line, args.match_indels_in_uid, glfo))
+    
+    if args.largest_cluster_across_partitions:
+        '''
+        Deduplicate sequence records. When using largest_cluster_across_partitions for seeded clusters, we may end up with duplicate sequences in 
+        these clusters because of how partis partitions seed clusters. If this option used, beware that this deduplication pays no respect to which 
+        duplicate record is preserved of two with the same unique id.
+        '''
+        iseqs_to_keep = iseqs_to_keep & set({unique_id: iseq for iseq, unique_id in enumerate(cluster_line['unique_ids'])}.values())
+    if args.remove_frameshifts or args.remove_stops or args.remove_mutated_invariants:
+        iseqs_to_keep = iseqs_to_keep & set(apply_filters(args, cluster_line))
+
+    cluster_line = utils.restrict_to_iseqs(cluster_line, iseqs_to_keep, glfo) 
 
     cluster_sequences = {
             'unique_id':             [args.inferred_naive_name] + cluster_line['unique_ids'],
@@ -204,20 +218,7 @@ def process_cluster(args, cluster_line, seed_id, glfo):
         for pos in ['start', 'end']:
             cluster_line[gene+'_'+pos] = cluster_line['regional_bounds'][gene][pos.startswith('e')]
 
-    cluster_cols = ['v_gene', 'd_gene', 'j_gene', 'cdr3_length']
-
     sequences = as_dict_rows(cluster_sequences)
-    
-    if args.largest_cluster_across_partitions:
-        '''
-        Deduplicate sequence records. When using largest_cluster_across_partitions for seeded clusters, we may end up with duplicate sequences in 
-        these clusters because of how partis partitions seed clusters. If this option used, beware that this deduplication pays no respect to which 
-        duplicate record is preserved of two with the same unique id.
-        '''
-        sequence_records_by_uniq_id = {record['unique_id']: record for record in sequences}
-        sequences = sequence_records_by_uniq_id.values()
-    if args.remove_frameshifts or args.remove_stops or args.remove_mutated_invariants:
-        sequences = apply_filters(args, sequences)
 
     n_unique_seqs = len(sequences)
 
@@ -242,6 +243,8 @@ def process_cluster(args, cluster_line, seed_id, glfo):
              # Should be equal unless downsampled
              'n_sampled_seqs': len(sequences),
              'seed_id': seed_id})
+    
+    cluster_cols = ['v_gene', 'd_gene', 'j_gene', 'cdr3_length']
     for k in cluster_cols:
         cluster[k] = cluster_line[k]
     for gene in 'vdj':
