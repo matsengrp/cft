@@ -220,7 +220,7 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     for gene in 'vdj':
         for pos in ['start', 'end']:
             cluster_line[gene+'_'+pos] = cluster_line['regional_bounds'][gene][pos.startswith('e')]
-    cluster = merge(
+    return merge(
             subset_dict(cluster_line, ['v_gene', 'd_gene', 'j_gene', 'cdr3_length', 'naive_seq', 'v_per_gene_support', 'd_per_gene_support', 'j_per_gene_support']),
             {'sequences': sequences,
              'cdr3_start': cluster_line['codon_positions']['v'],
@@ -232,9 +232,8 @@ def process_cluster(args, cluster_line, seed_id, glfo):
              # Should also add mean_mut_freq etc here
              'mean_mut_freq': numpy.mean(cluster_line['mut_freqs']),
              'n_sampled_seqs': n_sampled_seqs,
-             'seed_id': seed_id}) #TODO: ADD SOME FIELD HERE TO DENOTE INDEL FILTERING INSTEAD OF CHANGING SEQ IDS
-    
-    return cluster
+             'seed_id': seed_id,
+             'match_indels_in_uid': args.match_indels_in_uid})
 
 def find_largest_cluster_across_partitions(cpath, annotation_list):
     '''
@@ -319,7 +318,7 @@ def write_cluster_meta(args, cluster_data):
     def attrs(base):
         return [base + '_' + k for k in ['gene', 'start', 'end', 'per_gene_support']]
     to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'n_unique_seqs', 'n_total_reads', 'last_modified', 'partition_file',
-        'cdr3_start', 'cdr3_length', 'mean_mut_freq'] + attrs('v') + attrs('d') + attrs('j')
+        'cdr3_start', 'cdr3_length', 'mean_mut_freq', 'match_indels_in_uid'] + attrs('v') + attrs('d') + attrs('j')
     doc = subset_dict(cluster_data, to_keep)
     for gene in 'vdj':
         attr = gene + '_per_gene_support'
