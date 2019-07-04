@@ -61,6 +61,14 @@ def csv_reader(index=None, filter_by=None):
 
 default_glfo_dir = os.path.join(partis_path, 'data/germlines/human')  # this should only be used as a last resort (e.g. you've completely lost the germline sets corresponding to your deprecated csv output files)
 
+def subset_dict(d, keys):
+    return {k: d[k] for k in keys if k in d}
+
+def merge(d1, d2):
+    d = d1.copy()
+    d.update(d2)
+    return d
+
 def as_dict_rows(column_dict, columns=None):
     columns = columns or column_dict.keys()
     column_lengths = [len(column_dict[c]) for c in columns]
@@ -80,6 +88,11 @@ def apply_filters(args, cluster_line):
             return True
     return filter(filter_fn, range(len(cluster_line['seqs'])))
 
+def add_regional_bounds(cluster_line):
+    for gene in 'vdj':
+        for pos in ['start', 'end']:
+            cluster_line[gene+'_'+pos] = cluster_line['regional_bounds'][gene][pos.startswith('e')]
+    return cluster_line
 
 def seqs(args, cluster_line):
     non_reversed_seqs = cluster_line['seqs']
@@ -89,8 +102,47 @@ def seqs(args, cluster_line):
     else:
         return non_reversed_seqs
 
+def get_cluster_seqs_dict(cluster_line, seed_id, args):
+    """ Dict format from cluster line format """
+    # add naive values to beginning of per-seq fields
+    cluster_sequences = {
+            'unique_id':             [args.inferred_naive_name] + cluster_line['unique_ids'],
+            'seq': [cluster_line['naive_seq']] + seqs(args, cluster_line),
+            'is_seed':               ['False'] + [(unique_id == seed_id) for unique_id in cluster_line['unique_ids']],
+            'duplicates':               [None] + cluster_line['duplicates'],
+            'frameshifted':            [False] + [not x for x in cluster_line['in_frames']],
+            'mutated_invariants':      [False] + cluster_line['mutated_invariants'],
+            'stops':                   [False] + cluster_line['stops'],
+            'mut_freq':                  [0.0] + cluster_line['mut_freqs'],
+            'affinity':                 [None] + cluster_line.get('affinities', [None for _ in cluster_line['unique_ids']]),
+            'timepoint':                [None] + cluster_line['timepoints'],
+            'duplicates':               [[]] + cluster_line['duplicates'],
+            'multiplicity':           [None] + cluster_line['multiplicities'],
+            'duplicate_timepoint':     [None] + cluster_line['duplicate_timepoints'],
+            'duplicate_multiplicity': [None] + cluster_line['duplicate_multiplicities']}
+    return as_dict_rows(cluster_sequences)
 
-def upstream_row(upstream_seqmeta, seqid):
+def get_cluster_meta_dict(cluster_line, seed_id, args):
+    return {'sequences': get_cluster_seqs_dict(cluster_line, seed_id, args),
+            'cdr3_start': cluster_line['codon_positions']['v'],
+            'has_seed': seed_id in cluster_line['unique_ids'],
+            'mean_mut_freq': numpy.mean(cluster_line['mut_freqs']),
+            'seed_id': seed_id,
+            'match_indels_in_uid': args.match_indels_in_uid}
+
+def downsample_iseqs_by_multiplicity(cluster_line, max_sequences_count, always_include_ids):
+    """ First take the always keep, then take as many as you can of the remaining seqs, in order of highest multiplicity """
+    always_include_iseqs = [iseq for iseq in range(len(cluster_line['seqs'])) if cluster_line['unique_ids'][iseq] in always_include_ids]
+    rest_iseqs = [iseq for iseq in range(len(cluster_line['seqs'])) if cluster_line['unique_ids'][iseq] not in always_include_ids] 
+    remaining_seqs_to_take_count = max_sequences_count - len(always_include_ids)
+    downsampled_iseqs = always_include_iseqs + \
+                        sorted(rest_iseqs,
+                        key=lambda iseq: cluster_line['multiplicities'][iseq], # Sort by multiplicity
+                        reverse=True)[:remaining_seqs_to_take_count]           # Descending order
+    return downsampled_iseqs
+
+def get_upstream_row(upstream_seqmeta, seqid):
+    """ Get the corresponding row of the upstream metadata (which contains our full lenght sequence multiplicities...) """
     upstream_seqmeta = upstream_seqmeta or {}
     default_row = {'multiplicity': 1}
     row = merge(default_row, upstream_seqmeta.get(seqid, {}))
@@ -99,10 +151,10 @@ def upstream_row(upstream_seqmeta, seqid):
     row['timepoint'] = timepoint if timepoint and timepoint is not '' else 'no-timepoint'
     return row
 
-def timepoint_multiplicity_mapping(seqid, duplicates, upstream_seqmeta):
+def timepoint_multiplicity_mapping(duplicates, upstream_seqmeta):
     timepoints_dict = collections.defaultdict(lambda: 0)
     for dup_seqid in duplicates:
-        dup_upstream_row = get_upstream_row(upstream_seqmeta, seqid)
+        dup_upstream_row = get_upstream_row(upstream_seqmeta, dup_seqid)
         # pre-partis filtering multiplicity
         dup_multiplicity = int(dup_upstream_row['multiplicity'])
         # we have handled any case with missing timepoint info in get_upstream_row, so this should always work
@@ -112,34 +164,21 @@ def timepoint_multiplicity_mapping(seqid, duplicates, upstream_seqmeta):
 def merge_upstream_seqmeta(cluster_line, upstream_seqmeta):
     """"Merge upstream (pre-partis) metadata, indexed in a dict by unique_id, (potentially)
     including timepoint and multiplicity info, with the metadata output of process_partis (partis_seqmeta)."""
-    n_total_reads = 0
+    cluster_line['n_total_reads'] = 0 # n_total_reads represents the sum of all sequence multiplicities in the cluster
     cluster_line = collections.defaultdict(list, cluster_line) #initialize empty array for new per seq fields
     for iseq, seqid in enumerate(cluster_line['unique_ids']):
-        # We get the corresponding row of the upstream metadata (which contains our full lenght sequence multiplicities...)
-        upstream_row = upstream_row(upstream_seqmeta, seqid)
+        upstream_row = get_upstream_row(upstream_seqmeta, seqid)
         duplicates = filter(None, cluster_line['duplicates'][iseq]) + [seqid]
-        timepoints_dict = timepoint_multiplicity_mapping(seqid, duplicates, upstream_seqmeta)
+        timepoints_dict = timepoint_multiplicity_mapping(duplicates, upstream_seqmeta)
         timepoints = sorted(timepoints_dict.items())
         multiplicity = sum(t[1] for t in timepoints)
-        n_total_reads += multiplicity
+        cluster_line['n_total_reads'] += multiplicity
         cluster_line['timepoints'].append(upstream_row['timepoint']) #this represents the timepoint this exact sequence was sampled
         cluster_line['duplicates'].append(duplicates)
         cluster_line['multiplicities'].append(multiplicity)
         cluster_line['duplicate_timepoints'].append([tp[0] for tp in timepoints]) #this represents the timepoints duplicates (indentical seqs) were sampled
         cluster_line['duplicate_multiplicities'].append([tp[1] for tp in timepoints])
-    return cluster_line, n_total_reads 
-
-
-def downsample_iseqs_by_multiplicity(cluster_line, max_sequences_count, always_include):
-    """ First take the always keep, then take as many as you can of the remaining seqs, in order of highest multiplicity """
-    always_include_iseqs = [iseq for iseq in range(len(cluster_line['seqs'])) if cluster_line['unique_ids'][iseq] in always_include]
-    rest_iseqs = [iseq for iseq in range(len(cluster_line['seqs'])) if cluster_line['unique_ids'][iseq] not in always_include] 
-    remaining_seqs_to_take_count = max_sequences_count - len(always_include_seqs)
-    downsampled_iseqs = always_include_iseqs + \
-                        sorted(rest_iseqs,
-                        key=lambda iseq: cluster_line['multiplicities'][iseq], # Sort by multiplicity
-                        reverse=True)[:remaining_seqs_to_take_count]           # Descending order
-    return downsampled_iseqs
+    return cluster_line 
 
 def match_indels_in_uid_seq(cluster_line, match_indels_in_uid):
     iseq_to_match = cluster_line['unique_ids'].index(match_indels_in_uid)
@@ -150,10 +189,10 @@ def match_indels_in_uid_seq(cluster_line, match_indels_in_uid):
         raise Exception('{} has no indel. Use an id of a sequence with exactly one indel.'.format(match_indels_in_uid))
     else:
         ifo_to_match = ifos_to_match[0]
-    i_seqs_to_keep = get_iseqs_with_compatible_indels(cluster_line, ifo_to_match)
-    if len(i_seqs_to_keep) < 1:
+    iseqs_to_keep = get_iseqs_with_compatible_indels(cluster_line, ifo_to_match)
+    if len(iseqs_to_keep) < 1:
         raise Exception('No indels in cluster annotation for cluster containing {} matched {}'.format(match_indels_in_uid, ifo_to_match))
-    return i_seqs_to_keep 
+    return iseqs_to_keep 
 
 def check_seed_for_indels(cluster_line, seed_id, partition_file):
     iseq_seed = cluster_line['unique_ids'].index(seed_id)
@@ -161,14 +200,6 @@ def check_seed_for_indels(cluster_line, seed_id, partition_file):
     if len(ifos) > 0:
         print([indelutils.get_dbg_str(ifo) for ifo in ifos])
         raise Exception('indel in seed sequence {}. Options are 1. Look at the annotation for this cluster and find the indel in the seed. Rerun process_partis.py with --match-indels-in-uid <uid-of-seq-containing-indel-of-interest> to process only sequences containing that specific indel for further analysis of the indel 2. Run with --ignore-seed-indels. PS check out {}'.format(seed_id, partition_file))
-
-def subset_dict(d, keys):
-    return {k: d[k] for k in keys if k in d}
-
-def merge(d1, d2):
-    d = d1.copy()
-    d.update(d2)
-    return d
 
 def process_cluster(args, cluster_line, seed_id, glfo):
     if seed_id is not None and not args.match_indels_in_uid and not args.ignore_seed_indels:
@@ -178,7 +209,7 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     # various cases where we downsample cluster sequences
     if args.match_indels_in_uid:
         #cluster_line['unique_ids'] = map(lambda i: '{}_indel_filtered'.format(i), cluster_line['unique_ids']) 
-        i_seqs_to_keep = iseqs_to_keep & set(match_indels_in_uid_seq(cluster_line, args.match_indels_in_uid, glfo))
+        iseqs_to_keep = iseqs_to_keep & set(match_indels_in_uid_seq(cluster_line, args.match_indels_in_uid, glfo))
     
     if args.largest_cluster_across_partitions:
         '''
@@ -191,49 +222,24 @@ def process_cluster(args, cluster_line, seed_id, glfo):
         iseqs_to_keep = iseqs_to_keep & set(apply_filters(args, cluster_line))
 
     # apply merging of multiplicity info here (or flesh out with default values otherwise)
-    cluster_line, n_total_reads = merge_upstream_seqmeta(cluster_line, args.upstream_seqmeta)
+    cluster_line = merge_upstream_seqmeta(cluster_line, args.upstream_seqmeta)
     
     # apply sequence downsampling here
-    n_unique_seqs = len(iseqs_to_keep)
+    cluster_line['n_unique_seqs'] = len(iseqs_to_keep) # total in cluster output from partis
     always_include = set(args.always_include + [args.inferred_naive_name])
     if args.max_sequences:
         iseqs_to_keep = downsample_iseqs_by_multiplicity(cluster_line, args.max_sequences, always_include)
-    n_sampled_seqs = len(i_seqs_to_keep)
+    cluster_line['n_sampled_seqs'] = len(iseqs_to_keep)
 
-    #filter cluster line to i_seqs_to_keep
+    #filter cluster line to iseqs_to_keep
     cluster_line = utils.restrict_to_iseqs(cluster_line, iseqs_to_keep, glfo) 
+   
+    # this needs to happen after restrict_to_iseqs re-adds implicit partis linekeys including 'regional_bounds'
+    cluster_line = add_regional_bounds(cluster_line)
     
-    #changing to dict format from cluster line format
-    cluster_sequences = {
-            'unique_id':             [args.inferred_naive_name] + cluster_line['unique_ids'],
-            'seq': [cluster_line['naive_seq']] + seqs(args, cluster_line),
-            'is_seed':               ['False'] + [(unique_id == seed_id) for unique_id in cluster_line['unique_ids']],
-            'duplicates':               [None] + [':'.join(x) for x in cluster_line['duplicates']],
-            'frameshifted':            [False] + [not x for x in cluster_line['in_frames']],
-            'mutated_invariants':      [False] + cluster_line['mutated_invariants'],
-            'stops':                   [False] + cluster_line['stops'],
-            'mut_freq':                  [0.0] + cluster_line['mut_freqs'],
-            'affinity':                 [None] + cluster_line.get('affinities', [None for _ in cluster_line['unique_ids']])}
-
-    sequences = as_dict_rows(cluster_sequences)
-    
-    for gene in 'vdj':
-        for pos in ['start', 'end']:
-            cluster_line[gene+'_'+pos] = cluster_line['regional_bounds'][gene][pos.startswith('e')]
     return merge(
-            subset_dict(cluster_line, ['v_gene', 'd_gene', 'j_gene', 'cdr3_length', 'naive_seq', 'v_per_gene_support', 'd_per_gene_support', 'j_per_gene_support']),
-            {'sequences': sequences,
-             'cdr3_start': cluster_line['codon_positions']['v'],
-             'has_seed': seed_id in cluster_line['unique_ids'],
-             # total in cluster output from partis
-             'n_unique_seqs' : n_unique_seqs,
-             # n_total_reads represents the sum of all sequence multiplicities in the cluster
-             'n_total_reads' : n_total_reads,
-             # Should also add mean_mut_freq etc here
-             'mean_mut_freq': numpy.mean(cluster_line['mut_freqs']),
-             'n_sampled_seqs': n_sampled_seqs,
-             'seed_id': seed_id,
-             'match_indels_in_uid': args.match_indels_in_uid})
+            subset_dict(cluster_line, ['n_total_reads', 'n_sampled_seqs', 'n_unique_seqs', 'v_gene', 'd_gene', 'j_gene', 'cdr3_length', 'naive_seq', 'v_per_gene_support', 'd_per_gene_support', 'j_per_gene_support']),
+            get_cluster_meta_dict(cluster_line, seed_id, args))
 
 def find_largest_cluster_across_partitions(cpath, annotation_list):
     '''
@@ -339,17 +345,14 @@ def format_list(row, key):
 
 def format_results(results):
     for row in results:
-        format_list(row, 'timepoints')
-        format_list(row, 'timepoint_multiplicities')
+        format_list(row, 'duplicate_timepoints')
+        format_list(row, 'duplicate_multiplicities')
         format_list(row, 'duplicates')
-        format_list(row, 'cluster_duplicates')
-        format_list(row, 'cluster_timepoints')
-        format_list(row, 'cluster_timepoint_multiplicities')
         yield row
 
 def write_seq_meta(args, cluster_data):
     to_keep = ['unique_id', 'is_seed', 'frameshifted', 'stops', 'mutated_invariants',
-            'mut_freq', 'timepoint', 'multiplicity', 'timepoints', 'timepoint_multiplicities', 'duplicates', 'affinity']
+            'mut_freq', 'timepoint', 'multiplicity', 'duplicate_timepoints', 'duplicate_multiplicities', 'duplicates', 'affinity']
     with open(args.seqmeta_out, 'w') as outfile:
         writer = csv.DictWriter(outfile, fieldnames=to_keep, extrasaction='ignore')
         writer.writeheader()
