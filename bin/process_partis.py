@@ -61,6 +61,8 @@ def csv_reader(index=None, filter_by=None):
 
 default_glfo_dir = os.path.join(partis_path, 'data/germlines/human')  # this should only be used as a last resort (e.g. you've completely lost the germline sets corresponding to your deprecated csv output files)
 
+dummy_timepoint_name = 'no-timepoint'
+
 def subset_dict(d, keys):
     return {k: d[k] for k in keys if k in d}
 
@@ -119,11 +121,11 @@ def get_cluster_seqs_dict(cluster_line, seed_id, args):
             'stops':                   [False] + cluster_line['stops'],
             'mut_freq':                  [0.0] + cluster_line['mut_freqs'],
             'affinity':                 [None] + cluster_line.get('affinities', [None for _ in cluster_line['unique_ids']]),
-            'timepoint':                [None] + cluster_line['timepoints'],
-            'duplicates':               [[]] + cluster_line['duplicates'],
-            'multiplicity':           [None] + cluster_line['multiplicities'],
-            'timepoints':               [[]] + cluster_line['duplicate_timepoints'],
-            'timepoint_multiplicities': [[]] + cluster_line['duplicate_multiplicities']}
+            'timepoint':[dummy_timepoint_name] + cluster_line['timepoints'],
+            'duplicates':                 [[]] + cluster_line['duplicates'],
+            'multiplicity':                [1] + cluster_line['multiplicities'],
+            'timepoints':[[dummy_timepoint_name]] + cluster_line['duplicate_timepoints'],
+            'timepoint_multiplicities':  [[1]] + cluster_line['duplicate_multiplicities']}
     res = as_dict_rows(cluster_sequences)
     #print(cluster_line['unique_ids'][314],cluster_line['duplicate_multiplicities'][314] )
     #print([i for i in res if i['unique_id'] == 'MIG474-349'])
@@ -162,7 +164,7 @@ def get_upstream_row(upstream_seqmeta, seqid):
     row = merge(default_row, upstream_seqmeta.get(seqid, {}))
     timepoint = row.get('timepoint')
     # if we do not have timepoint info (including when timepoint == ''), then we assign a dummy timepoint so multiplicity is calculated even in the absence of timepoint data.
-    row['timepoint'] = timepoint if timepoint and timepoint is not '' else 'no-timepoint'
+    row['timepoint'] = timepoint if timepoint and timepoint is not '' else dummy_timepoint_name
     return row
 
 def timepoint_multiplicity_mapping(seqid, duplicates, upstream_seqmeta):
