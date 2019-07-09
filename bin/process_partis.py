@@ -167,13 +167,12 @@ def get_upstream_row(upstream_seqmeta, seqid):
     row['timepoint'] = timepoint if timepoint and timepoint is not '' else dummy_timepoint_name
     return row
 
-def timepoint_multiplicity_mapping(seqid, duplicates, upstream_seqmeta):
+def timepoint_multiplicity_mapping(duplicates, upstream_seqmeta):
     timepoints_dict = collections.defaultdict(lambda: 0)
     for dup_seqid in duplicates:
-        dup_upstream_row = get_upstream_row(upstream_seqmeta, seqid)
+        dup_upstream_row = get_upstream_row(upstream_seqmeta, dup_seqid)
         # pre-partis filtering multiplicity
         dup_multiplicity = int(dup_upstream_row['multiplicity'])
-        #print(seqid, dup_multiplicity)
         # we have handled any case with missing timepoint info in get_upstream_row, so this should always work
         timepoints_dict[dup_upstream_row['timepoint']] += dup_multiplicity
     return timepoints_dict
@@ -185,7 +184,7 @@ def get_multiplicity_seqmeta(cluster_line, upstream_seqmeta):
     for iseq, seqid in enumerate(cluster_line['unique_ids']):
         upstream_row = get_upstream_row(upstream_seqmeta, seqid)
         duplicates = [seqid] + cluster_line['duplicates'][iseq] 
-        timepoints_dict = timepoint_multiplicity_mapping(seqid, duplicates, upstream_seqmeta)
+        timepoints_dict = timepoint_multiplicity_mapping(duplicates, upstream_seqmeta)
         timepoints = sorted(timepoints_dict.items())
         multiplicity = sum(t[1] for t in timepoints)
         multiplicity_seqmeta['timepoints'].append(upstream_row['timepoint']) #this represents the timepoint this exact sequence was sampled
