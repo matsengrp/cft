@@ -241,11 +241,11 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     
     #print([cluster_line['duplicate_multiplicities'][iseq] for iseq, uid, in enumerate(cluster_line['unique_ids']) if uid == 'MIG474-349'])
     # apply sequence downsampling here
-    cluster_line['n_unique_seqs'] = len(iseqs_to_keep) + 1 # total in cluster output from partis
+    cluster_line['unique_seqs_count'] = len(iseqs_to_keep) + 1 # total in cluster output from partis
     always_include = set(args.always_include + [args.inferred_naive_name])
     if args.max_sequences:
         iseqs_to_keep = downsample_iseqs_by_multiplicity(cluster_line, multiplicity_seqmeta, args.max_sequences, always_include)
-    cluster_line['n_sampled_seqs'] = len(iseqs_to_keep)
+    cluster_line['sampled_seqs_count'] = len(iseqs_to_keep)
     #print([cluster_line['duplicate_multiplicities'][iseq] for iseq, uid, in enumerate(cluster_line['unique_ids']) if uid == 'MIG474-349'])
     #filter cluster line to iseqs_to_keep
     cluster_line = utils.restrict_to_iseqs(cluster_line, iseqs_to_keep, glfo)
@@ -253,13 +253,13 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     # add the additional info computed in above for the iseqs we care about
     cluster_line = add_additional_info(cluster_line, multiplicity_seqmeta, iseqs_to_keep) 
 
-    cluster_line['n_total_reads'] = sum(cluster_line['multiplicities']) + 1 #total reads accounting for multiplicity (must be calculated after subsetting cluster in restrict_to_iseqs if it should correspond to total reads represented by subset of cluster returned by restrict_to_iseqs)
+    cluster_line['total_read_count'] = sum(cluster_line['multiplicities']) + 1 #total reads accounting for multiplicity (must be calculated after subsetting cluster in restrict_to_iseqs if it should correspond to total reads represented by subset of cluster returned by restrict_to_iseqs)
 
     # this needs to happen after restrict_to_iseqs re-adds implicit partis linekeys including 'regional_bounds'
     cluster_line, regional_bounds_keys = add_regional_bounds(cluster_line)
     print([cluster_line['duplicate_multiplicities'][iseq] for iseq, uid, in enumerate(cluster_line['unique_ids']) if uid == 'MIG474-349'])
     return merge(
-            subset_dict(cluster_line, regional_bounds_keys + ['n_total_reads', 'n_sampled_seqs', 'n_unique_seqs', 'v_gene', 'd_gene', 'j_gene', 'cdr3_length', 'naive_seq', 'v_per_gene_support', 'd_per_gene_support', 'j_per_gene_support']),
+            subset_dict(cluster_line, regional_bounds_keys + ['total_read_count', 'sampled_seqs_count', 'unique_seqs_count', 'v_gene', 'd_gene', 'j_gene', 'cdr3_length', 'naive_seq', 'v_per_gene_support', 'd_per_gene_support', 'j_per_gene_support']),
             get_cluster_meta_dict(cluster_line, seed_id, args))
 
 def find_largest_cluster_across_partitions(cpath, annotation_list):
@@ -344,7 +344,7 @@ def processed_data(args):
 def write_cluster_meta(args, cluster_data):
     def attrs(base):
         return [base + '_' + k for k in ['gene', 'start', 'end', 'per_gene_support']]
-    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'n_unique_seqs', 'n_total_reads', 'last_modified', 'partition_file',
+    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'unique_seqs_count', 'total_read_count', 'sampled_seqs_count', 'last_modified', 'partition_file',
         'cdr3_start', 'cdr3_length', 'mean_mut_freq'] + attrs('v') + attrs('d') + attrs('j')
     doc = subset_dict(cluster_data, to_keep)
     for gene in 'vdj':
