@@ -241,7 +241,7 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     
     #print([cluster_line['duplicate_multiplicities'][iseq] for iseq, uid, in enumerate(cluster_line['unique_ids']) if uid == 'MIG474-349'])
     # apply sequence downsampling here
-    cluster_line['unique_seqs_count'] = len(iseqs_to_keep) + 1 # total in cluster output from partis
+    cluster_line['unique_seqs_count'] = len(iseqs_to_keep) # total in cluster output from partis
     always_include = set(args.always_include + [args.inferred_naive_name])
     if args.max_sequences:
         iseqs_to_keep = downsample_iseqs_by_multiplicity(cluster_line, multiplicity_seqmeta, args.max_sequences, always_include)
@@ -253,7 +253,7 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     # add the additional info computed in above for the iseqs we care about
     cluster_line = add_additional_info(cluster_line, multiplicity_seqmeta, iseqs_to_keep) 
 
-    cluster_line['total_read_count'] = sum(cluster_line['multiplicities']) + 1 #total reads accounting for multiplicity (must be calculated after subsetting cluster in restrict_to_iseqs if it should correspond to total reads represented by subset of cluster returned by restrict_to_iseqs)
+    cluster_line['total_read_count'] = sum(cluster_line['multiplicities']) #total reads accounting for multiplicity (must be calculated after subsetting cluster in restrict_to_iseqs if it should correspond to total reads represented by subset of cluster returned by restrict_to_iseqs)
 
     # this needs to happen after restrict_to_iseqs re-adds implicit partis linekeys including 'regional_bounds'
     cluster_line, regional_bounds_keys = add_regional_bounds(cluster_line)
