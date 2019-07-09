@@ -203,7 +203,7 @@ def match_indels_in_uid_seq(cluster_line, match_indels_in_uid):
         raise Exception('{} has no indel. Use an id of a sequence with exactly one indel.'.format(match_indels_in_uid))
     else:
         ifo_to_match = ifos_to_match[0]
-    iseqs_to_keep = get_iseqs_with_compatible_indels(cluster_line, ifo_to_match)
+    iseqs_to_keep = indelutils.get_iseqs_with_compatible_indels(cluster_line, ifo_to_match)
     if len(iseqs_to_keep) < 1:
         raise Exception('No indels in cluster annotation for cluster containing {} matched {}'.format(match_indels_in_uid, ifo_to_match))
     return iseqs_to_keep 
@@ -223,7 +223,7 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     # various cases where we downsample cluster sequences
     if args.match_indels_in_uid:
         #cluster_line['unique_ids'] = map(lambda i: '{}_indel_filtered'.format(i), cluster_line['unique_ids']) 
-        iseqs_to_keep = iseqs_to_keep & set(match_indels_in_uid_seq(cluster_line, args.match_indels_in_uid, glfo))
+        iseqs_to_keep = iseqs_to_keep & set(match_indels_in_uid_seq(cluster_line, args.match_indels_in_uid))
     
     if args.largest_cluster_across_partitions:
         '''
