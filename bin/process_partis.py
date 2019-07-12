@@ -126,7 +126,7 @@ def get_cluster_seqs_dict(cluster_line, seed_id, args):
             'multiplicity':                [1] + cluster_line['multiplicities'],
             'timepoints':[[dummy_timepoint_name]] + cluster_line['duplicate_timepoints'],
             'timepoint_multiplicities':  [[1]] + cluster_line['duplicate_multiplicities']}
-    return sorted(as_dict_rows(cluster_sequences), key=lambda row: row['multiplicity'], reverse=True)
+    return as_dict_rows(cluster_sequences)
 
 def get_cluster_meta_dict(cluster_line, seed_id, args):
     return {'sequences': get_cluster_seqs_dict(cluster_line, seed_id, args),
@@ -164,10 +164,10 @@ def get_upstream_row(upstream_seqmeta, seqid):
     row['timepoint'] = timepoint if timepoint and timepoint is not '' else dummy_timepoint_name
     return row
 
-def timepoint_multiplicity_mapping(seqid, duplicates, upstream_seqmeta):
+def timepoint_multiplicity_mapping(duplicates, upstream_seqmeta):
     timepoints_dict = collections.defaultdict(lambda: 0)
     for dup_seqid in duplicates:
-        dup_upstream_row = get_upstream_row(upstream_seqmeta, seqid)
+        dup_upstream_row = get_upstream_row(upstream_seqmeta, dup_seqid)
         # pre-partis filtering multiplicity
         dup_multiplicity = int(dup_upstream_row['multiplicity'])
         # we have handled any case with missing timepoint info in get_upstream_row, so this should always work
@@ -181,7 +181,7 @@ def get_multiplicity_seqmeta(cluster_line, upstream_seqmeta):
     for iseq, seqid in enumerate(cluster_line['unique_ids']):
         upstream_row = get_upstream_row(upstream_seqmeta, seqid)
         duplicates = [seqid] + cluster_line['duplicates'][iseq] 
-        timepoints_dict = timepoint_multiplicity_mapping(seqid, duplicates, upstream_seqmeta)
+        timepoints_dict = timepoint_multiplicity_mapping(duplicates, upstream_seqmeta)
         timepoints = sorted(timepoints_dict.items())
         multiplicity = sum(t[1] for t in timepoints)
         multiplicity_seqmeta['timepoints'].append(upstream_row['timepoint']) #this represents the timepoint this exact sequence was sampled
@@ -220,7 +220,6 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     # various cases where we downsample cluster sequences
     if args.match_indels_in_uid:
         iseqs_to_keep = iseqs_to_keep & set(match_indels_in_uid_seq(cluster_line, args.match_indels_in_uid))
-        cluster_line['unique_ids'] = map(lambda i: '{}_indel_filtered'.format(i), cluster_line['unique_ids']) 
     if args.largest_cluster_across_partitions:
         '''
         Deduplicate sequence records. When using largest_cluster_across_partitions for seeded clusters, we may end up with duplicate sequences in 
