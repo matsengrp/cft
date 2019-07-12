@@ -126,10 +126,7 @@ def get_cluster_seqs_dict(cluster_line, seed_id, args):
             'multiplicity':                [1] + cluster_line['multiplicities'],
             'timepoints':[[dummy_timepoint_name]] + cluster_line['duplicate_timepoints'],
             'timepoint_multiplicities':  [[1]] + cluster_line['duplicate_multiplicities']}
-    res = as_dict_rows(cluster_sequences)
-    #print(cluster_line['unique_ids'][314],cluster_line['duplicate_multiplicities'][314] )
-    #print([i for i in res if i['unique_id'] == 'MIG474-349'])
-    return res
+    return sorted(as_dict_rows(cluster_sequences), key=lambda row: row['multiplicity'], reverse=True)
 
 def get_cluster_meta_dict(cluster_line, seed_id, args):
     return {'sequences': get_cluster_seqs_dict(cluster_line, seed_id, args),
@@ -167,10 +164,10 @@ def get_upstream_row(upstream_seqmeta, seqid):
     row['timepoint'] = timepoint if timepoint and timepoint is not '' else dummy_timepoint_name
     return row
 
-def timepoint_multiplicity_mapping(duplicates, upstream_seqmeta):
+def timepoint_multiplicity_mapping(seqid, duplicates, upstream_seqmeta):
     timepoints_dict = collections.defaultdict(lambda: 0)
     for dup_seqid in duplicates:
-        dup_upstream_row = get_upstream_row(upstream_seqmeta, dup_seqid)
+        dup_upstream_row = get_upstream_row(upstream_seqmeta, seqid)
         # pre-partis filtering multiplicity
         dup_multiplicity = int(dup_upstream_row['multiplicity'])
         # we have handled any case with missing timepoint info in get_upstream_row, so this should always work
@@ -184,7 +181,7 @@ def get_multiplicity_seqmeta(cluster_line, upstream_seqmeta):
     for iseq, seqid in enumerate(cluster_line['unique_ids']):
         upstream_row = get_upstream_row(upstream_seqmeta, seqid)
         duplicates = [seqid] + cluster_line['duplicates'][iseq] 
-        timepoints_dict = timepoint_multiplicity_mapping(duplicates, upstream_seqmeta)
+        timepoints_dict = timepoint_multiplicity_mapping(seqid, duplicates, upstream_seqmeta)
         timepoints = sorted(timepoints_dict.items())
         multiplicity = sum(t[1] for t in timepoints)
         multiplicity_seqmeta['timepoints'].append(upstream_row['timepoint']) #this represents the timepoint this exact sequence was sampled
@@ -222,9 +219,8 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     iseqs_to_keep = set(range(len(cluster_line['seqs'])))
     # various cases where we downsample cluster sequences
     if args.match_indels_in_uid:
-        #cluster_line['unique_ids'] = map(lambda i: '{}_indel_filtered'.format(i), cluster_line['unique_ids']) 
         iseqs_to_keep = iseqs_to_keep & set(match_indels_in_uid_seq(cluster_line, args.match_indels_in_uid))
-    
+        cluster_line['unique_ids'] = map(lambda i: '{}_indel_filtered'.format(i), cluster_line['unique_ids']) 
     if args.largest_cluster_across_partitions:
         '''
         Deduplicate sequence records. When using largest_cluster_across_partitions for seeded clusters, we may end up with duplicate sequences in 
@@ -234,18 +230,16 @@ def process_cluster(args, cluster_line, seed_id, glfo):
         iseqs_to_keep = iseqs_to_keep & set({unique_id: iseq for iseq, unique_id in enumerate(cluster_line['unique_ids'])}.values())
     if args.remove_frameshifts or args.remove_stops or args.remove_mutated_invariants:
         iseqs_to_keep = iseqs_to_keep & set(apply_filters(args, cluster_line))
-
     # apply merging of multiplicity info here (or flesh out with default values otherwise)
     multiplicity_seqmeta = get_multiplicity_seqmeta(cluster_line, args.upstream_seqmeta)
     
-    #print([cluster_line['duplicate_multiplicities'][iseq] for iseq, uid, in enumerate(cluster_line['unique_ids']) if uid == 'MIG474-349'])
     # apply sequence downsampling here
     cluster_line['unique_seqs_count'] = len(iseqs_to_keep) # total in cluster output from partis
     always_include = set(args.always_include + [args.inferred_naive_name])
     if args.max_sequences:
-        iseqs_to_keep = downsample_iseqs_by_multiplicity(cluster_line, multiplicity_seqmeta, args.max_sequences, always_include)
+        iseqs_to_keep = iseqs_to_keep & set(downsample_iseqs_by_multiplicity(cluster_line, multiplicity_seqmeta, args.max_sequences, always_include))
     cluster_line['sampled_seqs_count'] = len(iseqs_to_keep)
-    #print([cluster_line['duplicate_multiplicities'][iseq] for iseq, uid, in enumerate(cluster_line['unique_ids']) if uid == 'MIG474-349'])
+    
     #filter cluster line to iseqs_to_keep
     cluster_line = utils.restrict_to_iseqs(cluster_line, iseqs_to_keep, glfo)
     
@@ -253,10 +247,8 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     cluster_line = add_additional_info(cluster_line, multiplicity_seqmeta, iseqs_to_keep) 
 
     cluster_line['total_read_count'] = sum(cluster_line['multiplicities']) #total reads accounting for multiplicity (must be calculated after subsetting cluster in restrict_to_iseqs if it should correspond to total reads represented by subset of cluster returned by restrict_to_iseqs)
-
     # this needs to happen after restrict_to_iseqs re-adds implicit partis linekeys including 'regional_bounds'
     cluster_line, regional_bounds_keys = add_regional_bounds(cluster_line)
-    print([cluster_line['duplicate_multiplicities'][iseq] for iseq, uid, in enumerate(cluster_line['unique_ids']) if uid == 'MIG474-349'])
     return merge(
             subset_dict(cluster_line, regional_bounds_keys + ['total_read_count', 'sampled_seqs_count', 'unique_seqs_count', 'v_gene', 'd_gene', 'j_gene', 'cdr3_length', 'naive_seq', 'v_per_gene_support', 'd_per_gene_support', 'j_per_gene_support']),
             get_cluster_meta_dict(cluster_line, seed_id, args))
