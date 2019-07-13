@@ -59,7 +59,6 @@ def csv_reader(index=None, filter_by=None):
 
 
 
-default_glfo_dir = os.path.join(partis_path, 'data/germlines/human')  # this should only be used as a last resort (e.g. you've completely lost the germline sets corresponding to your deprecated csv output files)
 
 dummy_timepoint_name = 'no-timepoint'
 
@@ -300,13 +299,17 @@ def choose_cluster(partition_file, annotation_list, cpath, ipart=None, i_cluster
         print '%s more than one annotation with requested uids %s found in %s' % (utils.color('red', 'warning'), cluster_unique_ids, partition_file)  # shouldn't be possible
     return annotations[0]
 
+def read_partis_output(partition_file, glfo_dir=None, locus=None):
+    default_glfo_dir = os.path.join(partis_path, 'data/germlines/human')  # this should only be used as a last resort (e.g. you've completely lost the germline sets corresponding to your deprecated csv output files)
+    glfo = None if utils.getsuffix(partition_file) == '.yaml' else glutils.read_glfo(glfo_dir if glfo_dir else default_glfo_dir, locus)
+    glfo, annotation_list, cpath = utils.read_output(partition_file, glfo=glfo)  # returns glfo from the file if it's there, otherwise it returns the one we passed in
+    return glfo, annotation_list, cpath
+
 def processed_data(args):
     """Uses args to find the correct partition, cluster pair and all associated information. Cluster
     information is returned as by process_cluster."""
 
-    glfo = None if utils.getsuffix(args.partition_file) == '.yaml' else glutils.read_glfo(args.glfo_dir if args.glfo_dir else default_glfo_dir, args.locus)
-    #print("calling utils.read_output with args:", args.partition_file, glfo)
-    glfo, annotation_list, cpath = utils.read_output(args.partition_file, glfo=glfo)  # returns glfo from the file if it's there, otherwise it returns the one we passed in
+    glfo, annotation_list, cpath = read_partis_output(args.partition_file, args.glfo_dir, args.locus)
     if annotation_list is None:
         raise Exception('no annotations in %s (probably because cluster annotation file wasn\'t found)' % args.partition_file)
 
