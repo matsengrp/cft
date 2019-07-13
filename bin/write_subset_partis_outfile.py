@@ -25,7 +25,6 @@ if not partis_path or not os.path.exists(partis_path):
 
 sys.path.insert(1, os.path.join(partis_path, 'python'))
 import utils
-import partitiondriver
 
 def iseqs_from_uids(uids_file, cluster_annotation):
     with open(args.subset_ids_path) as f:
@@ -63,8 +62,8 @@ if __name__ == '__main__':
     glfo, annotation_list, cpath = process_partis.read_partis_output(args.partition_file, args.glfo_dir, args.locus)
     cluster_annotation = process_partis.choose_cluster(args.partition_file, annotation_list, cpath, args.partition_step, i_cluster=None, unique_ids=args.original_cluster_unique_ids)
     iseqs = iseqs_from_uids(args.subset_ids_path, cluster_annotation)
-    # restrict to iseqs should rewrite linearham info among other things according to the new subset
+    # TODO: restrict to iseqs should rewrite linearham info among other things according to the new subset
     new_annotation_list = [utils.restrict_to_iseqs(cluster_annotation, iseqs)]
 
-    # TODO :
-    # partitiondriver.PartitionDriver().write_output(self, annotation_list, hmm_failures, cpath=None, dont_write_failed_queries=False, write_sw=False, outfname=None) 
+    # TODO:
+    # utils.write_annotations(fname, glfo, annotation_list, headers, synth_single_seqs=False, failed_queries=None, partition_lines=None, use_pyyaml=False) 
