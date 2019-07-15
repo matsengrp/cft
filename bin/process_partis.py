@@ -38,6 +38,8 @@ import glutils
 import clusterpath
 
 
+default_glfo_dir = os.path.join(partis_path, 'data/germlines/human')  # this should only be used as a last resort (e.g. you've completely lost the germline sets corresponding to your deprecated csv output files)
+
 # Make sure we can read the really big fields frequently found in partis output
 csv.field_size_limit(sys.maxsize)
 
@@ -300,7 +302,6 @@ def choose_cluster(partition_file, annotation_list, cpath, ipart=None, i_cluster
     return annotations[0]
 
 def read_partis_output(partition_file, glfo_dir=None, locus=None):
-    default_glfo_dir = os.path.join(partis_path, 'data/germlines/human')  # this should only be used as a last resort (e.g. you've completely lost the germline sets corresponding to your deprecated csv output files)
     glfo = None if utils.getsuffix(partition_file) == '.yaml' else glutils.read_glfo(glfo_dir if glfo_dir else default_glfo_dir, locus)
     glfo, annotation_list, cpath = utils.read_output(partition_file, glfo=glfo)  # returns glfo from the file if it's there, otherwise it returns the one we passed in
     return glfo, annotation_list, cpath

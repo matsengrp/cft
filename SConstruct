@@ -405,7 +405,7 @@ def partition(c):
 @w.add_nest(label_func=lambda d: d['id'], metadata=lambda c, d: {'annotation': 'elided', 'naive_probabilities': 'elided'})
 def cluster(c):
     part = c['partition']
-    seed_cluster_annotation = part['seed_cluster_annotation')
+    seed_cluster_annotation = part['seed_cluster_annotation']
     unique_ids = ':'.join(seed_cluster_annotation['unique_ids'])
     naive_probabilities = get_alt_naive_probabilities(seed_cluster_annotation)
     return [{'id': 'seed-cluster',
@@ -639,11 +639,11 @@ def add_cluster_analysis(w):
             return env.Command(
                 path.join(outdir, 'pruned_partis_output.yaml'),
                 [c['partition']['partition-file'], c['pruned_ids']],
-                'bin/write_subset_partis_outfile.py $SOURCES $TARGET ' +
-                '--partition-step={}'.format(c['partition']['i_step']) +
-                '--original_cluster_unique_ids={}'.format(clust_ids_string) + 
-                ('--glfo-dir={}'.format(c['sample']['glfo-dir']) if yaml_format else '') +
-                ('--locus={}'.format(locus(c)) if yaml_format else '') )
+                'python bin/write_subset_partis_outfile.py $SOURCES $TARGET' +
+                ' --partition-step={}'.format(c['partition']['step']) +
+                ' --original-cluster-unique-ids={}'.format(clust_ids_string) + 
+                (' --glfo-dir={}'.format(c['sample']['glfo-dir']) if not yaml_format else '') +
+                (' --locus={}'.format(locus(c)) if not yaml_format else '') )
 
     @w.add_target()
     def tip_seqmeta(outdir, c):

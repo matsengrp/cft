@@ -30,7 +30,7 @@ def iseqs_from_uids(uids_file, cluster_annotation):
     with open(args.subset_ids_path) as f:
         ids = f.readlines()
     ids = [id.rstrip("\n") for id in ids]
-    return [iseq for iseq, uid in enumerate(cluster_annotation['unqiue_ids']) if uid in ids]
+    return [iseq for iseq, uid in enumerate(cluster_annotation['unique_ids']) if uid in ids]
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Rewrite partis output file with subset of ids.")
@@ -49,21 +49,20 @@ if __name__ == '__main__':
     parser.add_argument(
         '--original-cluster-unique-ids', type=str, required=True,
         help="Colon separated list of unique ids to identify the cluster we want to subset")
-    partis_args.add_argument(
+    parser.add_argument(
         '--glfo-dir',
         help='path to germline info, only necessary for deprecated .csv output files')
-    partis_args.add_argument(
+    parser.add_argument(
         '--locus',
         help='Sample locus, only necessary for deprecated .csv output files')
 
     args = parser.parse_args()
     
-
+    #print('CLUSTER IDS {}'.format(args.original_cluster_unique_ids))
     glfo, annotation_list, cpath = process_partis.read_partis_output(args.partition_file, args.glfo_dir, args.locus)
-    cluster_annotation = process_partis.choose_cluster(args.partition_file, annotation_list, cpath, args.partition_step, i_cluster=None, unique_ids=args.original_cluster_unique_ids)
+    cluster_annotation = process_partis.choose_cluster(args.partition_file, annotation_list, cpath, args.partition_step, i_cluster=None, unique_ids=args.original_cluster_unique_ids.split(':'))
     iseqs = iseqs_from_uids(args.subset_ids_path, cluster_annotation)
     # TODO: restrict to iseqs should rewrite linearham info among other things according to the new subset
-    new_annotation_list = [utils.restrict_to_iseqs(cluster_annotation, iseqs)]
+    new_annotation_list = [utils.restrict_to_iseqs(cluster_annotation, iseqs, glfo)]
 
-    # TODO:
-    # utils.write_annotations(fname, glfo, annotation_list, headers, synth_single_seqs=False, failed_queries=None, partition_lines=None, use_pyyaml=False) 
+    utils.write_annotations(args.outfname, glfo, new_annotation_list, utils.sw_cache_headers)
