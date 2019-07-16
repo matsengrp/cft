@@ -50,6 +50,9 @@ if __name__ == '__main__':
         '--original-cluster-unique-ids', type=str, required=True,
         help="Colon separated list of unique ids to identify the cluster we want to subset")
     parser.add_argument(
+        '--sw-cache', type=str, required=True,
+        help="Partis smith-waterman cache file needed to rewrite linearham info.")
+    parser.add_argument(
         '--glfo-dir',
         help='path to germline info, only necessary for deprecated .csv output files')
     parser.add_argument(
@@ -58,11 +61,16 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
-    #print('CLUSTER IDS {}'.format(args.original_cluster_unique_ids))
     glfo, annotation_list, cpath = process_partis.read_partis_output(args.partition_file, args.glfo_dir, args.locus)
     cluster_annotation = process_partis.choose_cluster(args.partition_file, annotation_list, cpath, args.partition_step, i_cluster=None, unique_ids=args.original_cluster_unique_ids.split(':'))
     iseqs = iseqs_from_uids(args.subset_ids_path, cluster_annotation)
-    # TODO: restrict to iseqs should rewrite linearham info among other things according to the new subset
-    new_annotation_list = [utils.restrict_to_iseqs(cluster_annotation, iseqs, glfo)]
+    def read_sw_info(sw_cache, glfo_dir, locus):
+        _, sw_annotations, _ = process_partis.read_partis_output(sw_cache, glfo_dir, locus)
+        def sw_uid(line):
+            assert len(line['unique_ids']) == 1  # would only fail if this was not actually an sw cache file, checking to illustrate sw case is special
+            return line['unique_ids'][0]
+        return {sw_uid(adict): adict for adict in sw_annotations}
+    sw_info = read_sw_info(args.sw_cache, args.glfo_dir, args.locus)
+    new_annotation_list = [utils.restrict_to_iseqs(cluster_annotation, iseqs, glfo, sw_info)]
 
     utils.write_annotations(args.outfname, glfo, new_annotation_list, utils.sw_cache_headers)

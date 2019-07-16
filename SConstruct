@@ -642,6 +642,7 @@ def add_cluster_analysis(w):
                 'python bin/write_subset_partis_outfile.py $SOURCES $TARGET' +
                 ' --partition-step={}'.format(c['partition']['step']) +
                 ' --original-cluster-unique-ids={}'.format(clust_ids_string) + 
+                ' --sw-cache={}'.format(c['dataset']['sw-cache']) + 
                 (' --glfo-dir={}'.format(c['sample']['glfo-dir']) if not yaml_format else '') +
                 (' --locus={}'.format(locus(c)) if not yaml_format else '') )
 
