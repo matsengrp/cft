@@ -26,6 +26,14 @@ if not partis_path or not os.path.exists(partis_path):
 sys.path.insert(1, os.path.join(partis_path, 'python'))
 import utils
 
+def read_sw_info(sw_cache, locus):
+    sw_cache_glfo = utils.replace_suffix(sw_cache, '-glfo') if utils.getsuffix(sw_cache) == '.csv' else None
+    _, sw_annotations, _ = process_partis.read_partis_output(sw_cache, sw_cache_glfo, locus)
+    def sw_uid(line):
+        assert len(line['unique_ids']) == 1  # would only fail if this was not actually an sw cache file, checking to illustrate sw case is special
+        return line['unique_ids'][0]
+    return {sw_uid(adict): adict for adict in sw_annotations}
+
 def iseqs_from_uids(uids_file, cluster_annotation):
     with open(args.subset_ids_path) as f:
         ids = f.readlines()
@@ -64,13 +72,8 @@ if __name__ == '__main__':
     glfo, annotation_list, cpath = process_partis.read_partis_output(args.partition_file, args.glfo_dir, args.locus)
     cluster_annotation = process_partis.choose_cluster(args.partition_file, annotation_list, cpath, args.partition_step, i_cluster=None, unique_ids=args.original_cluster_unique_ids.split(':'))
     iseqs = iseqs_from_uids(args.subset_ids_path, cluster_annotation)
-    def read_sw_info(sw_cache, glfo_dir, locus):
-        _, sw_annotations, _ = process_partis.read_partis_output(sw_cache, glfo_dir, locus)
-        def sw_uid(line):
-            assert len(line['unique_ids']) == 1  # would only fail if this was not actually an sw cache file, checking to illustrate sw case is special
-            return line['unique_ids'][0]
-        return {sw_uid(adict): adict for adict in sw_annotations}
-    sw_info = read_sw_info(args.sw_cache, args.glfo_dir, args.locus)
-    new_annotation_list = [utils.restrict_to_iseqs(cluster_annotation, iseqs, glfo, sw_info)]
-
-    utils.write_annotations(args.outfname, glfo, new_annotation_list, utils.sw_cache_headers)
+    sw_info = read_sw_info(args.sw_cache, args.locus)
+    new_annotation = utils.restrict_to_iseqs(cluster_annotation, iseqs, glfo, sw_info)
+    if new_annotation.get('linearham-info') is None:
+        utils.add_linearham_info(sw_info, [new_annotation])
+    utils.write_annotations(args.outfname, glfo, [new_annotation], utils.sw_cache_headers)
