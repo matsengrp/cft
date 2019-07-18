@@ -76,4 +76,4 @@ if __name__ == '__main__':
     new_annotation = utils.restrict_to_iseqs(cluster_annotation, iseqs, glfo, sw_info)
     if new_annotation.get('linearham-info') is None:
         utils.add_linearham_info(sw_info, [new_annotation])
-    utils.write_annotations(args.outfname, glfo, [new_annotation], utils.sw_cache_headers)
+    utils.write_annotations(args.outfname, glfo, [new_annotation], set(new_annotation))
