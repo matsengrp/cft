@@ -474,7 +474,7 @@ def add_cluster_analysis(w):
         '''
         Write partis alternative naives to a fasta in order of probability
         '''
-        if c['cluster']['naive_probabilities']:
+        if c['cluster']['naive_probabilities'] is not None:
             cluster_name = c['cluster'].get('seed_name', c['cluster']['id'])
 
             naives_sorted_by_prob =  list(sorted(c['cluster']['naive_probabilities'], key=lambda x: x[1], reverse=True))
@@ -500,7 +500,7 @@ def add_cluster_analysis(w):
         '''
         Create logo plot according to probabilities
         '''
-        if c['cluster']['naive_probabilities']:
+        if c['cluster']['naive_probabilities'] is not None:
             
             annotation = c['cluster']['annotation']
             cluster_name = c['cluster'].get('seed_name', c['cluster']['id'])  
@@ -645,6 +645,18 @@ def add_cluster_analysis(w):
                 ' --sw-cache={}'.format(c['sample']['sw-cache']) + 
                 (' --glfo-dir={}'.format(c['sample']['glfo-dir']) if not yaml_format else '') +
                 (' --locus={}'.format(locus(c)) if not yaml_format else '') )
+        
+        @w.add_target()
+        def linearham_base_command(outdir, c):
+            if 'seed' in c:
+                print(path.join(os.getcwd(), str(c['pruned_partis_outfile'][0])))
+                return env.Command(
+                    path.join(outdir, 'linearham_base_command.txt'),
+                    c['pruned_partis_outfile'], #get cwd for absolute path
+                    'echo "scons --run-linearham --template-path=templates/revbayes_template.rev ' +
+                    ' --parameter-dir={}'.format(c['sample']['parameter-dir']) + 
+                    ' --partis-yaml-file={}'.format(path.join(os.getcwd(), str(c['pruned_partis_outfile'][0]))) + 
+                    ' --seed-seq={}" > $TARGET'.format(c['cluster']['seed_name']))
 
     @w.add_target()
     def tip_seqmeta(outdir, c):
