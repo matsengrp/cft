@@ -90,11 +90,12 @@ Script.AddOption('--fasttree-png',
         default=False,
         help="Setting this flag builds fasttree pngs for small-med sized trees")
 
-Script.AddOption('--write-pruned-partis-outfile',
-        dest='write_pruned_partis_outfile',
+Script.AddOption('--write-linearham-yaml-input',
+        dest='write_linearham_yaml_input',
         action='store_true',
         default=False,
-        help="Setting this flag writes a partis partition file for the pruned cluster annotation.")
+        help="""Setting this flag writes a partis partition file for the pruned cluster annotation and adds necssary info to use
+        said file as input to linearham.""")
 
 def get_options(env):
     # prefer realpath so that running latest vs explicit vN doesn't require rerun; also need for defaults below
@@ -118,7 +119,7 @@ def get_options(env):
         inferred_naive_name = env.GetOption('inferred_naive_name'),
         outdir_base = env.GetOption('outdir'),
         fasttree_png = env.GetOption('fasttree_png'),
-        write_pruned_partis_outfile = env.GetOption('write_pruned_partis_outfile'))
+        write_linearham_yaml_input = env.GetOption('write_linearham_yaml_input'))
 
 
 

@@ -630,32 +630,34 @@ def add_cluster_analysis(w):
             "seqmagick convert --include-from-file $SOURCES - | " +
             "seqmagick convert --squeeze - $TARGET")
 
-    if options['write_pruned_partis_outfile']:
+    if options['write_linearham_yaml_input']:
         @w.add_target()
         def pruned_partis_outfile(outdir, c):
-            #these are not the unique ids we want to use when subsettig the cluster, they are just a way to identify the cluster we want to subset
-            clust_ids_string = c['cluster']['unique_ids']
-            yaml_format = partisutils.getsuffix(c['partition']['partition-file']) == '.yaml'
-            return env.Command(
-                path.join(outdir, 'pruned_partis_output.yaml'),
-                [c['partition']['partition-file'], c['pruned_ids']],
-                'python bin/write_subset_partis_outfile.py $SOURCES $TARGET' +
-                ' --partition-step={}'.format(c['partition']['step']) +
-                ' --original-cluster-unique-ids={}'.format(clust_ids_string) + 
-                ' --sw-cache={}'.format(c['sample']['sw-cache']) + 
-                (' --glfo-dir={}'.format(c['sample']['glfo-dir']) if not yaml_format else '') +
-                (' --locus={}'.format(locus(c)) if not yaml_format else '') )
+            if 'seed' in c:
+                #these are not the unique ids we want to use when subsetting the cluster, they are just a way to identify the cluster we want to subset
+                clust_ids_string = c['cluster']['unique_ids']
+                yaml_format = partisutils.getsuffix(c['partition']['partition-file']) == '.yaml'
+                return env.Command(
+                    path.join(outdir, 'pruned_partis_output.yaml'),
+                    [c['partition']['partition-file'], c['pruned_ids']],
+                    'python bin/write_subset_partis_outfile.py $SOURCES $TARGET' +
+                    ' --partition-step={}'.format(c['partition']['step']) +
+                    ' --sw-cache={}'.format(c['sample']['sw-cache']) + 
+                    (' --glfo-dir={}'.format(c['sample']['glfo-dir']) if not yaml_format else '') +
+                    (' --locus={}'.format(locus(c)) if not yaml_format else '') )
         
         @w.add_target()
         def linearham_base_command(outdir, c):
+            """ This allows us to not have to manually build the minimum necessary commmad for running this seed
+            cluster through Linearham. Eventually we may want to run this command here in the CFT SCons pipeline,
+            but for now we make life a little easier by just being able to copy this command to run Linearham."""
             if 'seed' in c:
-                print(path.join(os.getcwd(), str(c['pruned_partis_outfile'][0])))
                 return env.Command(
                     path.join(outdir, 'linearham_base_command.txt'),
-                    c['pruned_partis_outfile'], #get cwd for absolute path
+                    c['pruned_partis_outfile'], 
                     'echo "scons --run-linearham --template-path=templates/revbayes_template.rev ' +
                     ' --parameter-dir={}'.format(c['sample']['parameter-dir']) + 
-                    ' --partis-yaml-file={}'.format(path.join(os.getcwd(), str(c['pruned_partis_outfile'][0]))) + 
+                    ' --partis-yaml-file={}'.format(path.join(os.getcwd(), str(c['pruned_partis_outfile'][0]))) + #get cwd for absolute path
                     ' --seed-seq={}" > $TARGET'.format(c['cluster']['seed_name']))
 
     @w.add_target()

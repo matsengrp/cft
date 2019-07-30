@@ -52,10 +52,13 @@ if __name__ == '__main__':
         'outfname', type=str,
         help="The name of partis yaml file to write.")
     parser.add_argument(
-        '--partition-step', type=str, required=True,
+        '--partition-step', type=int, required=True,
         help="The partition step to use.")
     parser.add_argument(
-        '--original-cluster-unique-ids', type=str, required=True,
+        '--original-cluster-size-idx', type=int,
+        help="Index (after sorting by cluster size) to identify the cluster we want to subset")
+    parser.add_argument(
+        '--original-cluster-unique-ids', type=lambda id_str: id_str.split(':'),
         help="Colon separated list of unique ids to identify the cluster we want to subset")
     parser.add_argument(
         '--sw-cache', type=str, required=True,
@@ -70,7 +73,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     glfo, annotation_list, cpath = process_partis.read_partis_output(args.partition_file, args.glfo_dir, args.locus)
-    cluster_annotation = process_partis.choose_cluster(args.partition_file, annotation_list, cpath, args.partition_step, i_cluster=None, unique_ids=args.original_cluster_unique_ids.split(':'))
+    cluster_annotation = process_partis.choose_cluster(args.partition_file, annotation_list, cpath, args.partition_step, args.original_cluster_size_idx, args.original_cluster_unique_ids)
     iseqs = iseqs_from_uids(args.subset_ids_path, cluster_annotation)
     sw_info = read_sw_info(args.sw_cache, args.locus)
     new_annotation = utils.restrict_to_iseqs(cluster_annotation, iseqs, glfo, sw_info)
