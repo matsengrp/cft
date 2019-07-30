@@ -365,8 +365,7 @@ def valid_seed_partition(annotation_list, cp, part, i_step, seed_id, seed_cluste
 # Try to read partition file; If fails, it is possibly because it's empty. Catch that case and warn
 def read_partition_file(part, c):
     try:
-        glfo = None if partisutils.getsuffix(part['partition-file']) == '.yaml' else glutils.read_glfo(c['sample']['glfo-dir'], locus(c))
-        glfo, annotation_list, cpath = partisutils.read_output(part['partition-file'], glfo=glfo)
+        glfo, annotation_list, cpath = process_partis.read_partis_output(part['partition-file'], c['sample']['glfo-dir'], locus(c))
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         lines = traceback.format_exception(exc_type, exc_value, exc_traceback)
@@ -406,14 +405,14 @@ def partition(c):
 @w.add_nest(label_func=lambda d: d['id'], metadata=lambda c, d: {'annotation': 'elided', 'naive_probabilities': 'elided'})
 def cluster(c):
     part = c['partition']
-    naive_probabilities = None
-    seed_cluster_annotation = part.get('seed_cluster_annotation')
-    if seed_cluster_annotation:
-        naive_probabilities = get_alt_naive_probabilities(seed_cluster_annotation)
+    seed_cluster_annotation = part['seed_cluster_annotation']
+    unique_ids = ':'.join(seed_cluster_annotation['unique_ids'])
+    naive_probabilities = get_alt_naive_probabilities(seed_cluster_annotation)
     return [{'id': 'seed-cluster',
              'seed_name': c['seed']['id'],
              'size': part['seed_cluster_size'],
              'annotation': seed_cluster_annotation,
+             'unique_ids': unique_ids,
              'naive_probabilities': naive_probabilities}]
 
 
@@ -475,7 +474,7 @@ def add_cluster_analysis(w):
         '''
         Write partis alternative naives to a fasta in order of probability
         '''
-        if c['cluster']['naive_probabilities']:
+        if c['cluster']['naive_probabilities'] is not None:
             cluster_name = c['cluster'].get('seed_name', c['cluster']['id'])
 
             naives_sorted_by_prob =  list(sorted(c['cluster']['naive_probabilities'], key=lambda x: x[1], reverse=True))
@@ -501,7 +500,7 @@ def add_cluster_analysis(w):
         '''
         Create logo plot according to probabilities
         '''
-        if c['cluster']['naive_probabilities']:
+        if c['cluster']['naive_probabilities'] is not None:
             
             annotation = c['cluster']['annotation']
             cluster_name = c['cluster'].get('seed_name', c['cluster']['id'])  
@@ -630,6 +629,36 @@ def add_cluster_analysis(w):
             [c['pruned_ids'], c['aligned_inseqs']],
             "seqmagick convert --include-from-file $SOURCES - | " +
             "seqmagick convert --squeeze - $TARGET")
+
+    if options['write_linearham_yaml_input']:
+        @w.add_target()
+        def pruned_partis_outfile(outdir, c):
+            if 'seed' in c:
+                #these are not the unique ids we want to use when subsetting the cluster, they are just a way to identify the cluster we want to subset
+                clust_ids_string = c['cluster']['unique_ids']
+                yaml_format = partisutils.getsuffix(c['partition']['partition-file']) == '.yaml'
+                return env.Command(
+                    path.join(outdir, 'pruned_partis_output.yaml'),
+                    [c['partition']['partition-file'], c['pruned_ids']],
+                    'python bin/write_subset_partis_outfile.py $SOURCES $TARGET' +
+                    ' --partition-step={}'.format(c['partition']['step']) +
+                    ' --sw-cache={}'.format(c['sample']['sw-cache']) + 
+                    (' --glfo-dir={}'.format(c['sample']['glfo-dir']) if not yaml_format else '') +
+                    (' --locus={}'.format(locus(c)) if not yaml_format else '') )
+        
+        @w.add_target()
+        def linearham_base_command(outdir, c):
+            """ This allows us to not have to manually build the minimum necessary commmad for running this seed
+            cluster through Linearham. Eventually we may want to run this command here in the CFT SCons pipeline,
+            but for now we make life a little easier by just being able to copy this command to run Linearham."""
+            if 'seed' in c:
+                return env.Command(
+                    path.join(outdir, 'linearham_base_command.txt'),
+                    c['pruned_partis_outfile'], 
+                    'echo "scons --run-linearham --template-path=templates/revbayes_template.rev ' +
+                    ' --parameter-dir={}'.format(c['sample']['parameter-dir']) + 
+                    ' --partis-yaml-file={}'.format(path.join(os.getcwd(), str(c['pruned_partis_outfile'][0]))) + #get cwd for absolute path
+                    ' --seed-seq={}" > $TARGET'.format(c['cluster']['seed_name']))
 
     @w.add_target()
     def tip_seqmeta(outdir, c):
