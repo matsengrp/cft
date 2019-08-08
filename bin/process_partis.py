@@ -206,16 +206,17 @@ def match_indels_in_uid_seq(cluster_line, match_indels_in_uid):
         raise Exception('No indels in cluster annotation for cluster containing {} matched {}'.format(match_indels_in_uid, ifo_to_match))
     return iseqs_to_keep 
 
-def check_seed_for_indels(cluster_line, seed_id, partition_file):
+def check_seed_for_indels(cluster_line, seed_id, partition_file, glfo):
+    utils.add_implicit_info(glfo, cluster_line)
     iseq_seed = cluster_line['unique_ids'].index(seed_id)
     ifos = cluster_line['indelfos'][iseq_seed]['indels']
     if len(ifos) > 0:
-        print([indelutils.get_dbg_str(ifo) for ifo in ifos])
+        print(indelutils.get_dbg_str(cluster_line['indelfos'][iseq_seed]))
         raise Exception('indel in seed sequence {}. Options are 1. Look at the annotation for this cluster and find the indel in the seed. Rerun process_partis.py with --match-indels-in-uid <uid-of-seq-containing-indel-of-interest> to process only sequences containing that specific indel for further analysis of the indel 2. Run with --ignore-seed-indels. PS check out {}'.format(seed_id, partition_file))
 
 def process_cluster(args, cluster_line, seed_id, glfo):
     if seed_id is not None and not args.match_indels_in_uid and not args.ignore_seed_indels:
-        check_seed_for_indels(cluster_line, seed_id, args.partition_file)
+        check_seed_for_indels(cluster_line, seed_id, args.partition_file, glfo)
     #assume we want all seqs in cluster
     iseqs_to_keep = set(range(len(cluster_line['seqs'])))
     # various cases where we downsample cluster sequences
