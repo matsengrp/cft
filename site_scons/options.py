@@ -125,7 +125,7 @@ def get_options(env):
         inferred_naive_name = env.GetOption('inferred_naive_name'),
         outdir_base = env.GetOption('outdir'),
         fasttree_png = env.GetOption('fasttree_png'),
-        dont_reverse_indels = env.GetOption('dont_reverse_indels')
+        dont_reverse_indels = env.GetOption('dont_reverse_indels'),
         write_linearham_yaml_input = env.GetOption('write_linearham_yaml_input'))
 
 

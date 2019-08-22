@@ -15,8 +15,8 @@ from os import path
 
 
 
-def add(env, w):
-    options = options.get_options(env) 
+def add(env, w, options):
+    #options = options.get_options(env) 
     
     if options['dont_reverse_indels']:
         @w.add_target()
@@ -91,5 +91,5 @@ def add(env, w):
         else:
             return env.Command(
                 aligned_inseqs_fname,
-                c['inseqs']
+                c['inseqs'],
                 'cp $SOURCE $TARGET')

@@ -130,7 +130,7 @@ def get_cluster_seqs_dict(cluster_line, seed_id, args):
     return as_dict_rows(cluster_sequences)
 
 def get_cluster_meta_dict(cluster_line, seed_id, args):
-    has_indels = any([indelutils.has_indels(cluster_line['indelfos'][iseq]) for iseq in cluster_line['input_seqs'])
+    has_indels = any([indelutils.has_indels(cluster_line['indelfos'][iseq]) for iseq in range(len(cluster_line['input_seqs']))])
     return {'sequences': get_cluster_seqs_dict(cluster_line, seed_id, args),
             'cdr3_start': cluster_line['codon_positions']['v'],
             'has_seed': seed_id in cluster_line['unique_ids'],
@@ -220,7 +220,6 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     
     if seed_id is not None and not args.match_indels_in_uid and not args.ignore_seed_indels:
         check_seed_for_indels(cluster_line, seed_id, args.partition_file)
-        print(cluster_line['indelfos'])
     #assume we want all seqs in cluster
     iseqs_to_keep = set(range(len(cluster_line['input_seqs'])))
     # various cases where we downsample cluster sequences

@@ -437,7 +437,7 @@ def add_cluster_analysis(w):
                 sources,
                 'process_partis.py' +
                     ' --remove-stops --remove-frameshifts --remove-mutated-invariants' +
-                   (' --indel-reversed-seqs ' if not options['dont_reverse_indels'] +
+                   (' --indel-reversed-seqs ' if not options['dont_reverse_indels'] else '') +
                     ' --partition-file ${SOURCES[0]}' +
                     ' --partition {}'.format(c['partition']['step']) +
                    (' --upstream-seqmeta ${SOURCES[1]}' if perseq_metafile else '') +
@@ -526,7 +526,7 @@ def add_cluster_analysis(w):
     # Sequence Alignment
     # ------------------
 
-    backtrans_align.add(env, w)
+    backtrans_align.add(env, w, options)
 
 
     # On with trees and other things...
