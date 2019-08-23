@@ -136,7 +136,7 @@ def get_cluster_meta_dict(cluster_line, seed_id, args):
             'has_seed': seed_id in cluster_line['unique_ids'],
             'mean_mut_freq': numpy.mean(cluster_line['mut_freqs']),
             'seed_id': seed_id,
-            'match_indels_in_uid': args.match_indels_in_uid,
+            'match_indels_in_uid': args.match_indels_in_uid is not None,
             'has_indels': has_indels,
             'indels_reversed': has_indels and args.indel_reversed_seqs} 
 
@@ -342,9 +342,8 @@ def processed_data(args):
 def write_cluster_meta(args, cluster_data):
     def attrs(base):
         return [base + '_' + k for k in ['gene', 'start', 'end', 'per_gene_support']]
-    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'unique_seqs_count', 'total_read_count', 'sampled_seqs_count', 'last_modified', 'partition_file',
-        'cdr3_start', 'cdr3_length', 'mean_mut_freq'] + attrs('v') + attrs('d') + attrs('j')
-    doc = subset_dict(cluster_data, to_keep)
+    dont_keep = set(['n_clusters', 'seed_id', 'sequences', 'logprob'])
+    doc = subset_dict(cluster_data, set(cluster_data)-dont_keep)
     for gene in 'vdj':
         attr = gene + '_per_gene_support'
         base = 'cft.gene_support:' if args.namespace else ''
