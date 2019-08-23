@@ -16,8 +16,6 @@ from os import path
 
 
 def add(env, w, options):
-    #options = options.get_options(env) 
-    
     if options['dont_reverse_indels']:
         @w.add_target()
         def translated_inseqs_(outdir, c):
