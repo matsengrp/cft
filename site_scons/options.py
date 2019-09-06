@@ -97,11 +97,11 @@ Script.AddOption('--write-linearham-yaml-input',
         help="""Setting this flag writes a partis partition file for the pruned cluster annotation and adds necssary info to use
         said file as input to linearham.""")
 
-Script.AddOption('--dont-reverse-indels',
-        dest='dont_reverse_indels',
+Script.AddOption('--preserve-indels',
+        dest='preserve_indels',
         action='store_true',
         default=False,
-        help="""Setting this flag assumes there are indels and does not reverse them in input sequences. Instead, partis 'input_seqs' key sequences are aligned and used as the cluster sequences.""")
+        help="""Setting this flag assumes there are indels and does not use indel reversed input sequences (indel reversed sequences are used by default). Instead, partis 'input_seqs' key sequences are aligned and used as the cluster sequences.""")
 
 def get_options(env):
     # prefer realpath so that running latest vs explicit vN doesn't require rerun; also need for defaults below
@@ -125,7 +125,7 @@ def get_options(env):
         inferred_naive_name = env.GetOption('inferred_naive_name'),
         outdir_base = env.GetOption('outdir'),
         fasttree_png = env.GetOption('fasttree_png'),
-        dont_reverse_indels = env.GetOption('dont_reverse_indels') or (match_indels_in_uid is not None),
+        preserve_indels = env.GetOption('preserve_indels') or (match_indels_in_uid is not None),
         write_linearham_yaml_input = env.GetOption('write_linearham_yaml_input'))
 
 

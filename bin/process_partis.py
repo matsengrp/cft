@@ -132,7 +132,7 @@ def get_cluster_seqs_dict(cluster_line, seed_id, args):
 def get_cluster_meta_dict(cluster_line, seed_id, args):
     has_indels = any([indelutils.has_indels(cluster_line['indelfos'][iseq]) for iseq in range(len(cluster_line['input_seqs']))])
     if not args.indel_reversed_seqs and not has_indels:
-        warnings.warn('{}: --indel-reversed-seqs was not passed and there are no indels. This is probably because CFT was run with --dont-reverse-indels and there are no indels in this cluster. It will get aligned anyway.'.format(utils.color('red', 'warning')))
+        warnings.warn('{}: --indel-reversed-seqs was not passed and there are no indels. If running this script from CFT, this is probably because CFT was run with --preserve-indels and there are no indels in this cluster. It will get aligned anyway.'.format(utils.color('red', 'warning')))
     return {'sequences': get_cluster_seqs_dict(cluster_line, seed_id, args),
             'cdr3_start': cluster_line['codon_positions']['v'],
             'has_seed': seed_id in cluster_line['unique_ids'],

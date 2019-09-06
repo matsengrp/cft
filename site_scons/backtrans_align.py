@@ -23,7 +23,7 @@ import utils as partisutils
 
 
 def add(env, w, options):
-    if options['dont_reverse_indels']:
+    if options['preserve_indels']:
         @w.add_target()
         def translated_inseqs_(outdir, c):
             return env.Command(
@@ -88,9 +88,9 @@ def add(env, w, options):
     @w.add_target()
     def aligned_inseqs(outdir, c):
         aligned_inseqs_fname = os.path.join(outdir, 'aligned_inseqs.fa')
-        if options['dont_reverse_indels']:
+        if options['preserve_indels']:
             msg = """
-                    Aligning partis cluster sequences because --dont-reverse-indels was passed
+                    Aligning partis cluster sequences because --preserve-indels was passed
                     (either explicitly or by passing --match-indels-in-uid).
 
                     Check this alignment using information from partis about indels in these sequences
