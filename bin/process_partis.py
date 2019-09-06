@@ -12,7 +12,7 @@ import time
 import collections
 import numpy
 #import itertools as it
-#import warnings
+import warnings
 
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -89,7 +89,7 @@ def apply_filters(args, cluster_line):
             return False
         else:
             return True
-    return filter(filter_fn, range(len(cluster_line['seqs'])))
+    return filter(filter_fn, range(len(cluster_line['input_seqs'])))
 
 def add_regional_bounds(cluster_line):
     keys_to_add = []
@@ -101,7 +101,7 @@ def add_regional_bounds(cluster_line):
     return cluster_line, keys_to_add
 
 def seqs(args, cluster_line):
-    non_reversed_seqs = cluster_line['seqs']
+    non_reversed_seqs = cluster_line['input_seqs']
     if args.indel_reversed_seqs:
         return [reversed_seq or non_reversed_seqs[i]
                 for i, reversed_seq in enumerate(cluster_line['indel_reversed_seqs'])]
@@ -130,12 +130,17 @@ def get_cluster_seqs_dict(cluster_line, seed_id, args):
     return as_dict_rows(cluster_sequences)
 
 def get_cluster_meta_dict(cluster_line, seed_id, args):
+    has_indels = any([indelutils.has_indels(cluster_line['indelfos'][iseq]) for iseq in range(len(cluster_line['input_seqs']))])
+    if not args.indel_reversed_seqs and not has_indels:
+        warnings.warn('{}: --indel-reversed-seqs was not passed and there are no indels. If running this script from CFT, this is probably because CFT was run with --preserve-indels and there are no indels in this cluster. It will get aligned anyway.'.format(utils.color('red', 'warning')))
     return {'sequences': get_cluster_seqs_dict(cluster_line, seed_id, args),
             'cdr3_start': cluster_line['codon_positions']['v'],
             'has_seed': seed_id in cluster_line['unique_ids'],
             'mean_mut_freq': numpy.mean(cluster_line['mut_freqs']),
             'seed_id': seed_id,
-            'match_indels_in_uid': args.match_indels_in_uid}
+            'match_indels_in_uid': args.match_indels_in_uid is not None,
+            'has_indels': has_indels,
+            'indels_reversed': has_indels and args.indel_reversed_seqs} 
 
 def add_additional_info(cluster_line, additional_per_seq_info, iseqs_to_keep):
     for key in additional_per_seq_info:
@@ -144,10 +149,10 @@ def add_additional_info(cluster_line, additional_per_seq_info, iseqs_to_keep):
 
 def downsample_iseqs_by_multiplicity(cluster_line, multiplicity_seqmeta, max_sequences_count, always_include_ids):
     """ First take the always keep, then take as many as you can of the remaining seqs, in order of highest multiplicity """
-    if len(multiplicity_seqmeta['multiplicities']) != len(cluster_line['seqs']):
+    if len(multiplicity_seqmeta['multiplicities']) != len(cluster_line['input_seqs']):
         raise Exception('Something went wrong internally, mutiplicities are calculated for each seq in the cluster annotation but the number of seqs in the annotation does not match the number of multiplicities')
-    always_include_iseqs = [iseq for iseq in range(len(cluster_line['seqs'])) if cluster_line['unique_ids'][iseq] in always_include_ids]
-    rest_iseqs = [iseq for iseq in range(len(cluster_line['seqs'])) if cluster_line['unique_ids'][iseq] not in always_include_ids] 
+    always_include_iseqs = [iseq for iseq in range(len(cluster_line['input_seqs'])) if cluster_line['unique_ids'][iseq] in always_include_ids]
+    rest_iseqs = [iseq for iseq in range(len(cluster_line['input_seqs'])) if cluster_line['unique_ids'][iseq] not in always_include_ids] 
     remaining_seqs_to_take_count = max_sequences_count - len(always_include_ids)
     downsampled_iseqs = always_include_iseqs + \
                         sorted(rest_iseqs,
@@ -206,19 +211,19 @@ def match_indels_in_uid_seq(cluster_line, match_indels_in_uid):
         raise Exception('No indels in cluster annotation for cluster containing {} matched {}'.format(match_indels_in_uid, ifo_to_match))
     return iseqs_to_keep 
 
-def check_seed_for_indels(cluster_line, seed_id, partition_file, glfo):
-    utils.add_implicit_info(glfo, cluster_line)
+def check_seed_for_indels(cluster_line, seed_id, partition_file):
     iseq_seed = cluster_line['unique_ids'].index(seed_id)
-    ifos = cluster_line['indelfos'][iseq_seed]['indels']
-    if len(ifos) > 0:
+    if indelutils.has_indels(cluster_line['indelfos'][iseq_seed]):
         print(indelutils.get_dbg_str(cluster_line['indelfos'][iseq_seed]))
         raise Exception('indel in seed sequence {}. Options are 1. Look at the annotation for this cluster and find the indel in the seed. Rerun process_partis.py with --match-indels-in-uid <uid-of-seq-containing-indel-of-interest> to process only sequences containing that specific indel for further analysis of the indel 2. Run with --ignore-seed-indels. PS check out {}'.format(seed_id, partition_file))
 
 def process_cluster(args, cluster_line, seed_id, glfo):
+    utils.add_implicit_info(glfo, cluster_line)
+    
     if seed_id is not None and not args.match_indels_in_uid and not args.ignore_seed_indels:
-        check_seed_for_indels(cluster_line, seed_id, args.partition_file, glfo)
+        check_seed_for_indels(cluster_line, seed_id, args.partition_file)
     #assume we want all seqs in cluster
-    iseqs_to_keep = set(range(len(cluster_line['seqs'])))
+    iseqs_to_keep = set(range(len(cluster_line['input_seqs'])))
     # various cases where we downsample cluster sequences
     if args.match_indels_in_uid:
         iseqs_to_keep = iseqs_to_keep & set(match_indels_in_uid_seq(cluster_line, args.match_indels_in_uid))
@@ -339,9 +344,8 @@ def processed_data(args):
 def write_cluster_meta(args, cluster_data):
     def attrs(base):
         return [base + '_' + k for k in ['gene', 'start', 'end', 'per_gene_support']]
-    to_keep = ['naive_seq', 'has_seed', 'seqs_file', 'unique_seqs_count', 'total_read_count', 'sampled_seqs_count', 'last_modified', 'partition_file',
-        'cdr3_start', 'cdr3_length', 'mean_mut_freq'] + attrs('v') + attrs('d') + attrs('j')
-    doc = subset_dict(cluster_data, to_keep)
+    dont_keep = set(['n_clusters', 'seed_id', 'sequences', 'logprob'])
+    doc = subset_dict(cluster_data, set(cluster_data)-dont_keep)
     for gene in 'vdj':
         attr = gene + '_per_gene_support'
         base = 'cft.gene_support:' if args.namespace else ''
