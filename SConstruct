@@ -791,6 +791,13 @@ def add_cluster_analysis(w):
     @w.add_target(ingest=True)
     def asr_seqs(outdir, c):
         return c['_asr'][2]
+    
+    @w.add_target()
+    def sampled_ancestors(outdir, c):
+        return env.Command(
+                path.join(outdir, "sampled_ancestors.json"),
+                [c["aligned_inseqs"], c["asr_seqs"]],
+                "python bin/find_sampled_ancestors.py $SOURCES $TARGET")
 
     @w.add_target()
     def selection_metrics(baseoutdir, c):
