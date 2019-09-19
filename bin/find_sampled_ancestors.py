@@ -33,12 +33,9 @@ def get_sampled_ancestors(sampled_seqs, inferred_ancestors, match_count, rank_by
     '''
     find the closest <match_count> sampled sequences in <sampled_seqs> to each inferred ancestor in <inferred_ancestors>.
     '''
-    # TODO figure out where to remove sampled seqs from asr fastas in the CFT context if possible; ideally not in this script if it is all purpose, and if we must, then it should be optionally
     # TODO address time complexity? Majority of time is spent doing pairwise align function. At least make sure we aren't doing this more than we need to
     # TODO should we be able to take in user specified aa seqs or should we always translate here?
     sampled_ancestors = []
-    #for sampled_record in sampled_seqs:
-    #    sampled_record.aa = sampled_record.seq.translate()
     for ancestor_record in inferred_ancestors:
         ancestor_record.aa = ancestor_record.seq.translate()
         for sampled_record in sampled_seqs:

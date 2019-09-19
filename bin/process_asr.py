@@ -243,6 +243,15 @@ def main():
     with open(fname, "w") as fh:
         SeqIO.write(sequences, fh, "fasta")
 
+    # write just inferred ancestors, inferred naive, and seed to a fasta; we later check to see if we sampled any of these sequences (checking against sampled sequences in the cluster) or any sequences that are close to them.
+    tip_names = set(args.seqname_mapping.values())
+    all_names = set([record.id for record in sequences])
+    ancestors = all_names - tip_names
+    ancestors_naive_and_seed = ancestors.union(set([args.inferred_naive_name, args.seed]))
+    fname = outbase + '.ancestors_naive_and_seed.fa'
+    with open(fname, "w") as fh:
+        SeqIO.write([record for record in sequences if record.id in ancestors_naive_and_seed], fh, "fasta")
+
     tree = build_tree(sequences, parents)
     tree = reroot_tree(tree, args.inferred_naive_name)
 

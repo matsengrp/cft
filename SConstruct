@@ -719,7 +719,7 @@ def add_cluster_analysis(w):
             # Now process the phylip output into something that isn't shit
             basename = 'asr'
             tgt = env.Command(
-                    [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg', 'fa']],
+                    [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg', 'fa', 'ancestors_naive_and_seed.fa']],
                     [c['seqname_mapping'], phylip_out, c['tip_seqmeta']],
                     # Note that adding `-` at the beginning of this command string can keep things running if
                     # there's an error trying to build a tree from 2 sequences; should be filtered prior now...
@@ -729,11 +729,11 @@ def add_cluster_analysis(w):
                         + " --basename " + basename
                         + " --inferred-naive-name " + options['inferred_naive_name']
                         + " --seqname-mapping $SOURCES")
-            asr_tree, asr_tree_svg, asr_seqs = tgt
+            asr_tree, asr_tree_svg, asr_seqs, ancestors_naive_and_seed = tgt
             # manually depnd on this because the script isn't in first position
             env.Depends(tgt, 'bin/process_asr.py')
             env.Depends(tgt, 'bin/plot_tree.py')
-            return [asr_tree, asr_tree_svg, asr_seqs]
+            return [asr_tree, asr_tree_svg, asr_seqs, ancestors_naive_and_seed]
         elif asr_prog == 'raxml':
             asr_supports_tree = env.SRun(
                 path.join(outdir, 'asr.sup.nwk'),
@@ -791,13 +791,19 @@ def add_cluster_analysis(w):
     @w.add_target(ingest=True)
     def asr_seqs(outdir, c):
         return c['_asr'][2]
-    
+
+    @w.add_target(ingest=True)
+    def ancestors_naive_and_seed(outdir, c):
+        return c['_asr'][3]
+
     @w.add_target()
     def sampled_ancestors(outdir, c):
-        return env.Command(
+        sampled_ancestors_output = env.Command(
                 path.join(outdir, "sampled_ancestors.json"),
-                [c["aligned_inseqs"], c["asr_seqs"]],
-                "python bin/find_sampled_ancestors.py $SOURCES $TARGET")
+                [c["aligned_inseqs"], c["ancestors_naive_and_seed"]],
+                "time python bin/find_sampled_ancestors.py $SOURCES $TARGET")
+        env.Depends(sampled_ancestors_output, "bin/find_sampled_ancestors.py")
+        return sampled_ancestors_output
 
     @w.add_target()
     def selection_metrics(baseoutdir, c):
