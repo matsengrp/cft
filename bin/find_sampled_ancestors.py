@@ -17,8 +17,10 @@ def percent_similarity(seq1, seq2):
 
 def match_summaries(query_record, ranked_match_records):
     def match_summary(record):
-        return collections.OrderedDict([("dna_sequence", str(record.seq)),
+        return collections.OrderedDict([("id", record.id),
+                                        ("dna_sequence", str(record.seq)),
                                         ("dna_similarity", record.dna_similarity),
+                                        ("dna_similarity_over_aa_similarity", record.dna_similarity/float(record.aa_similarity)),
                                         ("aa_sequence", str(record.aa)),
                                         ("aa_similarity", record.aa_similarity)])
     return collections.OrderedDict([("inferred_ancestor", query_record.id),
