@@ -4,6 +4,7 @@ from Bio.Blast.Applications import NcbiblastnCommandline
 import os
 import argparse
 import subprocess
+import warnings
 
 def write_blast_tsv(cline, outfname):
     stdout, stderr = cline()
@@ -24,20 +25,28 @@ def blast(blast_constructor, query, db, evalue, outfile):
     write_blast_tsv(blast_cline, outfile)
 
 def make_blast_db(infile, outfile, dbtype='nucl'):
-    subprocess.check_call(['makeblastdb', '-in', infile, '-dbtype', dbtype, '-out', outfile])
+    try:
+        subprocess.check_call(['makeblastdb', '-in', infile, '-dbtype', dbtype, '-out', outfile])
+    except OSError, e:
+        warnings.warn('blast command line tools not installed!')
+        raise
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Find the closest N sampled sequences to each inferred ancestor.')
+    parser = argparse.ArgumentParser(description='Create a BLAST database from <db_seqs>, query for <query_seqs>, and write results to a TSV (actually two TSVs: one for nucleotide and one for protein identitiy).')
     parser.add_argument(
-        'sampled_seqs', type=str,
-        help='Fasta containing sampled sequences to match ancestors with.')
+        'db_seqs', type=str,
+        help='Fasta containing sequences to create a BLAST database from.')
     parser.add_argument(
-        'asr_seqs', type=str,
-        help='Fasta containing the set of inferred ancestral sequences.')
+        'query_seqs', type=str,
+        help='Fasta containing the set of query sequences.')
     parser.add_argument(
         '--outdir', type=str,
         required=True,
-        help='Name of JSON file to write the results to.')
+        help='Name of directory to write blast results to.')
+    parser.add_argument(
+        '--results-basename', type=str,
+        default='blast_results',
+        help='Base for the name of TSV file to write blast results to. Output TSVs will look like <results-basename>.{blastn, tblastx}.tsv')
     parser.add_argument(
         '--write-blast-alignments', action='store_true',
         default=False,
@@ -50,14 +59,14 @@ def parse_args():
 
 def main():
     args = parse_args()
-    outfname =  'sampled_ancestors.tsv'
-    dbfname = os.path.join(args.outdir, 'sampled_seqs_blast_db')
-    make_blast_db(args.sampled_seqs, dbfname)
+    dbfname = os.path.join(args.outdir, 'blast_db')
+    make_blast_db(args.db_seqs, dbfname)
     # nucleotide blast
-    blast(NcbiblastnCommandline, args.asr_seqs, dbfname, args.evalue, os.path.join(args.outdir, 'blastn_' + outfname))
+    blast(NcbiblastnCommandline, args.query_seqs, dbfname, args.evalue, os.path.join(args.outdir, args.results_basename + '.blastn.tsv'))
     # translated nucleotide (both db sequences and query sequences get translated using tblastx strategy) blast
-    blast(NcbitblastxCommandline, args.asr_seqs, dbfname, args.evalue, os.path.join(args.outdir, 'tblastx_' + outfname))
-    #TODO implement --write-blast-alignments
+    blast(NcbitblastxCommandline, args.query_seqs, dbfname, args.evalue, os.path.join(args.outdir, args.results_basename + '.tblastx.tsv'))
+    if args.write_blast_alignments:
+        #TODO implement --write-blast-alignments
 
 if __name__ == '__main__':
     main()
