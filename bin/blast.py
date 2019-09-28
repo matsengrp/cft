@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 from Bio.Blast.Applications import NcbitblastxCommandline
 from Bio.Blast.Applications import NcbiblastnCommandline
+from Bio import SeqIO
+from Bio.SeqRecord import SeqRecord
 import os
 import argparse
 import subprocess
 import warnings
+import csv
 
 def write_blast_tsv(cline, outfname):
     stdout, stderr = cline()
@@ -20,9 +23,30 @@ def write_blast_tsv(cline, outfname):
             fh.write(l)
         fh.close()
 
-def blast(blast_constructor, query, db, evalue, outfile):
-    blast_cline = blast_constructor(query=query, db=db, evalue=evalue, outfmt='7', out=outfile)
+def write_blast_alignment(blast_results_tsv, query_seqs, db_seqs):
+    #TODO write fcn description, validate, and clean up
+    query_dict = {record.id: record for record in SeqIO.parse(query_seqs, 'fasta')}
+    db_seqs_dict = {record.id: record for record in SeqIO.parse(db_seqs, 'fasta')}
+    with open(blast_results_tsv) as fh:
+        reader = csv.DictReader(fh, delimiter='\t')
+        #TODO probably break into a real for loop since reading this is hard
+        blast_match_rows = [dict(r.items() + [('match_seq_record', db_seqs_dict[r['subject acc.ver']])]) for r in reader]
+    for query_id, query_record in query_dict.items():
+        query_match_rows = [r for r in blast_match_rows if r['query acc.ver'] == query_id]
+        query_record.id += ' query'
+        match_rows_to_write = sorted(query_match_rows, key=lambda r: float(r['% identity']), reverse=True)
+        match_records_to_write = [SeqRecord(query_record.seq, id=query_record.id, description='', name='')]
+        for match_row in match_rows_to_write:
+            match_record = SeqRecord(match_row['match_seq_record'].seq, id='{} {}% identity'.format(match_row['subject acc.ver'], match_row['% identity']), description='', name='')
+            match_records_to_write.append(match_record)
+        fname = blast_results_tsv.split('.tsv')[0] + '.{}.'.format(query_id) + '.fasta'
+        SeqIO.write(match_records_to_write, fname, 'fasta')
+
+def blast(blast_constructor, query_seqs_fname, db_seqs_fname, db, evalue, outfile, write_blast_alignments):
+    blast_cline = blast_constructor(query=query_seqs_fname, db=db, evalue=evalue, outfmt='7', out=outfile)
     write_blast_tsv(blast_cline, outfile)
+    if write_blast_alignments:
+        write_blast_alignment(outfile, query_seqs_fname, db_seqs_fname)
 
 def make_blast_db(infile, outfile, dbtype='nucl'):
     try:
@@ -62,11 +86,9 @@ def main():
     dbfname = os.path.join(args.outdir, 'blast_db')
     make_blast_db(args.db_seqs, dbfname)
     # nucleotide blast
-    blast(NcbiblastnCommandline, args.query_seqs, dbfname, args.evalue, os.path.join(args.outdir, args.results_basename + '.blastn.tsv'))
+    blast(NcbiblastnCommandline, args.query_seqs, args.db_seqs, dbfname, args.evalue, os.path.join(args.outdir, args.results_basename + '.blastn.tsv'), args.write_blast_alignments)
     # translated nucleotide (both db sequences and query sequences get translated using tblastx strategy) blast
-    blast(NcbitblastxCommandline, args.query_seqs, dbfname, args.evalue, os.path.join(args.outdir, args.results_basename + '.tblastx.tsv'))
-    if args.write_blast_alignments:
-        #TODO implement --write-blast-alignments
+    blast(NcbitblastxCommandline, args.query_seqs, args.db_seqs, dbfname, args.evalue, os.path.join(args.outdir, args.results_basename + '.tblastx.tsv'), args.write_blast_alignments)
 
 if __name__ == '__main__':
     main()
