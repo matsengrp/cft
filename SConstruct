@@ -798,11 +798,14 @@ def add_cluster_analysis(w):
 
     @w.add_target()
     def sampled_ancestors(outdir, c):
+        blast_db_files = ["blast_db.{}".format(ext) for ext in ("nin", "nhr", "nsq")]
+        blast_results_files = ["blast_results.{}.tsv".format(method) for method in ("blastn", "tblastx")]
+        targets = blast_db_files + blast_results_files
         sampled_ancestors_output = env.Command(
-                path.join(outdir, "sampled_ancestors.json"),
+                [path.join(outdir, fname) for fname in targets],
                 [c["aligned_inseqs"], c["ancestors_naive_and_seed"]],
-                "time python bin/find_sampled_ancestors.py $SOURCES $TARGET")
-        env.Depends(sampled_ancestors_output, "bin/find_sampled_ancestors.py")
+                "python bin/blast.py $SOURCES --outdir {}".format(outdir))
+        env.Depends(sampled_ancestors_output, "bin/blast.py")
         return sampled_ancestors_output
 
     @w.add_target()
