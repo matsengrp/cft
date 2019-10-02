@@ -35,32 +35,41 @@ def write_query_alignment(query_id, query_record, blast_matches, fname):
     query_record.id += ' query'
     match_records_to_write = [SeqRecord(query_record.seq, id=query_record.id, description='', name='')]
     for match in sorted(query_matches, key=lambda r: float(r['% identity']), reverse=True):
-        match_record = SeqRecord(match['match_seq_record'].seq, id='{} {}% identity'.format(match['subject acc.ver'], match['% identity']), description='', name='')
+        match_record = SeqRecord(match['match_seqrecord'].seq, id='{} {}% identity'.format(match['subject acc.ver'], match['% identity']), description='', name='')
         match_records_to_write.append(match_record)
     SeqIO.write(match_records_to_write, fname, 'fasta')
 
-def write_all_query_alignments(blast_results_tsv, query_seqs, db_seqs):
+def write_all_query_alignments(blast_results_tsv, query_seqs, blast_matches):
     '''
     write an alignment for each query sequence. See write_query_alignment()
     '''
     query_dict = {record.id: record for record in SeqIO.parse(query_seqs, 'fasta')}
-    db_seqs_dict = {record.id: record for record in SeqIO.parse(db_seqs, 'fasta')}
-    def blast_match_dict(tsv_row):
-        return dict(tsv_row.items() + [('match_seq_record', db_seqs_dict[tsv_row['subject acc.ver']])])
-    with open(blast_results_tsv) as tsvfile:
-        blast_matches = [blast_match_dict(row) for row in csv.DictReader(tsvfile, delimiter='\t')]
     for query_id, query_record in query_dict.items():
         write_query_alignment(query_id, query_record, blast_matches, blast_results_tsv.split('.tsv')[0] + '.{}.fasta'.format(query_id))
+    
+def blast_match_dicts(blast_results_tsv, db_seqs_fname):
+    db_seqs_dict = {record.id: record for record in SeqIO.parse(db_seqs_fname, 'fasta')}
+    def blast_match_dict(tsv_row):
+        return dict(tsv_row.items() + [('match_seqrecord', db_seqs_dict[tsv_row['subject acc.ver']])])
+    with open(blast_results_tsv) as tsvfile:
+        return [blast_match_dict(row) for row in csv.DictReader(tsvfile, delimiter='\t')]
 
-def blast(blast_constructor, query_seqs_fname, db_seqs_fname, db, evalue, outfile, write_query_alignments):
+def blast(blast_constructor, query_seqs_fname, db_seqs_fname, db, evalue, outfile, write_query_alignments=False, write_blast_match_fasta=False):
     '''
     blast for sequences in <query_seqs_fname> among <db_seqs_fname> using <blast_constructor>, etc.
     optionally write query_alignments (see write_query_alignment()).
     '''
     blast_cline = blast_constructor(query=query_seqs_fname, db=db, evalue=evalue, outfmt='7', out=outfile)
     write_blast_tsv(blast_cline, outfile)
+    #TODO make blast_matches only if we need them?
+    blast_matches = blast_match_dicts(outfile, db_seqs_fname)
     if write_query_alignments:
-        write_all_query_alignments(outfile, query_seqs_fname, db_seqs_fname)
+        write_all_query_alignments(outfile, query_seqs_fname, blast_matches)
+    if write_blast_match_fasta:
+        all_matches_fasta_fname = outfile.split('.tsv')[0] + '.{}.fasta'.format('all_matches')
+        SeqIO.write([match['match_seqrecord'] for match in blast_matches], all_matches_fasta_fname, 'fasta')
+        return all_matches_fasta_fname
+
 
 def make_blast_db(infile, outfile, dbtype='nucl'):
     '''
@@ -89,6 +98,10 @@ def parse_args():
         default='blast_results',
         help='Base for the name of TSV file to write blast results to. Output TSVs will look like <results-basename>.{blastn, tblastx}.tsv')
     parser.add_argument(
+        '--report-aa-similarity', action='store_true',
+        default=False,
+        help='If set, blasts among the \'blastn\' (similar nt) hits for similar amino acid sequences.')
+    parser.add_argument(
         '--write-query-alignments', action='store_true',
         default=False,
         help='If set, writes a fasta for each query sequence containing the aligned blast results for that query sequence.')
@@ -103,9 +116,13 @@ def main():
     dbfname = os.path.join(args.outdir, 'blast_db')
     make_blast_db(args.db_seqs, dbfname)
     # nucleotide blast
-    blast(NcbiblastnCommandline, args.query_seqs, args.db_seqs, dbfname, args.evalue, os.path.join(args.outdir, args.results_basename + '.blastn.tsv'), args.write_query_alignments)
+    nt_blast_matches_fasta_fname = blast(NcbiblastnCommandline, args.query_seqs, args.db_seqs, dbfname, args.evalue, os.path.join(args.outdir, args.results_basename + '.blastn.tsv'), args.write_query_alignments, write_blast_match_fasta=args.report_aa_similarity)
     # translated nucleotide (both db sequences and query sequences get translated using tblastx strategy) blast
-    blast(NcbitblastxCommandline, args.query_seqs, args.db_seqs, dbfname, args.evalue, os.path.join(args.outdir, args.results_basename + '.tblastx.tsv'), args.write_query_alignments)
+    if args.report_aa_similarity:
+        nt_hits_db_name = os.path.join(args.outdir, 'nt_hits')
+        make_blast_db(nt_blast_matches_fasta_fname, nt_hits_db_name)
+        blast(NcbitblastxCommandline, args.query_seqs, nt_blast_matches_fasta_fname, nt_hits_db_name, args.evalue, os.path.join(args.outdir, args.results_basename + '.tblastx.tsv'))
+        #TODO merge these results with NT similarity?
 
 if __name__ == '__main__':
     main()
