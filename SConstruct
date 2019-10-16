@@ -422,6 +422,21 @@ def add_cluster_analysis(w):
     def path_fn(outdir, c):
         return outdir
 
+    @w.add_target()
+    def partis_cluster_fasta(outdir, c):
+        return env.Command(
+                path.join(outdir, 'unfiltered_partis_cluster.fa'),
+                c['partition']['partition-file'],
+                'process_partis.py' +
+                    ' --partition-file $SOURCE' +
+                    ' --partition {}'.format(c['partition']['step']) +
+                   (' --glfo-dir ' + c['sample']['glfo-dir'] if partisutils.getsuffix(c['partition']['partition-file']) == '.csv' else '') +
+                    ' --locus ' + locus(c) +
+                    ' --paths-relative-to ' + dataset_outdir(c) +
+                    ' --inferred-naive-name ' + options['inferred_naive_name'] +
+                   (' --cluster {}'.format(c['cluster']['sorted_index']) if not c.get('seed') else '') +
+                    ' --seqs-out $TARGET')
+
     @w.add_metadata()
     def _process_partis(outdir, c):
         # Should get this to explicitly depend on cluster0.fa
@@ -803,7 +818,7 @@ def add_cluster_analysis(w):
         targets = blast_db_files + blast_results_files
         sampled_ancestors_output = env.Command(
                 [path.join(outdir, fname) for fname in targets],
-                [c["aligned_inseqs"], c["ancestors_naive_and_seed"]],
+                [c["partis_cluster_fasta"], c["ancestors_naive_and_seed"]],
                 "python bin/blast.py $SOURCES --outdir {}".format(outdir))
         env.Depends(sampled_ancestors_output, "bin/blast.py")
         return sampled_ancestors_output
