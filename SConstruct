@@ -812,16 +812,16 @@ def add_cluster_analysis(w):
         return c['_asr'][3]
 
     @w.add_target()
-    def sampled_ancestors(outdir, c):
+    def observed_ancestors(outdir, c):
         blast_db_files = ["blast_db.{}".format(ext) for ext in ("nin", "nhr", "nsq")]
         blast_results_files = ["blast_results.{}.tsv".format(method) for method in ("blastn", "tblastx")]
         targets = blast_db_files + blast_results_files
-        sampled_ancestors_output = env.Command(
+        observed_ancestors_output = env.Command(
                 [path.join(outdir, fname) for fname in targets],
                 [c["partis_cluster_fasta"], c["ancestors_naive_and_seed"]],
                 "python bin/blast.py $SOURCES --outdir {}".format(outdir))
-        env.Depends(sampled_ancestors_output, "bin/blast.py")
-        return sampled_ancestors_output
+        env.Depends(observed_ancestors_output, "bin/blast.py")
+        return observed_ancestors_output
 
     @w.add_target()
     def selection_metrics(baseoutdir, c):
