@@ -27,7 +27,7 @@ def write_blast_tsv(cline, outfname):
         datalines = [l for l in lines if '#' not in l]
     # overwrite the file with headers and data in a traditional tsv format
     with open(outfname, 'w') as outfile:
-        dict_lines = [d for d  in csv.DictReader(['\t'.join(headers)] + datalines, delimiter='\t')]
+        dict_lines = [d for d in csv.DictReader(['\t'.join(headers)] + datalines, delimiter='\t')]
         writer = csv.DictWriter(outfile, fieldnames=headers, delimiter='\t')
         writer.writeheader()
         for l in sorted(dict_lines, key=hit_sort_criteria, reverse=True):
@@ -58,6 +58,9 @@ def write_all_query_alignments(blast_results_tsv, query_seqs_fasta, blast_matche
         write_query_alignment(query_id, query_record, blast_matches, blast_results_tsv.split('.tsv')[0] + '.{}.fasta'.format(query_id))
 
 def top_hit_rows(query_matches, top_n_hits, query_record=None, include_seqs=False):
+    '''
+    get the top <top_n_hits> matches for a given query. optionally include sequences in returned dicts
+    '''
     top_n_matches = query_matches[:top_n_hits]
     for match in top_n_matches:
         if include_seqs and query_record is not None:
@@ -66,14 +69,17 @@ def top_hit_rows(query_matches, top_n_hits, query_record=None, include_seqs=Fals
         del match['match_seqrecord']
     return top_n_matches
 
-def write_top_hits_summary_tsv(blast_results_tsv, query_seqs_fasta, blast_matches, top_n_hits): 
+def write_top_hits_summary_tsv(blast_results_tsv, query_seqs_fasta, blast_matches, top_n_hits):
+    '''
+    write out a tsv with info on the top <top_n_hits> matches among <blast_matches> for each query in <query_seqs_fasta> including sequences. duplicates some code from write_all_query_alignments and write_query_alignment but simpler to keep them separate
+    '''
     query_dict = {record.id: record for record in SeqIO.parse(query_seqs_fasta, 'fasta')}
     hit_summaries = []
     for query_id, query_record in query_dict.items():
         query_matches = [d for d in blast_matches if d['query acc.ver'] == query_id]
         hit_summaries += top_hit_rows(query_matches, top_n_hits, query_record, include_seqs=True)
     with open(blast_results_tsv.split('.tsv')[0] + '.top_{}_hits.tsv'.format(top_n_hits), 'w') as outfile:
-        headers = ['query acc.ver', 'subject acc.ver', '% identity', 'alignment length', 'mismatches', 'gap opens', 'q. start', 'q. end', 's. start', 's. end', 'evalue', 'bit score', 'query seq', 'subject (match) seq']
+        headers = ['query acc.ver', 'query seq', 'subject acc.ver', 'subject (match) seq', '% identity', 'alignment length', 'mismatches', 'gap opens', 'q. start', 'q. end', 's. start', 's. end', 'evalue', 'bit score']
         writer = csv.DictWriter(outfile, fieldnames=headers, delimiter='\t')
         writer.writeheader()
         for r in hit_summaries:
