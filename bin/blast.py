@@ -36,7 +36,7 @@ def write_blast_tsv(cline, outfname):
 def write_query_alignment(query_id, query_record, blast_matches, fname):
     '''
     write an alignment for a a query_sequence with with the query sequence
-    followed by all of it's BLAST matches with their percent identities.
+    followed by all of its BLAST matches with their percent identities.
     '''
     query_matches = [d for d in blast_matches if d['query acc.ver'] == query_id]
     query_record.id += ' query'
@@ -49,14 +49,36 @@ def write_query_alignment(query_id, query_record, blast_matches, fname):
         match_records_to_write.append(match_record)
     SeqIO.write(match_records_to_write, fname, 'fasta')
 
-def write_all_query_alignments(blast_results_tsv, query_seqs, blast_matches):
+def write_all_query_alignments(blast_results_tsv, query_seqs_fasta, blast_matches):
     '''
     write an alignment for each query sequence. See write_query_alignment()
     '''
-    query_dict = {record.id: record for record in SeqIO.parse(query_seqs, 'fasta')}
+    query_dict = {record.id: record for record in SeqIO.parse(query_seqs_fasta, 'fasta')}
     for query_id, query_record in query_dict.items():
         write_query_alignment(query_id, query_record, blast_matches, blast_results_tsv.split('.tsv')[0] + '.{}.fasta'.format(query_id))
-    
+
+def top_hit_rows(query_matches, top_n_hits, query_record=None, include_seqs=False):
+    top_n_matches = query_matches[:top_n_hits]
+    for match in top_n_matches:
+        if include_seqs and query_record is not None:
+            match['query seq'] = str(query_record.seq)
+            match['subject (match) seq'] = str(match['match_seqrecord'].seq)
+        del match['match_seqrecord']
+    return top_n_matches
+
+def write_top_hits_summary_tsv(blast_results_tsv, query_seqs_fasta, blast_matches, top_n_hits): 
+    query_dict = {record.id: record for record in SeqIO.parse(query_seqs_fasta, 'fasta')}
+    hit_summaries = []
+    for query_id, query_record in query_dict.items():
+        query_matches = [d for d in blast_matches if d['query acc.ver'] == query_id]
+        hit_summaries += top_hit_rows(query_matches, top_n_hits, query_record, include_seqs=True)
+    with open(blast_results_tsv.split('.tsv')[0] + '.top_{}_hits.tsv'.format(top_n_hits), 'w') as outfile:
+        headers = ['query acc.ver', 'subject acc.ver', '% identity', 'alignment length', 'mismatches', 'gap opens', 'q. start', 'q. end', 's. start', 's. end', 'evalue', 'bit score', 'query seq', 'subject (match) seq']
+        writer = csv.DictWriter(outfile, fieldnames=headers, delimiter='\t')
+        writer.writeheader()
+        for r in hit_summaries:
+            writer.writerow(r)
+
 def blast_match_dicts(blast_results_tsv, db_seqs_fname):
     '''
     get a list of dicts corresponding to blast matches, including their Bio.SeqRecord
@@ -67,7 +89,7 @@ def blast_match_dicts(blast_results_tsv, db_seqs_fname):
     with open(blast_results_tsv) as tsvfile:
         return [blast_match_dict(row) for row in csv.DictReader(tsvfile, delimiter='\t')]
 
-def blast(blast_constructor, query_seqs_fname, db_seqs_fname, db, evalue, outfile, write_query_alignments=False):
+def blast(blast_constructor, query_seqs_fname, db_seqs_fname, db, evalue, outfile, write_query_alignments=False, top_n_hits=None):
     '''
     blast for sequences in <query_seqs_fname> among <db_seqs_fname> using <blast_constructor>, etc.
     optionally write query_alignments (see write_query_alignment()).
@@ -77,6 +99,9 @@ def blast(blast_constructor, query_seqs_fname, db_seqs_fname, db, evalue, outfil
     if write_query_alignments:
         blast_matches = blast_match_dicts(outfile, db_seqs_fname)
         write_all_query_alignments(outfile, query_seqs_fname, blast_matches)
+    if top_n_hits:
+        blast_matches = blast_match_dicts(outfile, db_seqs_fname)
+        write_top_hits_summary_tsv(outfile, query_seqs_fname, blast_matches, top_n_hits)
 
 def make_blast_db(infile, outfile, dbtype='nucl'):
     '''
@@ -109,6 +134,11 @@ def parse_args():
         default=False,
         help='If set, writes a fasta for each query sequence containing the aligned blast results for that query sequence.')
     parser.add_argument(
+        '--top-n-hits',
+        default=None,
+        type=int,
+        help='If set, writes a separate TSV file (including columns containing the query and match sequences) with just this many hits for each query.')
+    parser.add_argument(
         '--evalue', type=float,
         default=0.001,
         help='''number of hits one can "expect" to see by chance when searching a database of a particular size. It decreases exponentially as the Score (S) of the match increases. Essentially, the E value describes the random background noise. For example, an E value of 1 assigned to a hit can be interpreted as meaning that in a database of the current size one might expect to see 1 match with a similar score simply by chance.''')
@@ -119,7 +149,7 @@ def main():
     dbfname = os.path.join(args.outdir, 'blast_db')
     make_blast_db(args.db_seqs, dbfname)
     # nucleotide blast using NcbiblastnCommandline
-    blast(NcbiblastnCommandline, args.query_seqs, args.db_seqs, dbfname, args.evalue, os.path.join(args.outdir, args.results_basename + '.blastn.tsv'), args.write_query_alignments)
+    blast(NcbiblastnCommandline, args.query_seqs, args.db_seqs, dbfname, args.evalue, os.path.join(args.outdir, args.results_basename + '.blastn.tsv'), args.write_query_alignments, args.top_n_hits)
 
 if __name__ == '__main__':
     main()
