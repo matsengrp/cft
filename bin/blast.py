@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import Bio
 from Bio.Blast.Applications import NcbitblastxCommandline
 from Bio.Blast.Applications import NcbiblastnCommandline
 from Bio import SeqIO
@@ -11,7 +12,7 @@ import csv
 
 def hit_sort_criteria(hit):
     '''
-    sort by query, then by % identity, then by alignment length.
+    returns tuple used to sort by query, then by % identity, then by alignment length.
     '''
     return (hit['query acc.ver'], float(hit['% identity']), int(hit['alignment length']))
 
@@ -19,14 +20,25 @@ def write_blast_tsv(cline, outfname):
     '''
     parse BLAST output format 7 (TSV with weird headers) into a normal TSV
     '''
-    stdout, stderr = cline()
-    with open(outfname, 'r') as outfile:
+    def check_hitless_queries(lines):
+        hitless_queries_count = len([l for l in lines if '0 hits found' in l])
+        if hitless_queries_count > 0:
+            print 'BLAST found no hits for {} of the query sequences.'.format(hitless_queries_count)
+    def get_headers(lines):
+        headerlines = [l for l in lines if 'Fields:' in l]
+        if len(headerlines) > 0:
+            return headerlines.pop().split('\n')[0].split('Fields: ')[1].split(', ')
+        return []
+    try:
+        stdout, stderr = cline() #Run the actual blast CLI
+    except Bio.Application.ApplicationError, e:
+        raise
+    with open(outfname, 'r') as outfile: #Read the blast CLI ouput
         lines = list(outfile)
-        headerline = [l for l in lines if 'Fields:' in l].pop()
-        headers = headerline.split('\n')[0].split('Fields: ')[1].split(', ')
+        check_hitless_queries(lines)
+        headers = get_headers(lines)
         datalines = [l for l in lines if '#' not in l]
-    # overwrite the file with headers and data in a traditional tsv format
-    with open(outfname, 'w') as outfile:
+    with open(outfname, 'w') as outfile: #Overwrite blast CLI output with headers in a traditional tsv format
         dict_lines = [d for d in csv.DictReader(['\t'.join(headers)] + datalines, delimiter='\t')]
         writer = csv.DictWriter(outfile, fieldnames=headers, delimiter='\t')
         writer.writeheader()
