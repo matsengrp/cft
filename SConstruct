@@ -814,7 +814,7 @@ def add_cluster_analysis(w):
     @w.add_target()
     def observed_ancestors(outdir, c):
         blast_db_files = ["blast_db.{}".format(ext) for ext in ("nin", "nhr", "nsq")]
-        blast_results_files = ["blast_results.{}.tsv".format(method) for method in ("blastn", "tblastx")]
+        blast_results_files = ["blast_results.{}.tsv".format(method) for method in ("blastn")]
         targets = blast_db_files + blast_results_files
         observed_ancestors_output = env.Command(
                 [path.join(outdir, fname) for fname in targets],
