@@ -422,6 +422,21 @@ def add_cluster_analysis(w):
     def path_fn(outdir, c):
         return outdir
 
+    @w.add_target()
+    def partis_cluster_fasta(outdir, c):
+        return env.Command(
+                path.join(outdir, 'unfiltered_partis_cluster.fa'),
+                c['partition']['partition-file'],
+                'process_partis.py' +
+                    ' --partition-file $SOURCE' +
+                    ' --partition {}'.format(c['partition']['step']) +
+                   (' --glfo-dir ' + c['sample']['glfo-dir'] if partisutils.getsuffix(c['partition']['partition-file']) == '.csv' else '') +
+                    ' --locus ' + locus(c) +
+                    ' --paths-relative-to ' + dataset_outdir(c) +
+                    ' --inferred-naive-name ' + options['inferred_naive_name'] +
+                   (' --cluster {}'.format(c['cluster']['sorted_index']) if not c.get('seed') else '') +
+                    ' --seqs-out $TARGET')
+
     @w.add_metadata()
     def _process_partis(outdir, c):
         # Should get this to explicitly depend on cluster0.fa
@@ -719,7 +734,7 @@ def add_cluster_analysis(w):
             # Now process the phylip output into something that isn't shit
             basename = 'asr'
             tgt = env.Command(
-                    [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg', 'fa']],
+                    [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg', 'fa', 'ancestors_naive_and_seed.fa']],
                     [c['seqname_mapping'], phylip_out, c['tip_seqmeta']],
                     # Note that adding `-` at the beginning of this command string can keep things running if
                     # there's an error trying to build a tree from 2 sequences; should be filtered prior now...
@@ -729,11 +744,11 @@ def add_cluster_analysis(w):
                         + " --basename " + basename
                         + " --inferred-naive-name " + options['inferred_naive_name']
                         + " --seqname-mapping $SOURCES")
-            asr_tree, asr_tree_svg, asr_seqs = tgt
+            asr_tree, asr_tree_svg, asr_seqs, ancestors_naive_and_seed = tgt
             # manually depnd on this because the script isn't in first position
             env.Depends(tgt, 'bin/process_asr.py')
             env.Depends(tgt, 'bin/plot_tree.py')
-            return [asr_tree, asr_tree_svg, asr_seqs]
+            return [asr_tree, asr_tree_svg, asr_seqs, ancestors_naive_and_seed]
         elif asr_prog == 'raxml':
             asr_supports_tree = env.SRun(
                 path.join(outdir, 'asr.sup.nwk'),
@@ -791,6 +806,22 @@ def add_cluster_analysis(w):
     @w.add_target(ingest=True)
     def asr_seqs(outdir, c):
         return c['_asr'][2]
+
+    @w.add_target(ingest=True)
+    def ancestors_naive_and_seed(outdir, c):
+        return c['_asr'][3]
+
+    @w.add_target()
+    def observed_ancestors(outdir, c):
+        blast_db_files = ["blast_db.{}".format(ext) for ext in ("nin", "nhr", "nsq")]
+        blast_results_files = ["blast_results.{}.tsv".format(method) for method in ("blastn")]
+        targets = blast_db_files + blast_results_files
+        observed_ancestors_output = env.Command(
+                [path.join(outdir, fname) for fname in targets],
+                [c["partis_cluster_fasta"], c["ancestors_naive_and_seed"]],
+                "python bin/blast.py $SOURCES --outdir {}".format(outdir))
+        env.Depends(observed_ancestors_output, "bin/blast.py")
+        return observed_ancestors_output
 
     @w.add_target()
     def selection_metrics(baseoutdir, c):
