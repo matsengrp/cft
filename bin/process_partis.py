@@ -149,6 +149,7 @@ def add_additional_info(cluster_line, additional_per_seq_info, iseqs_to_keep):
 
 def downsample_iseqs_by_multiplicity(cluster_line, multiplicity_seqmeta, max_sequences_count, always_include_ids):
     """ First take the always keep, then take as many as you can of the remaining seqs, in order of highest multiplicity """
+    warnings.warn(utils.color('red', 'Downsampling cluster sequences by multiplicity. Should there be many sequences with equal multiplicity (e.g. \'singlets\' all with multiplicity of 1), downsampling will be done arbitrarily among them.'))
     if len(multiplicity_seqmeta['multiplicities']) != len(cluster_line['input_seqs']):
         raise Exception('Something went wrong internally, mutiplicities are calculated for each seq in the cluster annotation but the number of seqs in the annotation does not match the number of multiplicities')
     always_include_iseqs = [iseq for iseq in range(len(cluster_line['input_seqs'])) if cluster_line['unique_ids'][iseq] in always_include_ids]
