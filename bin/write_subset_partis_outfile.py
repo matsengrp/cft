@@ -76,7 +76,7 @@ if __name__ == '__main__':
     cluster_annotation = process_partis.choose_cluster(args.partition_file, annotation_list, cpath, args.partition_step, args.original_cluster_size_idx, args.original_cluster_unique_ids)
     iseqs = iseqs_from_uids(args.subset_ids_path, cluster_annotation)
     sw_info = read_sw_info(args.sw_cache, args.locus)
-    new_annotation = utils.restrict_to_iseqs(cluster_annotation, iseqs, glfo, sw_info)
-    if new_annotation.get('linearham-info') is None:
-        utils.add_linearham_info(sw_info, [new_annotation])
-    utils.write_annotations(args.outfname, glfo, [new_annotation], set(new_annotation))
+    utils.restrict_to_iseqs(cluster_annotation, iseqs, glfo, sw_info)
+    if cluster_annotation.get('linearham-info') is None:
+        utils.add_linearham_info(sw_info, [cluster_annotation])
+    utils.write_annotations(args.outfname, glfo, [cluster_annotation], set(cluster_annotation))

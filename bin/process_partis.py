@@ -248,7 +248,7 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     cluster_line['sampled_seqs_count'] = len(iseqs_to_keep)
     
     #filter cluster line to iseqs_to_keep
-    cluster_line = utils.restrict_to_iseqs(cluster_line, iseqs_to_keep, glfo)
+    utils.restrict_to_iseqs(cluster_line, iseqs_to_keep, glfo)
     
     # add the additional info computed in above for the iseqs we care about
     cluster_line = add_additional_info(cluster_line, multiplicity_seqmeta, iseqs_to_keep) 
