@@ -20,7 +20,6 @@ Eventually, all of these cases should be caught and tombstone information should
 See README for typical environment setup and usage.
 '''
 
-
 # Basic imports
 from __future__ import print_function
 import os
@@ -43,7 +42,6 @@ from bin import process_partis, translate_seqs
 from os import path
 from warnings import warn
 
-
 # Nestly things
 # this temporarily switches between a local checkout and whatever is installed
 # Uncomment this line for a local checkout
@@ -56,7 +54,6 @@ from nestly import scons as nestly_scons
 sys.path = [path.join(os.getcwd(), 'deps', 'tripl')] + sys.path
 from tripl import nestly as nestly_tripl
 
-
 # Partis and datascripts things
 
 # If the PARTIS env var isn't already set, default to $PWD/partis (where we have a git
@@ -66,11 +63,9 @@ partis_path = os.environ.get('PARTIS', default_partis_path)
 sys.path.append(path.join(partis_path, 'python'))
 import utils as partisutils
 import glutils
-#print("partis utils loading from:", partisutils.__file__)
 
 # Scons requirements
 from SCons.Script import Environment
-
 
 # Build modules (in site_scons):
 import sconsutils
@@ -78,16 +73,13 @@ import backtrans_align
 import options
 import software_versions
 
-
 # Need this in order to read csv files with sequences in the fields
 csv.field_size_limit(sys.maxsize)
 
 # No-op; Prevents analysis warnings
 sconsutils #lint
 
-
 # Set up SCons environment
-
 environ = os.environ.copy()
 
 # install partis path as env var if not already set
@@ -102,9 +94,6 @@ env.PrependENVPath('PATH', 'tree')
 
 # Setting up command line arguments/options. See `site_scons/options.py` to see the option parsing setup.
 options = options.get_options(env)
-
-
-
 
 # Initialize nestly!
 # ==================
@@ -122,38 +111,30 @@ build_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 def git(*args):
     return subprocess.check_output(['git'] + list(args))
 
-
 print("\nscons build command:", " ".join(sys.argv))
 
 nest = nestly.Nest()
 w = nestly_scons.SConsWrap(nest, options['outdir_base'], alias_environment=env)
 w = nestly_tripl.NestWrap(w,
         name='build',
-        # Need to base hashing off of this for optimal incrementalization
         metadata={'id': 'cft-build-' + build_time.replace(' ', '-'),
                   'time': build_time,
                   'command': " ".join(sys.argv),
                   'workdir': os.getcwd(),
                   'user': getpass.getuser(),
                   'commit': git('rev-parse', 'HEAD'),
-                  # This will be really cool :-)
                   'diff': git('diff'),
                   'status': git('status', '--porcelain')},
         always_build_metadata=options['always_build_metadata'],
         base_namespace='cft',
         id_attrs=['cft.dataset:id', 'cft.build:id'])
 
-
 # Recording software versions
 # ---------------------------
-
 software_versions.add_software_versions(w)
-
-
 
 # Dataset nest level
 # =================
-
 
 # A dataset is a collection of data pointed to by one of the infiles.
 
@@ -174,7 +155,6 @@ def dataset_metadata(infile):
 def dataset(c):
     return map(dataset_metadata, options['infiles'])
 
-
 # Helpers for accessing info about the dataset
 
 def dataset_outdir(c):
@@ -184,9 +164,7 @@ def dataset_outdir(c):
 def dataset_id(c):
     return c['dataset']['id']
 
-
 # Helper for running test runs on a subset of the data, togglable via the `--test` cli flag
-
 def wrap_test_run(take_n=2):
     def deco(nestables_fn):
         def f(c):
@@ -197,13 +175,8 @@ def wrap_test_run(take_n=2):
         return f if options['test_run'] else nestables_fn
     return deco
 
-
 # Subject nest level
 # ------------------
-
-# We don't really do much here other than nest through the subjects in the input file for the sake of
-# establishing the metadata heirarchy
-
 
 def keep_sample(sample):
     return (sample.get('partition-file') and options['only_seeds'] is None) or \
@@ -220,8 +193,6 @@ def samples(c):
 def subject(c):
     return list(set(sconsutils.get_in(sample, ['meta', 'subject'])
                     for sample_id, sample in samples(c).items()))
-
-
 
 # Initialize sample nest
 # -----------------------------
@@ -247,8 +218,6 @@ def locus(c):
     locus = sample.get('locus') or sample.get('meta').get('locus')
     return locus
 
-
-
 # Initialize seed nest
 # --------------------
 
@@ -259,7 +228,6 @@ def locus(c):
 # Initialize our first sub dataset nest level
 @w.add_nest(metadata=lambda c, d: sconsutils.merge_dicts(d.get('meta', {}), {'id': d['id']}))
 # would like to have a lower number here but sometimes we get no good clusters for the first two seeds?
-# (on laura-mb for example).
 @wrap_test_run(take_n=3)
 def seed(c):
     return [sconsutils.merge_dicts(seed, {'id': seed_id})
@@ -276,9 +244,6 @@ def is_merged(c):
 
 def is_unmerged(c):
     return not is_merged(c)
-
-
-
 
 # Seeded partitions nest level
 # ---------------------
@@ -309,7 +274,7 @@ def partition_metadata(part, annotation_list, cp, i_step, seed=None, other_id=No
     
     meta = {'id': ('seed-' if seed else 'unseeded-') + (other_id + '-' if other_id else '') + 'part-' + str(i_step),
             'clusters': clusters,
-            # Should cluster step be partition step?
+            # TODO remove this comment? is it still relevant? Should cluster step be partition step?
             'step': i_step,
             'n_clusters': len(clusters),
             'largest_cluster_size': max(map(len, clusters)),
@@ -362,8 +327,6 @@ def valid_seed_partition(annotation_list, cp, part, i_step, seed_id, max_size_to
         return valid_cluster(annotation_list, part, seed_cluster_unique_ids, is_seed_cluster=True)
     return False
 
-# The actual nest construction for this
-
 # Try to read partition file; If fails, it is possibly because it's empty. Catch that case and warn
 def read_partition_file(part, c):
     try:
@@ -395,15 +358,10 @@ def partition(c):
                     keep_partitions.append(meta)
     return keep_partitions
 
-
 # The cluster level
 # -----------------
 
 # For seeded clusters we only process the seed containing cluster.
-
-
-# This is a little silly, but gives us the right semantics for partitions > clusters
-#w.add('cluster', ['cluster'], metadata=lambda _, cluster_id: {'id': cluster_id}) # set true
 @w.add_nest(label_func=lambda d: d['id'], metadata=lambda c, d: {'annotation': 'elided', 'naive_probabilities': 'elided'})
 def cluster(c):
     part = c['partition']
@@ -417,7 +375,6 @@ def cluster(c):
              'annotation': seed_cluster_annotation,
              'unique_ids': unique_ids,
              'naive_probabilities': naive_probabilities}]
-
 
 def add_cluster_analysis(w):
 
@@ -442,7 +399,6 @@ def add_cluster_analysis(w):
 
     @w.add_metadata()
     def _process_partis(outdir, c):
-        # Should get this to explicitly depend on cluster0.fa
         sources = [c['partition']['partition-file']]
         perseq_metafile = c['sample'].get('per-sequence-meta-file')
         if perseq_metafile:
@@ -543,10 +499,10 @@ def add_cluster_analysis(w):
     # Sequence Alignment
     # ------------------
 
+    # TODO lots of commented out code in here and probably other scripts / rest of code base
     backtrans_align.add(env, w, options)
 
-
-    # On with trees and other things...
+    # Trees 
     # ---------------------------------
 
     # use fasttree to make newick tree from sequences
@@ -557,28 +513,15 @@ def add_cluster_analysis(w):
             c['aligned_inseqs'],
             "FastTree -nt -quiet $SOURCE > $TARGET 2> $TARGET-.log")
 
-    # @w.add_target(ingest=True)
-    # def selection_metrics(baseoutdir, c):
-    #     outdir = path.join(baseoutdir, 'selection-metrics')
-    #     return env.Command(
-    #         [path.join(outdir, "tree-stats.json")],
-    #         [path.join(baseoutdir, "fasttree.nwk"), c['aligned_inseqs']],  # sources # don't use fasttree any more
-    #         # TODO lonr a.t.m. is still making its own trees, which should probably change TODO
-    #         "%s/bin/calculate_tree_metrics.py --seqfile ${SOURCES[1]} XXX --treefile ${SOURCES[0]} XXX --outfile ${TARGETS[0]} --naive-seq-name %s --debug" % (partis_path, options['inferred_naive_name'])
-    #     )
-
     @w.add_nest(metadata=lambda c, d: d)
     def reconstruction(c):
         return [{'id': prune_strategy + '-' + asr_prog,
                  'prune_strategy': prune_strategy,
                  'asr_prog': asr_prog,
-                 # Just 100 for everyone now
                  'prune_count': 100}
                  for prune_strategy, asr_prog
                  in itertools.product(
                      ['min_adcl', 'seed_lineage'] if 'seed' in c else ['min_adcl'],
-                     #['dnaml', 'ecgtheow']]
-                     # ^ in the future?
                      ['dnaml'])]
 
     # calculate list of sequences to be pruned
@@ -608,7 +551,6 @@ def add_cluster_analysis(w):
                 + (" --seed " + c['seed']['id'] if 'seed' in c else '')
                 + " $SOURCE $TARGET")
 
-
     if options['fasttree_png']:
         # create png showing included seqs (kept in pruning) as red
         @w.add_target()
@@ -637,7 +579,6 @@ def add_cluster_analysis(w):
                 'minadcl_clusters.py $SOURCES $TARGET',
                 srun_args='`minadcl_clusters_srun_args.py $SOURCE`')
 
-
     # prune out sequences to reduce taxa, making sure to cut out columns in the alignment that are now entirely
     # gaps from insertions in sequences that have been pruned out.
     @w.add_target()
@@ -652,7 +593,7 @@ def add_cluster_analysis(w):
         @w.add_target()
         def pruned_partis_outfile(outdir, c):
             if 'seed' in c:
-                #these are not the unique ids we want to use when subsetting the cluster, they are just a way to identify the cluster we want to subset
+                #TODO clarify this: these are not the unique ids we want to use when subsetting the cluster, they are just a way to identify the cluster we want to subset
                 clust_ids_string = c['cluster']['unique_ids']
                 yaml_format = partisutils.getsuffix(c['partition']['partition-file']) == '.yaml'
                 return env.Command(
@@ -715,7 +656,6 @@ def add_cluster_analysis(w):
 
 
     # Run dnapars/dnaml by passing in the "config file" as stdin hoping the menues all stay sane
-    # (Aside: If gets any messier can look at Expect; https://en.wikipedia.org/wiki/Expect)
     @w.add_target()
     def _asr(outdir, c):
         "run dnapars/dnaml (from phylip package) to create tree with inferred sequences at internal nodes"
@@ -729,11 +669,10 @@ def add_cluster_analysis(w):
                 path.join(outdir, "outfile"),
                 config,
                 'cd ' + outdir + ' && rm -f outtree && ' + asr_prog + ' < $SOURCE.file > ' + asr_prog + '.log')
-                #ignore_errors=True) # before; dropping
             # Manually depend on phy so that we rerun dnapars/dnaml if the input sequences change (without this, dnapars/dnaml will
             # only get rerun if one of the targets are removed or if the iput asr_config file is changed). IMPORTANT!
             env.Depends(phylip_out, c['phy'])
-            # Now process the phylip output into something that isn't shit
+            # process the phylip output 
             basename = 'asr'
             tgt = env.Command(
                     [path.join(outdir, basename + '.' + ext) for ext in ['nwk', 'svg', 'fa', 'ancestors_naive_and_seed.fa']],
@@ -771,35 +710,9 @@ def add_cluster_analysis(w):
         else:
             print("something has gone terribly wrong")
 
-
-    #@w.add_target(ingest=True)
-    #def asr_input_tree(outdir, c):
-        #return c['_asr'][0]
-
     @w.add_target(ingest=True)
     def asr_tree_svg(outdir, c):
         return c['_asr'][1]
-
-    #@w.add_target()
-    #def asr_supports_tree(outdir, c):
-        #vals = c['_asr']
-        #if len(vals) > 2:
-            #return c['_asr'][2]
-
-    #@w.add_target(ingest=True)
-    #def _asr(outdir, c):
-        #return env.Command(
-            #[path.join(outdir, 'asr_tree.nwk'), path.join(outdir, 'asr_seqs.fa')],
-            #[c['asr_input_tree'], c['pruned_seqs']],
-            #'joker.py ' + ('--no-reroot ' if asr_prog(c) == 'raxml' else '') + '-t $SOURCES $TARGETS')
-
-    #@w.add_target(ingest=True)
-    #def asr_tree(outdir, c):
-        #return c['_asr'][0]
-
-    #@w.add_target(ingest=True)
-    #def asr_seqs(outdir, c):
-        #return c['_asr'][1]
 
     @w.add_target(ingest=True)
     def asr_tree(outdir, c):
@@ -860,7 +773,6 @@ def add_cluster_analysis(w):
             [c['tip_seqmeta'], c['selection_metrics']],
             "merge_selection_metrics.py $SOURCES $TARGET")
 
-
     @w.add_target(ingest=True)
     def cluster_aa(outdir, c):
         return env.Command(
@@ -868,14 +780,11 @@ def add_cluster_analysis(w):
             c['asr_seqs'],
             "sed 's/\?/N/g' $SOURCE | seqmagick convert --translate dna2protein - $TARGET")
 
-
 # Temporarily turn off to debug above
 # Now actually add all of these build targets
 add_cluster_analysis(w)
 
-
-
-# Popping out
+# TODO clarify all these loose phrases referring to nesting levels Popping out
 # -----------
 
 # Here we pop off the "seed" nest level and everything down from it.
@@ -883,11 +792,8 @@ add_cluster_analysis(w)
 
 w.pop('seed')
 
-
-
 # Unseeded cluster analysis
 # -------------------------
-
 
 # Now we define a function that builds the cluster analysis defined above for the unseeded
 # partitions/clusters. We do this so that the functions names we use for building things with nestly don't
@@ -941,13 +847,9 @@ def add_unseeded_analysis(w):
 
     add_cluster_analysis(w)
 
-    # end function
-
-
 # Then we immediately call this function we define
 
 add_unseeded_analysis(w)
-
 
 # Write metadata
 # --------------------
@@ -964,5 +866,3 @@ def metadata_snapshot(outdir, c):
             'cp $SOURCE $TARGET')
 
 w.pop('dataset')
-
-
