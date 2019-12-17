@@ -1,4 +1,0 @@
-fasta:
-  class: File
-  path: sample_dedup.fa
-svgfile: sample_dedup.svg
