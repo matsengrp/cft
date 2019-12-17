@@ -187,7 +187,6 @@ def seqname_mapping_arg(filename):
 
 def get_args():
     def seqmeta_input(fname):
-        print(fname)
         with open(fname, 'r') as fhandle:
             return dict((row['sequence'], row) for row in csv.DictReader(fhandle))
 
