@@ -46,7 +46,6 @@ def get_args():
         help="If any inseqs lengths aren't divisible by three, trim excess and write to this file.")
     return parser.parse_args()
 
-
 def main():
     args = get_args()
     frame = get_frame(args.metadata)
@@ -58,8 +57,5 @@ def main():
         SeqIO.write(trimmed_inseqs, args.trimmed_inseqs, "fasta")
         args.trimmed_inseqs.close()
 
-
 if __name__ == '__main__':
     main()
-
-

@@ -12,7 +12,6 @@ import subprocess
 import argparse
 import sys
 
-
 def seed_lineage_selection(args):
     """
     Take the closest taxa on subtrees branching off the root (naive) to seed lineage.
@@ -42,8 +41,7 @@ def seed_lineage_selection(args):
     """
     tree = args.tree
 
-    # Set args.n_keep to the min of requested value and the actual number of seqs (make sure to do this before
-    # rerooting, or len(tree) will have decremented...)
+    # Set args.n_keep to the min of requested value and the actual number of seqs (make sure to do this before rerooting, or len(tree) will have decremented...)
     n_keep = min(args.n_keep, len(tree))
 
     # Reroot the tree on naive
@@ -62,8 +60,7 @@ def seed_lineage_selection(args):
             distance_dict[leaf] = lineage_node.get_distance(leaf)
         return distance_dict[leaf]
 
-    # Iterate over seed lineage and find closest taxon from each branch, and
-    # repeat until we have n_keep leaf sequences.
+    # Iterate over seed lineage and find closest taxon from each branch, and repeat until we have n_keep leaf sequences.
     leaves_to_keep = set(find_node(tree, n) for n in args.always_include if tree.get_leaves_by_name(n))
     # Extract the sequence of nodes on lineage from root to seed.
     # Note: ete doc suggests get_ancestors() would include the seed node, but it doesn't.
@@ -77,18 +74,14 @@ def seed_lineage_selection(args):
             # The subtree that continues down the seed lineage doesn't count.
             if subtree != seed_lineage[i+1]:
                 subtrees.append(subtree)
-    # Repeatedly pass through this list of subtrees, grabbing the one
-    # closest leaf (to the seed lineage) from each, until we get how many we
-    # need.
+    # Repeatedly pass through this list of subtrees, grabbing the one closest leaf (to the seed lineage) from each, until we get how many we need.
     while len(leaves_to_keep) < (n_keep - 1): # -1 because naive gets rerooted out, and we manually yield as below
         for subtree in subtrees:
             # Obtain all the leaves in this subtree that aren't already in leaves_to_keep.
             leaves = [leaf for leaf in subtree.iter_leaves() if leaf not in leaves_to_keep]
             if leaves:
                 # Add the leaf that's the closest to the seed lineages.
-                # Use subtree.up so that we are getting the distance from the
-                # node on the lineage from root to seed (rather than the root
-                # of the subtree).
+                # Use subtree.up so that we are getting the distance from the node on the lineage from root to seed (rather than the root of the subtree).
                 leaves_to_keep.add(min(leaves, key=lambda leaf: distances(subtree.up, leaf)))
                 if len(leaves_to_keep) == n_keep - 1:
                     break
@@ -97,7 +90,6 @@ def seed_lineage_selection(args):
     yield args.naive
     for leaf in leaves_to_keep:
         yield leaf.name
-
 
 def min_adcl_selection(args):
     """
@@ -132,10 +124,8 @@ def min_adcl_selection(args):
             raise Exception("keeping too many sequences; perhaps the rppr subprocess failed?")
         return keep_names
 
-
 def tree_arg(tree_arg_value):
     return Tree(tree_arg_value, format=1)
-
 
 def get_args():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -165,7 +155,6 @@ def get_args():
                 [args.naive, args.seed] + args.always_include))
     return args
 
-
 def main(args):
     selection_fn = seed_lineage_selection if args.strategy == "seed_lineage" else min_adcl_selection
     out_handle = file(args.output, 'w')
@@ -173,7 +162,6 @@ def main(args):
         # Writes to stdout
         out_handle.write(name +"\n")
     out_handle.close()
-
 
 if __name__ == "__main__":
     main(get_args())

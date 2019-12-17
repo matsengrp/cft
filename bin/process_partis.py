@@ -11,13 +11,11 @@ import textwrap
 import time
 import collections
 import numpy
-#import itertools as it
 import warnings
 
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-
 
 # Figure out where partis is so that partis utils and glutils ccan be loaded below
 partis_path = os.environ.get('PARTIS')
@@ -37,12 +35,10 @@ import indelutils
 import glutils
 import clusterpath
 
-
 default_glfo_dir = os.path.join(partis_path, 'data/germlines/human')  # this should only be used as a last resort (e.g. you've completely lost the germline sets corresponding to your deprecated csv output files)
 
 # Make sure we can read the really big fields frequently found in partis output
 csv.field_size_limit(sys.maxsize)
-
 
 # Util for reading csv files from command line arguments
 def csv_reader(index=None, filter_by=None):
@@ -58,9 +54,6 @@ def csv_reader(index=None, filter_by=None):
             else:
                 return list(reader)
     return f
-
-
-
 
 dummy_timepoint_name = 'no-timepoint'
 
@@ -358,11 +351,9 @@ def write_cluster_meta(args, cluster_data):
     with open(args.cluster_meta_out, 'w') as outfile:
         json.dump(doc, outfile, sort_keys=True, indent=4)
 
-
 def format_list(row, key):
     if key in row:
         row[key] = ':'.join(map(str, row[key]))
-
 
 def format_results(results):
     for row in results:
@@ -374,8 +365,6 @@ def format_results(results):
 def write_seq_meta(args, cluster_data):
     to_keep = ['unique_id', 'sequence', 'is_seed', 'frameshifted', 'stops', 'mutated_invariants',
             'mut_freq', 'timepoint', 'multiplicity', 'timepoints', 'timepoint_multiplicities', 'duplicates', 'affinity']
-    #    to_keep = ['unique_id', 'is_seed', 'frameshifted', 'stops', 'mutated_invariants',
-    #            'mut_freq', 'timepoint', 'multiplicity', 'duplicate_timepoints', 'duplicate_multiplicities', 'duplicates', 'affinity']
     with open(args.seqmeta_out, 'w') as outfile:
         writer = csv.DictWriter(outfile, fieldnames=to_keep, extrasaction='ignore')
         writer.writeheader()
@@ -418,10 +407,6 @@ def parse_args():
     outputs.add_argument(
         '--cluster-meta-out',
         help='cluster sequences as a JSON file')
-    # If we support a recursive option, we have to name I guess?
-    #outputs.add_argument(
-        #'--process-all-data-to',
-        #help="writes all data for all partitions/clusters to the specified directory")
 
     partis_args = parser.add_argument_group(title="Partis args",
         description="""These arguments (as passed to partis) are required in order to process the data correctly.""")
@@ -451,7 +436,6 @@ def parse_args():
         '--largest-cluster-across-partitions',
         help='select the largest cluster across all partitions. Must include seed if partis was run with a seed.',
         action="store_true")
-    # add a non sorted version?
     cluster_selection_args.add_argument(
         '--unique-ids',
         help='select a specific cluster using its unique_ids signature')
@@ -516,9 +500,7 @@ def parse_args():
         else:
             raise Exception('doesn\'t make sense to pass both --parameter-dir and --glfo-dir (just use the latter)')
         delattr(args, 'parameter_dir')
-
     return args
-
 
 def main():
     """
@@ -539,8 +521,5 @@ def main():
     if args.seqs_out:
         write_seqs(args, cluster_data)
 
-
 if __name__ == '__main__':
     main()
-
-

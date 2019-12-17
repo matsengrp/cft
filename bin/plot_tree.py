@@ -11,14 +11,14 @@ import colorbrewer
 def find_node(tree, pattern):
     regex = re.compile(pattern).search
     nodes =  [ node for node in tree.traverse() for m in [regex(node.name)] if m]
+    print('find node', pattern)
     if not nodes:
-        # warnings.warn("Cannot find matching node; looking for name matching '{}'".format(pattern))
+        warnings.warn("Cannot find matching node; looking for name matching '{}'".format(pattern))
         return
     else:
         if len(nodes) > 1:
             warnings.warn("multiple nodes found; using first one.\nfound: {}".format([n.name for n in nodes]))
         return nodes[0]
-
 
 # reroot the tree on node matching pattern.
 # Usually this is used to root on the naive germline sequence
@@ -34,10 +34,8 @@ def reroot_tree(tree, pattern):
             node.dist = 0
             tree = node
         except:
-            # fuckit
             pass
     return tree
-
 
 # iterate up a lineage toward the root.
 # lineage starts at node whose name matches pattern.
@@ -46,7 +44,6 @@ def iter_lineage(tree, pattern):
     while node:
         yield node
         node = node.up
-
 
 def timepoint_colors(annotations):
     # Should really improve this sort so that we're fully chronological
@@ -58,7 +55,6 @@ def timepoint_colors(annotations):
     colors = [palette[i%11] for i in range(len(timepoints))]
     return dict(zip(timepoints, colors))
 
-
 def timepoint_legend(ts, tp_colors):
     ts.legend.add_face(ete3.faces.TextFace(""), 0)
     ts.legend.add_face(ete3.faces.TextFace("Timepoints"), 1)
@@ -68,10 +64,8 @@ def timepoint_legend(ts, tp_colors):
     ts.legend.add_face(ete3.faces.CircleFace(8, 'brown', "circle"), 0)
     ts.legend.add_face(ete3.faces.TextFace("seedlineage"), 1)
 
-
 def scale_node(size):
     return 6 + (math.log(size) * 2)
-
 
 def multiplicity_legend(ts):
     ts.legend.add_face(ete3.faces.TextFace(""), 0)
@@ -82,17 +76,12 @@ def multiplicity_legend(ts):
         ts.legend.add_face(pie_face, 0)
         ts.legend.add_face(ete3.faces.TextFace(str(multiplicity)), 1)
 
-
 def leaf_style(node, seqmeta, tp_colors, highlight_node=None):
     name = node.name + " (mf={}) ".format(round(float(seqmeta['mut_freq']), 3))
     F = ete3.faces.TextFace(name, fsize=9)
     ete3.add_face_to_node(F, node, column=1, position='branch-right')
-    ## Style the node with color corresponding to timepoint
+    # Style the node with color corresponding to timepoint
     nstyle = ete3.NodeStyle()
-    #if node.name == highlight_node:
-        #nstyle['fgcolor'] = 'brown'
-    #else:
-        #nstyle['fgcolor'] = tp_colors[seqmeta['timepoint']]
     nstyle['size'] = 0
     node.set_style(nstyle)
     # Style the node with color corresponding to timepoint
@@ -114,7 +103,6 @@ def leaf_style(node, seqmeta, tp_colors, highlight_node=None):
     pie_node = ete3.PieChartFace(percents, width=scale_node(multiplicity), height=scale_node(multiplicity),
             colors=colors, line_color='black')
     ete3.add_face_to_node(pie_node, node, column=0)
-
 
 def render_tree(fname, tree, annotations, highlight_node, inferred_naive_name, supports=False, support_cuttof=0.8):
     "render tree SVG"
@@ -156,8 +144,6 @@ def render_tree(fname, tree, annotations, highlight_node, inferred_naive_name, s
     ts.scale = 2300
     tree.render(fname, tree_style=ts)
 
-
-
 def get_args():
     def seqmeta_input(fname):
         with open(fname, 'r') as fhandle:
@@ -188,8 +174,6 @@ def get_args():
         '--seed', type=str, help="id of leaf [default 'seed']", default='seed')
     return parser.parse_args()
 
-
-
 def main():
     args = get_args()
 
@@ -202,8 +186,5 @@ def main():
     # write newick file
     render_tree(args.svg_out, tree, args.seqmeta, args.seed, args.inferred_naive_name, supports=args.supports)
 
-
 if __name__ == '__main__':
     main()
-
-

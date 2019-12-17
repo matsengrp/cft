@@ -3,7 +3,6 @@
 import argparse
 import csv
 import collections
-#import itertools
 
 def filter_by_ids(results, ids):
     filtered_results = [result for result in results if result['unique_id'] in ids]
@@ -28,11 +27,9 @@ def aggregate_clusters(merge_results, cluster_mapping):
             })
         yield centroid_data
 
-
 def format_list(row, key):
     if key in row:
         row[key] = ':'.join(map(str, row[key]))
-
 
 def format_results(results):
     for row in results:
@@ -53,7 +50,6 @@ def csv_reader(filename):
 
 def cluster_reader(filename):
     data = csv_reader(filename)
-    #return {k: [v['sequence'] for v in vs] for k, vs in itertools.groupby(data, lambda d: d['centroid'])}
     result = collections.defaultdict(set)
     for d in data:
         result[d['centroid']].add(d['sequence'])
@@ -105,7 +101,5 @@ def main():
     out_writer.writerows(format_results(results))
     args.output.close()
 
-
 if __name__ == '__main__':
     main()
-

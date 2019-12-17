@@ -7,8 +7,6 @@ import uuid
 import sys
 import functools as fun
 
-# Should not have to define these...
-
 def comp(f1, f2):
     def f(*args, **kw_args):
         return f1(f2(*args, **kw_args))
@@ -24,8 +22,6 @@ def map_vals(f, d):
 
 def map_keys(f, d):
     return {f(k): v for k, v in d.items()}
-
-
 
 def set_input(input_str):
     return input_str.split(":") if input_str else []
@@ -55,7 +51,6 @@ def get_args():
     args.id = args.id or (args.output.replace('/', '-') if args.output else str(uuid.uuid4()))
     return args
 
-
 def subset_by_keys(d, keys):
     return {k: v for k, v in d.items() if k in keys}
 
@@ -84,7 +79,6 @@ def remove_empty_samples(args, samples):
 def prefix_sample_ids(args, samples):
     return map_keys(lambda k: args.sample_prefix + '-' + k, samples) if args.sample_prefix else samples
 
-
 def process_samples(args, samples):
     if args.samples:
         samples = subset_by_keys(samples, args.samples)
@@ -98,7 +92,6 @@ def process_dataset(args, dataset):
     return merged(dataset, {'samples': process_samples(args, dataset['samples'])})
 
 def merge_datasets(args, datasets):
-    # Should really have a more recursive merge strategy than this... todo
     dataset = reduce(merged, datasets)
     samples = reduce(merged, [d['samples'] for d in datasets])
     dataset['samples'] = samples
@@ -114,8 +107,5 @@ def main():
     with open(args.output, 'w') if args.output else sys.stdout as fh:
         (json if out_frmt == 'json' else yaml).dump(dataset, fh)
 
-
 if __name__ == '__main__':
     main()
-
-

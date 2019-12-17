@@ -3,12 +3,10 @@
 import argparse
 from Bio import SeqIO
 
-
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('seqs')
     return parser.parse_args()
-
 
 def main():
     args = get_args()
@@ -25,7 +23,5 @@ def main():
         print '--partition=largenode ',
     print '--mem={} '.format(mem_needed),
 
-
 if __name__ == '__main__':
     main()
-    

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+# rework this for https://github.com/matsengrp/cft/issues/170
 import argparse
 import contextlib
 import os.path

@@ -35,8 +35,7 @@ def write_logo_input(alternative_naives, logo_input_fname, cdr3_logo_input_fname
     with open(logo_input_fname, 'w') as logo_input, open(cdr3_logo_input_fname, 'w') as cdr3_logo_input:
         for aa_seq, probability in alternative_naives:
             write_seq_according_to_probability(aa_seq, probability, logo_input)
-            # We are using the v and j codon position annotations from the most probable naive, so warn if one of the
-            # alternatives is not the same length since this could mess up the cdr3 start and end.
+            # We are using the v and j codon position annotations from the most probable naive, so warn if one of the alternatives is not the same length since this could mess up the cdr3 start and end.
             if len(aa_seq) != aa_naive_len:
                 warn('Skipping: alternative naive sequence with length %d; differs in length from most probable naive sequence with length %d' % (len(aa_seq), aa_naive_len))
                 continue
@@ -100,4 +99,3 @@ if __name__ == '__main__':
 
     create_logo(logo_input_fname, os.path.join(args.outdir, args.logo_fname), options)
     create_logo(cdr3_logo_input_fname, os.path.join(args.outdir, args.cdr3_logo_fname), options)
-

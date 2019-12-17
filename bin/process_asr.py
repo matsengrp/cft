@@ -20,7 +20,6 @@ from Bio.SeqRecord import SeqRecord
 
 import plot_tree
 
-
 # iterate over recognized sections in the phylip output file.
 def sections(fh):
     patterns = {
@@ -34,9 +33,9 @@ def sections(fh):
                 yield k
                 break
 
-
 # iterate over entries in the distance section
 def iter_edges(fh):
+    # EH: this I'm guessing is what the lines being parsed by the regular expression will look like?
     #  152          >naive2           0.01208     (     zero,     0.02525) **
     pat = re.compile("\s*(?P<parent>\w+)\s+(?P<child>[\w>_.-]+)\s+(?P<distance>\d+\.\d+)")
     # drop the header underline
@@ -54,9 +53,9 @@ def iter_edges(fh):
         else:
             break
 
-
 # iterate over entries in the sequences section
 def parse_seqdict(fh, mode='dnaml'):
+    # EH: this I'm guessing is what the lines being parsed by the regular expression will look like?
     #  152        sssssssssG AGGTGCAGCT GTTGGAGTCT GGGGGAGGCT TGGTACAGCC TGGGGGGTCC
     seqs = defaultdict(str)
     patterns = {
@@ -72,7 +71,6 @@ def parse_seqdict(fh, mode='dnaml'):
         else:
             break
     return seqs
-
 
 # parse the dnaml output file and return data strictures containing a
 # list biopython.SeqRecords and a dict containing adjacency
@@ -93,7 +91,6 @@ def parse_outfile(outfile, seqmeta, inferred_naive_name, seqname_mapping=None):
         elif name:
             goods.add(x)
         return name or x
-    # Ugg... for compilation need to let python know that these will definely both be defined :-/
     sequences, parents = [], {}
     with open(outfile, 'rU') as fh:
         for sect in sections(fh):
@@ -107,11 +104,11 @@ def parse_outfile(outfile, seqmeta, inferred_naive_name, seqname_mapping=None):
                 raise RuntimeError("unrecognized phylip setion = {}".format(sect))
 
     if inferred_naive_name in bads:
-        warn("Uh... naive in bad sequences?")
+        warn("Naive sequence unique ID not found!")
         bads.remove(inferred_naive_name)
     if bads:
-        print("good sequences:", sorted(goods))
-        print("bad sequences:", sorted(bads))
+        print("found sequences:", sorted(goods))
+        print("not found sequences:", sorted(bads))
         print("name_map misses:")
         for k, v in sorted(name_map.items()):
             if k not in goods:
@@ -123,7 +120,6 @@ def parse_outfile(outfile, seqmeta, inferred_naive_name, seqname_mapping=None):
         raise RuntimeError('invalid results attempting to parse {}: there are {} parentless sequences'.format(outfile, len(sequences) - len(parents)))
 
     return sequences, parents
-
 
 # build a tree from a set of sequences and an adjacency dict.
 def build_tree(sequences, parents):
@@ -164,7 +160,6 @@ def find_node(tree, pattern):
             warn("multiple nodes found; using first one.\nfound: {}".format([n.name for n in nodes]))
         return nodes[0]
 
-
 # reroot the tree on node matching regex pattern.
 # Usually this is used to root on the naive germline sequence
 # NOTE duplicates fcn in plot_tree.py
@@ -192,6 +187,7 @@ def seqname_mapping_arg(filename):
 
 def get_args():
     def seqmeta_input(fname):
+        print(fname)
         with open(fname, 'r') as fhandle:
             return dict((row['sequence'], row) for row in csv.DictReader(fhandle))
 
@@ -225,7 +221,6 @@ def get_args():
         '--seed', type=str, help="id of leaf [default 'seed']", default='seed')
     return parser.parse_args()
 
-
 def main():
     args = get_args()
 
@@ -258,10 +253,8 @@ def main():
     # write newick file
     fname = outbase + '.nwk'
     tree.write(format=1, format_root_node=True, outfile=fname)
-
+    
     plot_tree.render_tree(outbase+'.svg', tree, args.seqmeta, args.seed, args.inferred_naive_name)
-
 
 if __name__ == "__main__":
     main()
-

@@ -9,9 +9,6 @@ import re
 import pprint
 import yaml
 
-# File reading stuff
-# ------------------
-
 def seqmeta_reader(filename):
     with open(filename) as fh:
         reader = csv.DictReader(fh)
@@ -25,9 +22,10 @@ def yaml_reader(filename):
             raise
         return result if result else {}
 
-
-# Args
-# ----
+def merge(d1, d2):
+    d = d1.copy()
+    d.update(d2)
+    return d
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -36,17 +34,6 @@ def get_args():
     parser.add_argument('seqmeta_out', type=argparse.FileType('w'))
     args = parser.parse_args()
     return args
-
-
-# Putting everything together
-# ---------------------------
-
-
-def merge(d1, d2):
-    d = d1.copy()
-    d.update(d2)
-    return d
-
 
 def main():
     args = get_args()
@@ -63,14 +50,5 @@ def main():
     for _, row in seqmeta.items():
         writer.writerow(row)
 
-    # for _, row in args.tip_seqmeta
-    #     row = args.tip_seqmeta.get(seqid, {'sequence': seqid, 'unique_id': seqid})
-    #     lb = args.selection_metrics
-    #     #pprint.pprint(args.selection_metrics['lbi'])
-    #     row['lbi'] = args.selection_metrics['lbi'][i]
-    #     row['lbr'] = args.selection_metrics['lbr'][i]
-    #     writer.writerow(row)
-
 if __name__ == '__main__':
     main()
-

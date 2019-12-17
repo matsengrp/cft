@@ -10,7 +10,6 @@ import json
 import textwrap
 import process_partis
 
-
 # Figure out where partis is so that partis utils and glutils ccan be loaded below
 partis_path = os.environ.get('PARTIS')
 if not partis_path or not os.path.exists(partis_path):

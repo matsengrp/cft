@@ -69,13 +69,8 @@ def main():
 
     args = parser.parse_args()
 
-    # Note that we have hardcoded `naive` as the translation for the inferred_naive_name in
-    # bin/make_phylip.py, so this will always be the name we look for here.
+    # Note that we have hardcoded `naive` as the translation for the inferred_naive_name in bin/make_phylip.py, so this will always be the name we look for here.
     naive = extract_naive(args.phylip[0], 'naive')
-
-    # Not doing this because if you specify a long name it errors anyway...
-    #parser.add_argument('--inferred-naive-name', required=True)
-    #naive = extract_naive(args.phylip[0], args.inferred_naive_name)
 
     print("{}".format(os.path.basename(args.phylip[0])))		# phylip input file
     if naive:
@@ -101,7 +96,6 @@ def main():
         print("4") # 4 catagories
     else:
         raise RuntimeError('treeprog=' + args.treeprog + ' is not "dnaml" or "dnapars"')
-
 
 if __name__ == "__main__":
    main()
