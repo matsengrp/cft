@@ -14,7 +14,6 @@ import copy
 # Utility functions
 # -----------------
 
-
 def logged(f):
     "Returns a version of f which prints the results of calling; for use as decorator on nest fns"
     f_name = f.__name__
@@ -108,5 +107,3 @@ def SRun(env, target, source, action, srun_args=None, **kwargs):
 # Use the global AddMethod function to add a method to the global Environment class,
 # so it will be used in all subsequently created environments.
 AddMethod(Environment, SRun)
-
-

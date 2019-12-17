@@ -20,8 +20,6 @@ import utils as partisutils
 # So there's a bunch of housekeeping here in making sure all of this is the case for our final backtrans-align
 # step.
 
-
-
 def add(env, w, options):
     if options['preserve_indels']:
         @w.add_target()
@@ -49,23 +47,6 @@ def add(env, w, options):
                 'sed \'s/\*/X/g\' $SOURCE | muscle -in /dev/stdin -out $TARGET 2> $TARGET-.log',
                 srun_args='`alignment_srun_args.py $SOURCE`')
 
-        # EH: bin/process_partis.py removes seqs with stop codons in them but when things are trimmed to frame and
-        #     aligned above, this could introduce stop codons?
-
-        # Not sure why we're not using this any more; I think we want to be, but it must have been causing some
-        # issue... need to look at this XXX
-        # This script will replace the X characters in our alignment with stop codons where they were taken out in the
-        # sed step prior to alignment above. We should try to use these when possible in alignments we display.
-        # However, this may be less useful here than it is further down where we translate our ancestral state
-        # inferences, since those are the seqs we use elsewhere.
-
-        #@w.add_target()
-        #def fixed_aligned_translated_inseqs(outdir, c):
-            #return env.Command(
-                #os.path.join(outdir, 'fixed_aligned_translated_inseqs.fa'),
-                #[c['aligned_translated_inseqs'], c['translated_inseqs']],
-                #'fix_stop_deletions.py $SOURCES $TARGET')
-
         # Sort the sequences to have the same order, so that seqmagick doesn't freak out
 
         @w.add_target()
@@ -79,7 +60,6 @@ def add(env, w, options):
         def sorted_aligned_translated_inseqs(outdir, c):
             return env.Command(
                 os.path.join(outdir, "sorted_aligned_translated_inseqs.fa"),
-                #c['fixed_aligned_translated_inseqs'],
                 c['aligned_translated_inseqs'],
                 'seqmagick convert --sort name-asc $SOURCE $TARGET')
 

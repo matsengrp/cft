@@ -1,8 +1,4 @@
-
 import SCons.Script as Script
-
-
-# Set up command line arguments/options
 
 Script.AddOption('--infiles',
         dest='infiles',
@@ -41,7 +37,6 @@ Script.AddOption('--ignore-seed-indels',
 Script.AddOption('--asr-progs',
         dest='asr_progs',
         metavar='LIST',
-        #default='dnaml:dnapars:raxml',
         default='dnaml',
         help="""Specify ':' separated list of ancestral state reconstruction programs to run. Options are `dnaml` and
         `dnapars`. Defaults to running dnaml.""")
@@ -104,7 +99,6 @@ Script.AddOption('--preserve-indels',
         help="""Setting this flag assumes there are indels and does not use indel reversed input sequences (indel reversed sequences are used by default). Instead, partis 'input_seqs' key sequences are aligned and used as the cluster sequences.""")
 
 def get_options(env):
-    # prefer realpath so that running latest vs explicit vN doesn't require rerun; also need for defaults below
     test_run, dataset_tag, match_indels_in_uid = env.GetOption("test_run"), env.GetOption('dataset_tag'), env.GetOption('match_indels_in_uid')
     user_tag = (dataset_tag if dataset_tag else '')
     test_tag = ('test' if test_run else '')
