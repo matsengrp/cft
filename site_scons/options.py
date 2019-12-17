@@ -3,7 +3,7 @@ import SCons.Script as Script
 Script.AddOption('--infiles',
         dest='infiles',
         metavar='FILE_LIST',
-        default="test.yaml",
+        default="tests/test.yaml",
         help="""Specify ':' separated list of partis output directories to process on; if full path not specified,
         assumed to be in --base-datapath. Dataset names will be assined in relation to this --base-datapath
         if present. Note: symlinks may not work properly here unless they point to things in base-datapath also.""")
