@@ -46,14 +46,15 @@ import os
 import argparse
 from warnings import warn
 
+
 def extract_naive(file, inferred_naive_name):
-    with open( file, 'r' ) as fh:
+    with open(file, "r") as fh:
         for lineno, line in enumerate(fh):
             if len(line.split()) > 0 and line.split()[0] == inferred_naive_name:
                 return lineno
 
-def main():
 
+def main():
     def existing_file(fname):
         """
         Argparse type for an existing file
@@ -64,44 +65,39 @@ def main():
 
     parser = argparse.ArgumentParser(description=__doc__)
 
-    parser.add_argument('phylip', nargs=1, help='PHYLIP input', type=existing_file)
-    parser.add_argument('treeprog', help='dnaml or dnapars', type=str)
+    parser.add_argument("phylip", nargs=1, help="PHYLIP input", type=existing_file)
+    parser.add_argument("treeprog", help="dnaml or dnapars", type=str)
 
     args = parser.parse_args()
 
-    # Note that we have hardcoded `naive` as the translation for the inferred_naive_name in
-    # bin/make_phylip.py, so this will always be the name we look for here.
-    naive = extract_naive(args.phylip[0], 'naive')
+    # Note that we have hardcoded `naive` as the translation for the inferred_naive_name in bin/make_phylip.py, so this will always be the name we look for here.
+    naive = extract_naive(args.phylip[0], "naive")
 
-    # Not doing this because if you specify a long name it errors anyway...
-    #parser.add_argument('--inferred-naive-name', required=True)
-    #naive = extract_naive(args.phylip[0], args.inferred_naive_name)
-
-    print("{}".format(os.path.basename(args.phylip[0])))		# phylip input file
+    print("{}".format(os.path.basename(args.phylip[0])))  # phylip input file
     if naive:
-        print("O")						# Outgroup root
-        print("{}".format(naive))		# naive index in phylip
+        print("O")  # Outgroup root
+        print("{}".format(naive))  # naive index in phylip
     else:
         warn("No naïve sequence found!")
-    if args.treeprog == 'dnapars':
-        print('S')
-        print('Y')
-        print('J')
-        print('13')
-        print('10')
-        print('4')
-        print('5')
-        print('.')
-        print('Y')
-    elif args.treeprog == 'dnaml':
-        print("R") # gamma
-        print("5")                                         # Reconstruct hypothetical seq
-        print("Y")                                         # accept these
-        print("1.41421356237") # CV = sqrt(2) (alpha = .5)
-        print("4") # 4 catagories
+    if args.treeprog == "dnapars":
+        print("S")
+        print("Y")
+        print("J")
+        print("13")
+        print("10")
+        print("4")
+        print("5")
+        print(".")
+        print("Y")
+    elif args.treeprog == "dnaml":
+        print("R")  # gamma
+        print("5")  # Reconstruct hypothetical seq
+        print("Y")  # accept these
+        print("1.41421356237")  # CV = sqrt(2) (alpha = .5)
+        print("4")  # 4 catagories
     else:
-        raise RuntimeError('treeprog=' + args.treeprog + ' is not "dnaml" or "dnapars"')
+        raise RuntimeError("treeprog=" + args.treeprog + ' is not "dnaml" or "dnapars"')
 
 
 if __name__ == "__main__":
-   main()
+    main()

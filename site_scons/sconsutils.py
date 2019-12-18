@@ -18,10 +18,12 @@ import copy
 def logged(f):
     "Returns a version of f which prints the results of calling; for use as decorator on nest fns"
     f_name = f.__name__
+
     def f_(*args, **kw_args):
         result = f(*args, **kw_args)
         print f_name, "nest results:", result
         return result
+
     f_.__name__ = f_name
     return f_
 
@@ -38,6 +40,7 @@ def get_in(d, ks, default=None):
     else:
         return d.get(ks[0], default)
 
+
 # Running commands on the cluster sometimes has the unfortunate side-effect of
 # letting distributed filesystems get out of sync.  A file that is written on
 # the cluster may not be visible on local machines for several seconds.  This
@@ -51,10 +54,11 @@ def get_in(d, ks, default=None):
 # 	env.Command(target, 'source.file',
 #   	        [ "srun some-command <${TARGET}",
 #    			   Wait(target)
-#				])
+# 				])
 #
 # This will cause the execution to pause after running 'some-command' until the target shows up on the local machine.
 # The target will be polled on a 2-second interval, and the command will fail if the target does not show up within about 10 seconds.
+
 
 def get_paths_str(dest):
     # If dest is a list, we need to manually call str() on each element
@@ -62,11 +66,12 @@ def get_paths_str(dest):
         elem_strs = []
         for element in dest:
             elem_strs.append('"' + str(element) + '"')
-        return '[' + ', '.join(elem_strs) + ']'
+        return "[" + ", ".join(elem_strs) + "]"
     else:
         return '"' + str(dest) + '"'
 
-# https://github.com/azatoth/scons/blob/73f996e59902d03ec432cc662252aac5fb72f1f8/src/engine/SCons/Defaults.py 
+
+# https://github.com/azatoth/scons/blob/73f996e59902d03ec432cc662252aac5fb72f1f8/src/engine/SCons/Defaults.py
 def wait_func(dest):
     SCons.Node.FS.invalidate_node_memos(dest)
     if not SCons.Util.is_List(dest):
@@ -75,38 +80,41 @@ def wait_func(dest):
         count = 0
         limit = 30
         while not os.path.isfile(entry) or os.stat(entry).st_size == 0:
-            print("waiting for {}...".format(entry))
+            print ("waiting for {}...".format(entry))
             time.sleep(2)
             count = count + 1
-            if count >limit:
+            if count > limit:
                 return 1
     return 0
 
-Wait = ActionFactory(wait_func, lambda dir: 'Wait(%s)' % get_paths_str(dir))
 
-            
+Wait = ActionFactory(wait_func, lambda dir: "Wait(%s)" % get_paths_str(dir))
+
+
 # Define one of two versions of the SRun method,
 # depending on whether the `srun` command is available or not.
-exit_code = subprocess.call("type srun", shell=True, 
-                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-srun_exists = (exit_code == 0)
+exit_code = subprocess.call(
+    "type srun", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+)
+srun_exists = exit_code == 0
+
+
 def SRun(env, target, source, action, srun_args=None, **kwargs):
-    if not hasattr(target, '__iter__'):
+    if not hasattr(target, "__iter__"):
         target = [target]
     waitfor = target
-    if 'chdir' in kwargs:
+    if "chdir" in kwargs:
         waitfor = [os.path.basename(w) for w in waitfor]
     if srun_exists:
-        srun_base = "- srun " if kwargs.get('ignore_errors') else "srun "
+        srun_base = "- srun " if kwargs.get("ignore_errors") else "srun "
         if srun_args:
-            srun_base += srun_args + ' '
+            srun_base += srun_args + " "
         srun_base += "sh -c ' "
         action = [srun_base + action + " '", Wait(waitfor)]
     result = env.Command(target=target, source=source, action=action, **kwargs)
     return result
 
+
 # Use the global AddMethod function to add a method to the global Environment class,
 # so it will be used in all subsequently created environments.
 AddMethod(Environment, SRun)
-
-

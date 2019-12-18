@@ -1,4 +1,0 @@
-sequence,orig_seqid,timepoint,mut_freqs,is_seed,multiplicity,timepoints,timepoint_multiplicities,duplicates,cluster_multiplicity,cluster_timepoints,cluster_timepoint_multiplicities,cluster_duplicates
-seq2,,tptX,0.2,True,2,tptX,2,seq2,2,tptX,2,seq2
-seq1,,tptX,0.3,True,12,tptX:tptZ,3:9,seq1:seq6,17,tptX:tptY:tptZ,3:5:9,seq3:seq1:seq6
-seq4,,tptY,0.3,True,7,tptY,7,seq4,9,tptY:tptZ,7:2,seq5:seq4
