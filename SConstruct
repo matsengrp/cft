@@ -484,19 +484,15 @@ def partition(c):
     metadata=lambda c, d: {"annotation": "elided", "naive_probabilities": "elided"},
 )
 def cluster(c):
-    part = c["partition"]
-    seed_cluster_annotation = part["seed_cluster_annotation"]
-    seed_cluster_size = len(seed_cluster_annotation["unique_ids"])
-    unique_ids = ":".join(seed_cluster_annotation["unique_ids"])
-    naive_probabilities = get_alt_naive_probabilities(seed_cluster_annotation)
+    seed_cluster_annotation = c["partition"]["seed_cluster_annotation"]
     return [
         {
             "id": "seed-cluster",
             "seed_name": c["seed"]["id"],
-            "size": seed_cluster_size,
+            "size": len(seed_cluster_annotation["unique_ids"]),
+            "unique_ids": seed_cluster_annotation["unique_ids"],
             "annotation": seed_cluster_annotation,
-            "unique_ids": unique_ids,
-            "naive_probabilities": naive_probabilities,
+            "naive_probabilities": get_alt_naive_probabilities(seed_cluster_annotation),
         }
     ]
 
@@ -818,16 +814,15 @@ def add_cluster_analysis(w):
         @w.add_target()
         def pruned_partis_outfile(outdir, c):
             if "seed" in c:
-                # TODO clarify this: these are not the unique ids we want to use when subsetting the cluster, they are just a way to identify the cluster we want to subset
-                clust_ids_string = c["cluster"]["unique_ids"]
                 yaml_format = (
                     partisutils.getsuffix(c["partition"]["partition-file"]) == ".yaml"
                 )
-                return env.Command(
+                subset_partis_outfile = env.Command(
                     path.join(outdir, "pruned_partis_output.yaml"),
                     [c["partition"]["partition-file"], c["pruned_ids"]],
                     "python bin/write_subset_partis_outfile.py $SOURCES $TARGET"
                     + " --partition-step={}".format(c["partition"]["step"])
+                    + " --original-cluster-unique-ids={}".format(":".join(c["cluster"]["unique_ids"]))
                     + " --sw-cache={}".format(c["sample"]["sw-cache"])
                     + (
                         " --glfo-dir={}".format(c["sample"]["glfo-dir"])
@@ -836,6 +831,8 @@ def add_cluster_analysis(w):
                     )
                     + (" --locus={}".format(locus(c)) if not yaml_format else ""),
                 )
+                env.Depends(subset_partis_outfile, "bin/write_subset_partis_outfile.py")
+                return subset_partis_outfile
 
         @w.add_target()
         def linearham_base_command(outdir, c):
