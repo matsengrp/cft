@@ -28,7 +28,7 @@ def write_blast_tsv(cline, outfname):
     """
 
     def check_hitless_queries(lines):
-        hitless_queries_count = len([l for l in lines if "0 hits found" in l])
+        hitless_queries_count = len([l for l in lines if "# 0 hits found" in l])
         if hitless_queries_count > 0:
             print "BLAST found no hits for {} of the query sequences.".format(
                 hitless_queries_count
