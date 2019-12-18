@@ -163,6 +163,7 @@ def dataset_metadata(infile):
     )
 
 
+# See https://nestly.readthedocs.io/en/latest/index.html for a definition of add_nest and more info on the "nestly" package which governs the nesting levels of things getting built in this pipeline
 @w.add_nest(
     full_dump=True,
     label_func=lambda d: d["label"],
@@ -220,6 +221,7 @@ def samples(c):
     }
 
 
+# See https://nestly.readthedocs.io/en/latest/index.html for a definition of add_nest and more info on the "nestly" package which governs the nesting levels of things getting built in this pipeline
 @w.add_nest(label_func=str)
 @wrap_test_run(take_n=2)
 def subject(c):
@@ -241,6 +243,7 @@ def subject(c):
 # These are handled in separate nest loops below, with a pop in between.
 
 # There may eventually be some required arguments here as this is where we get our locus and isotype and such
+# See https://nestly.readthedocs.io/en/latest/index.html for a definition of add_nest and more info on the "nestly" package which governs the nesting levels of things getting built in this pipeline
 @w.add_nest(
     metadata=lambda c, d: sconsutils.merge_dicts(
         d.get("meta", {}), {"id": d["id"], "seeds": None, "meta": None}
@@ -270,6 +273,7 @@ def locus(c):
 # Eventually, we'll pop off this seed nest level so we can renest these partitions and clusters directly from the sample nest level.
 
 # Initialize our first sub dataset nest level
+# See https://nestly.readthedocs.io/en/latest/index.html for a definition of add_nest and more info on the "nestly" package which governs the nesting levels of things getting built in this pipeline
 @w.add_nest(
     metadata=lambda c, d: sconsutils.merge_dicts(d.get("meta", {}), {"id": d["id"]})
 )
@@ -346,7 +350,6 @@ def partition_metadata(part, annotation_list, cp, i_step, seed=None, other_id=No
         + "part-"
         + str(i_step),
         "clusters": clusters,
-        # TODO remove this comment? is it still relevant? Should cluster step be partition step?
         "step": i_step,
         "n_clusters": len(clusters),
         "largest_cluster_size": max(map(len, clusters)),
@@ -443,6 +446,7 @@ def read_partition_file(part, c):
 
 # note we elide the nested partitions > clusters lists (as well as the seed cluster annotation)
 # so as not to kill tripl when it tries to load them as a value and can't hash
+# See https://nestly.readthedocs.io/en/latest/index.html for a definition of add_nest and more info on the "nestly" package which governs the nesting levels of things getting built in this pipeline
 @w.add_nest(
     metadata=lambda c, d: {"clusters": "elided", "seed_cluster_annotation": "elided"}
 )
@@ -474,6 +478,7 @@ def partition(c):
 # -----------------
 
 # For seeded clusters we only process the seed containing cluster.
+# See https://nestly.readthedocs.io/en/latest/index.html for a definition of add_nest and more info on the "nestly" package which governs the nesting levels of things getting built in this pipeline
 @w.add_nest(
     label_func=lambda d: d["id"],
     metadata=lambda c, d: {"annotation": "elided", "naive_probabilities": "elided"},
@@ -698,7 +703,6 @@ def add_cluster_analysis(w):
     # Sequence Alignment
     # ------------------
 
-    # TODO lots of commented out code in here and probably other scripts / rest of code base
     backtrans_align.add(env, w, options)
 
     # Trees
@@ -713,6 +717,7 @@ def add_cluster_analysis(w):
             "FastTree -nt -quiet $SOURCE > $TARGET 2> $TARGET-.log",
         )
 
+    # See https://nestly.readthedocs.io/en/latest/index.html for a definition of add_nest and more info on the "nestly" package which governs the nesting levels of things getting built in this pipeline
     @w.add_nest(metadata=lambda c, d: d)
     def reconstruction(c):
         return [
@@ -1069,24 +1074,17 @@ def add_cluster_analysis(w):
         )
 
 
-# Temporarily turn off to debug above
-# Now actually add all of these build targets
+# This calls the above function and runs the whole anaylsis for the seeded clusters which have been added to nestly's nest structure (stored in the variable called 'w')
 add_cluster_analysis(w)
 
-# TODO clarify all these loose phrases referring to nesting levels Popping out
-# -----------
-
-# Here we pop off the "seed" nest level and everything down from it.
-# We're doing this so we can add_cluster_analysis for the unseeded runs.
-
+# Then we call pop() here to go up one nest level and add the unseeded clusters next to the seeded clusters in the build hierarchy (DAG) so we can run a slightly differeny analysis for unseeded clusters.
 w.pop("seed")
 
 # Unseeded cluster analysis
 # -------------------------
-
-# Now we define a function that builds the cluster analysis defined above for the unseeded
-# partitions/clusters. We do this so that the functions names we use for building things with nestly don't
-# overlap with those defined for the seeded analysis above
+# Now we define a function that builds the cluster analysis defined above for the clusters from unseeded partitions.
+# We do this so that the functions names we use for building things with nestly don't overlap with those defined for the seeded analysis above.
+# Note that the "partition" and "cluster" nest levels are defined here separately from above in order to apply different criteria for building the set of unseeded clusters.
 
 
 def add_unseeded_analysis(w):
@@ -1097,6 +1095,7 @@ def add_unseeded_analysis(w):
     # We elide the annotations here because we pass them through in order to avoid re-reading them from
     # the partition file and because we don't need to write them to the metadata for the partition.
     # See https://github.com/matsengrp/cft/pull/270#discussion_r267502415 for details on why we decided to do things this way.
+    # See https://nestly.readthedocs.io/en/latest/index.html for a definition of add_nest and more info on the "nestly" package which governs the nesting levels of things getting built in this pipeline
     @w.add_nest(metadata=lambda c, d: {"clusters": "elided", "cp": "elided"})
     def partition(c):
         """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
@@ -1118,6 +1117,7 @@ def add_unseeded_analysis(w):
         return keep_partitions
 
     # Add cluster nesting level
+    # See https://nestly.readthedocs.io/en/latest/index.html for a definition of add_nest and more info on the "nestly" package which governs the nesting levels of things getting built in this pipeline
     @w.add_nest(
         label_func=lambda d: d["id"],
         metadata=lambda c, d: {
@@ -1157,21 +1157,15 @@ def add_unseeded_analysis(w):
                     clusters.append(cluster_meta)
         return clusters
 
+    # do the cluster analysis defined above for all the unseeded clusters
     add_cluster_analysis(w)
 
 
-# Then we immediately call this function we define
-
 add_unseeded_analysis(w)
-
-# Write metadata
-# --------------------
-
-# could also do this by a final w.pop('dataset'), but we want a little more control here for snapshots
 
 w.pop("subject")
 
-
+# Write metadata
 @w.add_target()
 def metadata_snapshot(outdir, c):
     return env.Command(
