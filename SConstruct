@@ -1,22 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Carry partis output through prepation for display via cftweb application.
-
-This SConstruct does the following:
+This scons pipeline does the following:
 
 * Runs process_partis.py for each seed/sequencing-run/parition combination, producing a metadata file of information
 * For each such parition, the cluster with the seed is analyzed:
     * Tree construction using `FastTree`
-    * Ancestral state reconstruction using `dnapars` or `dnaml`
-    * Some SVG visualization
-* Results of all these analyses are then pointed to by a merged metadata file, which is then consumed by cftweb
+    * Ancestral state reconstruction using `raxml-ng` (default) and/or `dnaml`
+* Results of all these analyses are then pointed to by a merged metadata file, which is then consumed by Olmsted https://github.com/matsengrp/olmsted
 
-Clusters with only two sequences cannot be analyzed by dnapars, dnaml, or FastTree, and so these are skipped atuomatically.
-Additionally, some clusters end up with bad trees after a rerooting step, and also have trouble in our dnaml2tree.py/dnapars.py step.
-These are left out of the final `metadata.json` file.
-Eventually, all of these cases should be caught and tombstone information should be left in the metadata file capturing as much infomration as possible.
-
+Clusters with only two sequences cannot be analyzed by raxml-ng, dnaml, or FastTree, and so these are skipped atuomatically.
 See README for typical environment setup and usage.
 """
 
@@ -724,7 +717,8 @@ def add_cluster_analysis(w):
                 "prune_count": 100,
             }
             for prune_strategy, asr_prog in itertools.product(
-                ["min_adcl", "seed_lineage"] if "seed" in c else ["min_adcl"], ["dnaml"]
+                ["min_adcl", "seed_lineage"] if "seed" in c else ["min_adcl"],
+                ["raxml_ng"] if not options["run_dnaml"] else ["dnaml"]
             )
         ]
 
@@ -879,32 +873,68 @@ def add_cluster_analysis(w):
             base_call + "$TARGET",
         )
 
-    @w.add_target()
-    def _phy(outdir, c):
-        "Save seqs in phylip format for dnaml, renaming sequences as necessary to avoid seqname limits"
-        return env.Command(
-            [path.join(outdir, x) for x in ("pruned.phy", "seqname_mapping.csv")],
-            c["pruned_seqs"],
-            "make_phylip.py $SOURCE $TARGETS --inferred-naive-name "
-            + options["inferred_naive_name"],
-        )
+    if options["run_dnaml"]:
+        @w.add_target()
+        def _phy(outdir, c):
+            "Save seqs in phylip format for dnaml, renaming sequences as necessary to avoid seqname limits"
+            return env.Command(
+                [path.join(outdir, x) for x in ("pruned.phy", "seqname_mapping.csv")],
+                c["pruned_seqs"],
+                "make_phylip.py $SOURCE $TARGETS --inferred-naive-name "
+                + options["inferred_naive_name"],
+            )
 
-    @w.add_target()
-    def phy(outdir, c):
-        return c["_phy"][0]
+        @w.add_target()
+        def phy(outdir, c):
+            return c["_phy"][0]
 
-    @w.add_target()
-    def seqname_mapping(outdir, c):
-        """Seqname translations for reinterpretting dnaml output in terms of original seqnames, due to phylip name
-        length constraints."""
-        return c["_phy"][1]
+        @w.add_target()
+        def seqname_mapping(outdir, c):
+            """Seqname translations for reinterpretting dnaml output in terms of original seqnames, due to phylip name
+            length constraints."""
+            return c["_phy"][1]
 
-    # Run dnapars/dnaml by passing in the "config file" as stdin hoping the menues all stay sane
+    # Run raxml-ng/dnaml
     @w.add_target()
     def _asr(outdir, c):
-        "run dnapars/dnaml (from phylip package) to create tree with inferred sequences at internal nodes"
+        "run raxml-ng and/or dnaml(from phylip package) to create tree with inferred sequences at internal nodes"
         asr_prog = c["reconstruction"]["asr_prog"]
-        if asr_prog in {"dnapars", "dnaml"}:
+        basename = "asr"
+        if asr_prog == "raxml_ng":
+            raxml_ng_tree, raxml_ng_asr = env.Command(
+                [
+                    path.join(outdir, basename + ".raxml." + ext)
+                    for ext in ["ancestralTree", "ancestralStates"]
+                ],
+                c["pruned_seqs"],
+                "raxml-ng --ancestral --model GTR+G"
+                + " --msa $SOURCE"
+                + " --prefix {}".format(basename)
+                #+ " --threads <threads>"
+                #+ " --seed <random-seed>"
+                )
+            asr_tree, asr_seqs = env.Command(
+                [
+                    path.join(outdir, basename + "." + ext)
+                    for ext in ["fa", "nwk"]
+                ],
+                [
+                    raxml_ng_tree,
+                    raxml_ng_asr,
+                    c["pruned_seqs"]
+                ],
+                "bin/parse_raxmlng.py"
+                + " --tree ${SOURCES[0]}"
+                + " --asr-seq ${SOURCES[1]}"
+                + " --input-seq ${SOURCES[2]}"
+                + " --outbase {}".format(basename)
+                + " --naive {}".format(options["inferred_naive_name"])
+                )
+            # TODO add ancestors_naive_and_seed Command. Do this in bin/parse_raxmlng.py? Reuse bin/process_asr.py? Consolidate that function among the two?
+            # TODO clean up all the instances of: 'if options["run_dnaml"]:' maybe add a site_scons file to keep it separate?
+            # TODO run black on new code
+            return [asr_tree, asr_seqs, ancestors_naive_and_seed]
+        elif asr_prog == "dnaml":
             config = env.Command(
                 path.join(outdir, asr_prog + ".cfg"),
                 c["phy"],
@@ -921,11 +951,10 @@ def add_cluster_analysis(w):
                 + asr_prog
                 + ".log",
             )
-            # Manually depend on phy so that we rerun dnapars/dnaml if the input sequences change (without this, dnapars/dnaml will
+            # Manually depend on phy so that we rerun dnaml if the input sequences change (without this, dnaml will
             # only get rerun if one of the targets are removed or if the iput asr_config file is changed). IMPORTANT!
             env.Depends(phylip_out, c["phy"])
             # process the phylip output
-            basename = "asr"
             tgt = env.Command(
                 [
                     path.join(outdir, basename + "." + ext)
@@ -948,35 +977,7 @@ def add_cluster_analysis(w):
             # manually depnd on this because the script isn't in first position
             env.Depends(tgt, "bin/process_asr.py")
             env.Depends(tgt, "bin/plot_tree.py")
-            return [asr_tree, asr_tree_svg, asr_seqs, ancestors_naive_and_seed]
-        elif asr_prog == "raxml":
-            asr_supports_tree = env.SRun(
-                path.join(outdir, "asr.sup.nwk"),
-                c["pruned_seqs"],
-                # Question should use -T for threads? how many?
-                # Don't know if the reroot will really do what we want here
-                "raxml.py --rapid-bootstrap 30 -x 3243 -o %s $SOURCE $TARGET"
-                % options["inferred_naive_name"],
-            )
-            asr_tree_svg = env.Command(
-                path.join(outdir, "asr.svg"),
-                [asr_supports_tree, c["tip_seqmeta"]],
-                "xvfb-run -a bin/plot_tree.py $SOURCES $TARGET --supports --inferred-naive-name "
-                + options["inferred_naive_name"]
-                + (" --seed " + c["seed"] if "seed" in c else ""),
-            )
-            asr_tree = env.Command(
-                path.join(outdir, "asr.nwk"),
-                asr_supports_tree,
-                "name_internal_nodes.py $SOURCE $TARGET",
-            )
-            return [asr_tree, asr_tree_svg, asr_supports_tree]
-        else:
-            print("something has gone terribly wrong")
-
-    @w.add_target(ingest=True)
-    def asr_tree_svg(outdir, c):
-        return c["_asr"][1]
+            return [asr_tree, asr_seqs, ancestors_naive_and_seed, asr_tree_svg]
 
     @w.add_target(ingest=True)
     def asr_tree(outdir, c):
@@ -984,11 +985,16 @@ def add_cluster_analysis(w):
 
     @w.add_target(ingest=True)
     def asr_seqs(outdir, c):
-        return c["_asr"][2]
+        return c["_asr"][1]
 
     @w.add_target(ingest=True)
     def ancestors_naive_and_seed(outdir, c):
-        return c["_asr"][3]
+        return c["_asr"][2]
+
+    if options["run_dnaml"]:
+        @w.add_target(ingest=True)
+        def asr_tree_svg(outdir, c):
+            return c["_asr"][3]
 
     @w.add_target()
     def observed_ancestors(outdir, c):
