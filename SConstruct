@@ -901,39 +901,53 @@ def add_cluster_analysis(w):
         asr_prog = c["reconstruction"]["asr_prog"]
         basename = "asr"
         if asr_prog == "raxml_ng":
-            raxml_ng_tree, raxml_ng_asr = env.Command(
+            # TODO I was going to use num_jobs as --threads but if the ratio of threads:size-of-alignment is too large, raxml-ng complains, so we should either set as a low constant like I have now or compute from the input alignment size. We might sill want to use num_jobs so that we can be sure not to exceed it (if that is possible).
+            print(env.GetOption("num_jobs"))
+            raxml_base_cmd = "raxml-ng --model GTR+G --threads 2 --redo --force msa_allgaps" \
+            + " --prefix {}".format(path.join(outdir, basename)) \
+            + " --msa {}".format(str(c["pruned_seqs"][0]))
+            # run once to infer tree
+            raxml_best_tree = env.Command(
+                path.join(outdir, basename + ".raxml.bestTree"),
+                c["pruned_seqs"],
+                raxml_base_cmd
+                )
+            # run again to infer ancestral sequences
+            raxml_asr_tree, raxml_asr_seqs = env.Command(
                 [
                     path.join(outdir, basename + ".raxml." + ext)
                     for ext in ["ancestralTree", "ancestralStates"]
                 ],
-                c["pruned_seqs"],
-                "raxml-ng --ancestral --model GTR+G"
-                + " --msa $SOURCE"
-                + " --prefix {}".format(basename)
-                #+ " --threads <threads>"
-                #+ " --seed <random-seed>"
+                [
+                    c["pruned_seqs"],
+                    raxml_best_tree
+                ],
+                raxml_base_cmd
+                    + " --ancestral"
+                    + " --tree ${SOURCES[1]}"
                 )
-            asr_tree, asr_seqs = env.Command(
+            rooted_asr_tree, asr_seqs, ancestors_naive_and_seed = env.Command(
                 [
                     path.join(outdir, basename + "." + ext)
-                    for ext in ["fa", "nwk"]
+                    for ext in ["nwk", "fa", "ancestors_naive_and_seed.fa"]
                 ],
                 [
-                    raxml_ng_tree,
-                    raxml_ng_asr,
+                    raxml_asr_tree,
+                    raxml_asr_seqs,
                     c["pruned_seqs"]
                 ],
                 "bin/parse_raxmlng.py"
                 + " --tree ${SOURCES[0]}"
                 + " --asr-seq ${SOURCES[1]}"
                 + " --input-seq ${SOURCES[2]}"
-                + " --outbase {}".format(basename)
-                + " --naive {}".format(options["inferred_naive_name"])
+                + " --outbase {}".format(path.join(outdir, basename))
+                + " --inferred-naive-name {}".format(options["inferred_naive_name"])
+                + (" --seed " + c["seed"]["id"] if "seed" in c else "")
                 )
-            # TODO add ancestors_naive_and_seed Command. Do this in bin/parse_raxmlng.py? Reuse bin/process_asr.py? Consolidate that function among the two?
+            # TODO determine if we need svg plots for raxml trees (or at all)
             # TODO clean up all the instances of: 'if options["run_dnaml"]:' maybe add a site_scons file to keep it separate?
-            # TODO run black on new code
-            return [asr_tree, asr_seqs, ancestors_naive_and_seed]
+            # TODO (do this last): run black
+            return [rooted_asr_tree, asr_seqs, ancestors_naive_and_seed]
         elif asr_prog == "dnaml":
             config = env.Command(
                 path.join(outdir, asr_prog + ".cfg"),
@@ -1038,7 +1052,7 @@ def add_cluster_analysis(w):
 
         tree_metrics = env.Command(
             [path.join(outdir, "selection-metrics.yaml")],
-            [path.join(baseoutdir, "asr.nwk")],  # sources
+            c["asr_tree"],  # sources
             "%s/bin/get-tree-metrics.py ${SOURCES[0]} ${TARGETS[0]}" % (partis_path),
         )
         env.Depends(tree_metrics, "partis/bin/get-tree-metrics.py")

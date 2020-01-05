@@ -260,7 +260,7 @@ def get_args():
     )
     parser.add_argument("--inferred-naive-name", type=str, required=True)
     parser.add_argument(
-        "--seed", type=str, help="id of leaf [default 'seed']", default="seed"
+        "--seed", type=str, help="id of seed sequence, default: 'seed'", default="seed"
     )
     return parser.parse_args()
 
