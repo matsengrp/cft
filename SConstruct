@@ -329,6 +329,8 @@ def get_alt_naive_probabilities(annotation):
 
 
 def partition_steps(cp):
+    if len(cp.partitions) == 0:
+        return []
     return (
         range(len(cp.partitions))
         if options["process_all_partis_partition_steps"]
@@ -340,9 +342,13 @@ def partition_metadata(part, annotation_list, cp, i_step, seed=None, other_id=No
     clusters = cp.partitions[i_step]
     seed_cluster_annotation = None
     if seed:
-        seed_cluster_annotation = process_partis.choose_cluster(
-            part["partition-file"], annotation_list, cp, i_step
-        )
+        try:
+            seed_cluster_annotation = process_partis.choose_cluster(
+                part["partition-file"], annotation_list, cp, i_step
+            )
+        except ValueError, e:
+            warn("Due to the following error: {},\n no annotation was found in {} for seed cluster {}. Skipping this cluster".format(" ".join(e.args), part["partition-file"], seed))
+            return None
 
     meta = {
         "id": ("seed-" if seed else "unseeded-")
@@ -416,7 +422,7 @@ def valid_seed_partition(
     """If seed cluster size is less than max_size_to_check, read the corresponding cluster annotation and return True iff after applying our health metric filters
     we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
     seed_cluster_unique_ids = seed_cluster(cp, i_step, seed_id)
-    if meets_cluster_size_reqs(seed_cluster_unique_ids, is_seed_cluster=True):
+    if seed_cluster_unique_ids is not None and meets_cluster_size_reqs(seed_cluster_unique_ids, is_seed_cluster=True):
         if len(seed_cluster_unique_ids) > max_size_to_check:
             return True
         return valid_cluster(
