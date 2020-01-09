@@ -369,7 +369,7 @@ def with_other_partitions(node):
 
 
 def meets_cluster_size_reqs(unique_ids, is_seed_cluster=False):
-    """By default just checks for >= 3 sequences for seed clusters (otherwise, we can't build a tree downstream) and >= 6 for unseeded (somewhat arbitrary, though we often dont see smaller especially without processing all partition steps). This simple function exists just to track different min cluster sizes in one place"""
+    """By default just checks for >= 4 sequences for seed clusters (otherwise, we can't build a tree downstream) and >= 6 for unseeded (somewhat arbitrary, though we often dont see smaller especially without processing all partition steps). This simple function exists just to track different min cluster sizes in one place"""
     size = len(unique_ids)
     if size > 10000:
         raise Exception(
@@ -382,7 +382,7 @@ def meets_cluster_size_reqs(unique_ids, is_seed_cluster=False):
                 unique_ids
             )
         )
-    return size >= (3 if is_seed_cluster else 6)
+    return size >= (4 if is_seed_cluster else 6)
 
 
 def valid_cluster(annotation_list, part, unique_ids, is_seed_cluster=False):
@@ -901,8 +901,6 @@ def add_cluster_analysis(w):
         asr_prog = c["reconstruction"]["asr_prog"]
         basename = "asr"
         if asr_prog == "raxml_ng":
-            # TODO I was going to use num_jobs as --threads but if the ratio of threads:size-of-alignment is too large, raxml-ng complains, so we should either set as a low constant like I have now or compute from the input alignment size. We might sill want to use num_jobs so that we can be sure not to exceed it (if that is possible).
-            print(env.GetOption("num_jobs"))
             raxml_base_cmd = "raxml-ng --model GTR+G --threads 2 --redo --force msa_allgaps" \
             + " --prefix {}".format(path.join(outdir, basename)) \
             + " --msa {}".format(str(c["pruned_seqs"][0]))
