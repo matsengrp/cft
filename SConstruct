@@ -718,7 +718,7 @@ def add_cluster_analysis(w):
             }
             for prune_strategy, asr_prog in itertools.product(
                 ["min_adcl", "seed_lineage"] if "seed" in c else ["min_adcl"],
-                ["raxml_ng"] if not options["run_dnaml"] else ["dnaml"]
+                ["raxml_ng"] if not options["run_dnaml"] else ["dnaml"],
             )
         ]
 
@@ -816,7 +816,9 @@ def add_cluster_analysis(w):
                     [c["partition"]["partition-file"], c["pruned_ids"]],
                     "python bin/write_subset_partis_outfile.py $SOURCES $TARGET"
                     + " --partition-step={}".format(c["partition"]["step"])
-                    + " --original-cluster-unique-ids={}".format(":".join(c["cluster"]["unique_ids"]))
+                    + " --original-cluster-unique-ids={}".format(
+                        ":".join(c["cluster"]["unique_ids"])
+                    )
                     + " --sw-cache={}".format(c["sample"]["sw-cache"])
                     + (
                         " --glfo-dir={}".format(c["sample"]["glfo-dir"])
@@ -879,8 +881,10 @@ def add_cluster_analysis(w):
         "run raxml-ng and/or dnaml(from phylip package) to create tree with inferred sequences at internal nodes"
         asr_prog = c["reconstruction"]["asr_prog"]
         if asr_prog == "raxml_ng":
-            raxml_base_cmd = "raxml-ng --model GTR+G --threads 2 --redo --force msa_allgaps" \
-            + " --msa {}".format(str(c["pruned_seqs"][0]))
+            raxml_base_cmd = (
+                "raxml-ng --model GTR+G --threads 2 --redo --force msa_allgaps"
+                + " --msa {}".format(str(c["pruned_seqs"][0]))
+            )
             # run once to infer tree
             basename = "treeInference"
             log, raxml_best_tree = env.Command(
@@ -890,9 +894,9 @@ def add_cluster_analysis(w):
                 ],
                 c["pruned_seqs"],
                 raxml_base_cmd
-                    + " --prefix {}".format(path.join(outdir, basename))
-                    + " > ${TARGETS[0]}"
-                )
+                + " --prefix {}".format(path.join(outdir, basename))
+                + " > ${TARGETS[0]}",
+            )
             # run again to reconstruct ancestral sequences (ASR)
             basename = "ASR"
             log, raxml_asr_tree, raxml_asr_seqs = env.Command(
@@ -900,34 +904,27 @@ def add_cluster_analysis(w):
                     path.join(outdir, basename + ".raxml." + ext)
                     for ext in ["log", "ancestralTree", "ancestralStates"]
                 ],
-                [
-                    c["pruned_seqs"],
-                    raxml_best_tree
-                ],
+                [c["pruned_seqs"], raxml_best_tree],
                 raxml_base_cmd
-                    + " --prefix {}".format(path.join(outdir, basename))
-                    + " --ancestral"
-                    + " --tree ${SOURCES[1]}"
-                    + " > ${TARGETS[0]}"
-                )
+                + " --prefix {}".format(path.join(outdir, basename))
+                + " --ancestral"
+                + " --tree ${SOURCES[1]}"
+                + " > ${TARGETS[0]}",
+            )
             rooted_asr_tree, asr_seqs, ancestors_naive_and_seed = env.Command(
                 [
                     path.join(outdir, basename + "." + ext)
                     for ext in ["nwk", "fa", "ancestors_naive_and_seed.fa"]
                 ],
-                [
-                    raxml_asr_tree,
-                    raxml_asr_seqs,
-                    c["pruned_seqs"]
-                ],
+                [raxml_asr_tree, raxml_asr_seqs, c["pruned_seqs"]],
                 "bin/parse_raxmlng.py"
                 + " --tree ${SOURCES[0]}"
                 + " --asr-seq ${SOURCES[1]}"
                 + " --input-seq ${SOURCES[2]}"
                 + " --outbase {}".format(path.join(outdir, basename))
                 + " --inferred-naive-name {}".format(options["inferred_naive_name"])
-                + (" --seed " + c["seed"]["id"] if "seed" in c else "")
-                )
+                + (" --seed " + c["seed"]["id"] if "seed" in c else ""),
+            )
             # TODO (do this last): run black
             return [rooted_asr_tree, asr_seqs, ancestors_naive_and_seed]
         elif asr_prog == "dnaml":

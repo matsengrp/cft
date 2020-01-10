@@ -308,5 +308,6 @@ def main():
     fname = outbase + ".nwk"
     tree.write(format=1, format_root_node=True, outfile=fname)
 
+
 if __name__ == "__main__":
     main()
