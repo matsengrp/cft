@@ -873,27 +873,6 @@ def add_cluster_analysis(w):
             base_call + "$TARGET",
         )
 
-    if options["run_dnaml"]:
-        @w.add_target()
-        def _phy(outdir, c):
-            "Save seqs in phylip format for dnaml, renaming sequences as necessary to avoid seqname limits"
-            return env.Command(
-                [path.join(outdir, x) for x in ("pruned.phy", "seqname_mapping.csv")],
-                c["pruned_seqs"],
-                "make_phylip.py $SOURCE $TARGETS --inferred-naive-name "
-                + options["inferred_naive_name"],
-            )
-
-        @w.add_target()
-        def phy(outdir, c):
-            return c["_phy"][0]
-
-        @w.add_target()
-        def seqname_mapping(outdir, c):
-            """Seqname translations for reinterpretting dnaml output in terms of original seqnames, due to phylip name
-            length constraints."""
-            return c["_phy"][1]
-
     # Run raxml-ng/dnaml
     @w.add_target()
     def _asr(outdir, c):
@@ -949,14 +928,20 @@ def add_cluster_analysis(w):
                 + " --inferred-naive-name {}".format(options["inferred_naive_name"])
                 + (" --seed " + c["seed"]["id"] if "seed" in c else "")
                 )
-            # TODO clean up all the instances of: 'if options["run_dnaml"]:' maybe add a site_scons file to keep it separate?
             # TODO (do this last): run black
             return [rooted_asr_tree, asr_seqs, ancestors_naive_and_seed]
         elif asr_prog == "dnaml":
+            # Seqname translations for reinterpretting dnaml output in terms of original seqnames, due to phylip name length constraints.
+            pruned_seqs_phylip, seqname_mapping = env.Command(
+                [path.join(outdir, x) for x in ("pruned.phy", "seqname_mapping.csv")],
+                c["pruned_seqs"],
+                "make_phylip.py $SOURCE $TARGETS --inferred-naive-name "
+                + options["inferred_naive_name"],
+            )
             basename = "asr"
             config = env.Command(
                 path.join(outdir, asr_prog + ".cfg"),
-                c["phy"],
+                pruned_seqs_phylip,
                 "python bin/mkconfig.py $SOURCE " + asr_prog + "> $TARGET",
             )
             phylip_out = env.SRun(
@@ -970,16 +955,15 @@ def add_cluster_analysis(w):
                 + asr_prog
                 + ".log",
             )
-            # Manually depend on phy so that we rerun dnaml if the input sequences change (without this, dnaml will
-            # only get rerun if one of the targets are removed or if the iput asr_config file is changed). IMPORTANT!
-            env.Depends(phylip_out, c["phy"])
+            # Manually depend on phylip sequences so that we rerun dnaml if the input sequences change; without this, dnaml will only get rerun if one of the targets are removed or if the iput asr_config file is changed.
+            env.Depends(phylip_out, pruned_seqs_phylip)
             # process the phylip output
             tgt = env.Command(
                 [
                     path.join(outdir, basename + "." + ext)
                     for ext in ["nwk", "fa", "ancestors_naive_and_seed.fa"]
                 ],
-                [c["seqname_mapping"], phylip_out, c["tip_seqmeta"]],
+                [seqname_mapping, phylip_out, c["tip_seqmeta"]],
                 # Note that adding `-` at the beginning of this command string can keep things running if
                 # there's an error trying to build a tree from 2 sequences; should be filtered prior now...
                 "xvfb-run -a bin/process_asr.py"
