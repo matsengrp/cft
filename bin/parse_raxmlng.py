@@ -59,19 +59,13 @@ def write_tree_fastas(asr_seqs_fname, input_seqs_fname, inferred_naive_name, see
     SeqIO.write(input_records + asr_records, outbase + ".fa", "fasta")
     write_ancestors_naive_and_seed(input_records, asr_records, inferred_naive_name, seed, outbase)
 
-# reroot the tree on node matching regex pattern.
-# Usually this is used to root on the naive germline sequence with a name matching '.*naive.*'
-def reroot_tree(tree, pattern, outgroup=False):
-    # TODO do we need "outgroup" option/case?
-    # find all nodes matching pattern
+def reroot_tree(tree, pattern):
+    """
+    Reroot the tree on node matching regex pattern, e.g. the naive sequence.
+    """
     node = process_asr.find_node(tree, pattern)
     tree.set_outgroup(node)
-    if tree != node and outgroup:
-        s = node.get_sisters()  # KBH - want the outgroup with a branch length of (near) zero
-        s[0].dist = node.dist * 2
-        node.dist = 0.0000001   # KBH - actual zero length branches cause problems
-        tree.swap_children()    # KBH - want root to be at the last taxon in the newick file.
-    elif tree != node:
+    if tree != node:
         tree.remove_child(node)
         node.add_child(tree.get_children()[0])
         tree.dist = node.dist
