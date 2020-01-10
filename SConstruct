@@ -942,7 +942,6 @@ def add_cluster_analysis(w):
                 + " --inferred-naive-name {}".format(options["inferred_naive_name"])
                 + (" --seed " + c["seed"]["id"] if "seed" in c else "")
                 )
-            # TODO determine if we need svg plots for raxml trees (or at all)
             # TODO clean up all the instances of: 'if options["run_dnaml"]:' maybe add a site_scons file to keep it separate?
             # TODO (do this last): run black
             return [rooted_asr_tree, asr_seqs, ancestors_naive_and_seed]
@@ -970,7 +969,7 @@ def add_cluster_analysis(w):
             tgt = env.Command(
                 [
                     path.join(outdir, basename + "." + ext)
-                    for ext in ["nwk", "svg", "fa", "ancestors_naive_and_seed.fa"]
+                    for ext in ["nwk", "fa", "ancestors_naive_and_seed.fa"]
                 ],
                 [c["seqname_mapping"], phylip_out, c["tip_seqmeta"]],
                 # Note that adding `-` at the beginning of this command string can keep things running if
@@ -985,11 +984,10 @@ def add_cluster_analysis(w):
                 + options["inferred_naive_name"]
                 + " --seqname-mapping $SOURCES",
             )
-            asr_tree, asr_tree_svg, asr_seqs, ancestors_naive_and_seed = tgt
+            asr_tree, asr_seqs, ancestors_naive_and_seed = tgt
             # manually depnd on this because the script isn't in first position
             env.Depends(tgt, "bin/process_asr.py")
-            env.Depends(tgt, "bin/plot_tree.py")
-            return [asr_tree, asr_seqs, ancestors_naive_and_seed, asr_tree_svg]
+            return [asr_tree, asr_seqs, ancestors_naive_and_seed]
 
     @w.add_target(ingest=True)
     def asr_tree(outdir, c):
@@ -1002,11 +1000,6 @@ def add_cluster_analysis(w):
     @w.add_target(ingest=True)
     def ancestors_naive_and_seed(outdir, c):
         return c["_asr"][2]
-
-    if options["run_dnaml"]:
-        @w.add_target(ingest=True)
-        def asr_tree_svg(outdir, c):
-            return c["_asr"][3]
 
     @w.add_target()
     def observed_ancestors(outdir, c):
