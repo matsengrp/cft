@@ -899,30 +899,37 @@ def add_cluster_analysis(w):
     def _asr(outdir, c):
         "run raxml-ng and/or dnaml(from phylip package) to create tree with inferred sequences at internal nodes"
         asr_prog = c["reconstruction"]["asr_prog"]
-        basename = "asr"
         if asr_prog == "raxml_ng":
             raxml_base_cmd = "raxml-ng --model GTR+G --threads 2 --redo --force msa_allgaps" \
-            + " --prefix {}".format(path.join(outdir, basename)) \
             + " --msa {}".format(str(c["pruned_seqs"][0]))
             # run once to infer tree
-            raxml_best_tree = env.Command(
-                path.join(outdir, basename + ".raxml.bestTree"),
-                c["pruned_seqs"],
-                raxml_base_cmd
-                )
-            # run again to infer ancestral sequences
-            raxml_asr_tree, raxml_asr_seqs = env.Command(
+            basename = "treeInference"
+            log, raxml_best_tree = env.Command(
                 [
                     path.join(outdir, basename + ".raxml." + ext)
-                    for ext in ["ancestralTree", "ancestralStates"]
+                    for ext in ["log", "bestTree"]
+                ],
+                c["pruned_seqs"],
+                raxml_base_cmd
+                    + " --prefix {}".format(path.join(outdir, basename))
+                    + " > ${TARGETS[0]}"
+                )
+            # run again to reconstruct ancestral sequences (ASR)
+            basename = "ASR"
+            log, raxml_asr_tree, raxml_asr_seqs = env.Command(
+                [
+                    path.join(outdir, basename + ".raxml." + ext)
+                    for ext in ["log", "ancestralTree", "ancestralStates"]
                 ],
                 [
                     c["pruned_seqs"],
                     raxml_best_tree
                 ],
                 raxml_base_cmd
+                    + " --prefix {}".format(path.join(outdir, basename))
                     + " --ancestral"
                     + " --tree ${SOURCES[1]}"
+                    + " > ${TARGETS[0]}"
                 )
             rooted_asr_tree, asr_seqs, ancestors_naive_and_seed = env.Command(
                 [
@@ -946,6 +953,7 @@ def add_cluster_analysis(w):
             # TODO (do this last): run black
             return [rooted_asr_tree, asr_seqs, ancestors_naive_and_seed]
         elif asr_prog == "dnaml":
+            basename = "asr"
             config = env.Command(
                 path.join(outdir, asr_prog + ".cfg"),
                 c["phy"],
