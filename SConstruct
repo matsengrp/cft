@@ -887,7 +887,7 @@ def add_cluster_analysis(w):
             )
             # run once to infer tree
             basename = "treeInference"
-            log, raxml_best_tree = env.Command(
+            log, raxml_best_tree = env.SRun(
                 [
                     path.join(outdir, basename + ".raxml." + ext)
                     for ext in ["log", "bestTree"]
@@ -899,7 +899,7 @@ def add_cluster_analysis(w):
             )
             # run again to reconstruct ancestral sequences (ASR)
             basename = "ASR"
-            log, raxml_asr_tree, raxml_asr_seqs = env.Command(
+            log, raxml_asr_tree, raxml_asr_seqs = env.SRun(
                 [
                     path.join(outdir, basename + ".raxml." + ext)
                     for ext in ["log", "ancestralTree", "ancestralStates"]
