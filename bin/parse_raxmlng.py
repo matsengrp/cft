@@ -39,7 +39,9 @@ def ASR_parser(args):
     rooted_tree = root_tree(tree, args.inferred_naive_name)
 
     # Dump tree as newick:
-    rooted_tree.write(outfile="{}.nwk".format(args.outbase), format_root_node=True, format=1)
+    rooted_tree.write(
+        outfile="{}.nwk".format(args.outbase), format_root_node=True, format=1
+    )
     print("Done parsing RAxML-NG tree")
 
 
@@ -92,20 +94,21 @@ def root_tree(tree, desired_root_name):
     node = tree.search_nodes(name=desired_root_name)[0]
     if tree != node:
         tree.set_outgroup(node)
-        #outgrouping an unrooted tree causes an empty string named node, whose actual name goes to the root for some reason. Swap them back:
+        # outgrouping an unrooted tree causes an empty string named node, whose actual name goes to the root for some reason. Swap them back:
         tree.search_nodes(name="")[0].name = tree.name
         tree.name = ""
-        #Since we've outgrouped "node" the root should have two children: "node" and it's "sister" (aka the rest of the tree). We actually need "node" to be the root. First take off "node":
+        # Since we've outgrouped "node" the root should have two children: "node" and it's "sister" (aka the rest of the tree). We actually need "node" to be the root. First take off "node":
         tree.remove_child(node)
-        #"sister" remains now as the other child of the tree
+        # "sister" remains now as the other child of the tree
         sister = tree.get_children()[0]
         # add to the "sister" branch the branch length we lost when we removed "node" (should be equal branch length so could multiply sister.dist by 2 instead of doing it this way but this reads more clearly).
         sister.dist = sister.dist + node.dist
         node.dist = 0
         # attach "sister" (and the rest of the tree below it) to "node" to yield a tree rooted on "node"
         node.add_child(sister)
-        #return "node" below since "node" is now the root
+        # return "node" below since "node" is now the root
     return node
+
 
 def main():
     parser = argparse.ArgumentParser(description="Tools for running ASR with RAxML-NG.")
