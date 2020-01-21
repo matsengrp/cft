@@ -196,9 +196,23 @@ def wrap_test_run(take_n=2):
 # Subject nest level
 # ------------------
 
+# Whenever we iterate over partitions, we always want to assume there could be an `other-partitions` mapping,
+# and iterate over all these things, while tracking their other_id keys in the `other-partitions` dict.
+def get_partitions(node):
+    parts = []
+    if node.get("partition-file"):
+        parts.append(node)
+    if node.get("other-partitions"):
+        parts += [
+            sconsutils.merge_dicts(part, {"other_id": other_id})
+            for other_id, part in node["other-partitions"].items()
+            if part.get("partition-file")
+        ]
+    return parts
+
 
 def keep_sample(sample):
-    return (sample.get("partition-file") and options["only_seeds"] is None) or [
+    return (len(get_partitions(sample)) > 0 and options["only_seeds"] is None) or [
         seed
         for seed_id, seed in sample.get("seeds", {}).items()
         if seed.get("partition-file")
@@ -363,21 +377,6 @@ def partition_metadata(part, annotation_list, cp, i_step, seed=None, other_id=No
     return sconsutils.merge_dicts(meta, part.get("meta") or {})
 
 
-# Whenever we iterate over partitions, we always want to assume there could be an `other-partitions` mapping,
-# and iterate over all these things, while tracking their other_id keys in the `other-partitions` dict.
-def with_other_partitions(node):
-    parts = []
-    if node.get("partition-file"):
-        parts.append(node)
-    if node.get("other-partitions"):
-        parts += [
-            sconsutils.merge_dicts(part, {"other_id": other_id})
-            for other_id, part in node["other-partitions"].items()
-            if part.get("partition-file")
-        ]
-    return parts
-
-
 def meets_cluster_size_reqs(unique_ids, is_seed_cluster=False):
     """By default just checks for >= 4 sequences for seed clusters (otherwise, we can't build a tree downstream) and >= 6 for unseeded (somewhat arbitrary, though we often dont see smaller especially without processing all partition steps). This simple function exists just to track different min cluster sizes in one place"""
     size = len(unique_ids)
@@ -462,7 +461,7 @@ def partition(c):
     seed_id = c["seed"]["id"]
     if options["only_seeds"] is not None and seed_id not in options["only_seeds"]:
         return []
-    for part in with_other_partitions(c["seed"]):
+    for part in get_partitions(c["seed"]):
         annotation_list, cp = read_partition_file(part, c)
         if cp:
             for i_step in partition_steps(cp):
@@ -1110,7 +1109,7 @@ def add_unseeded_analysis(w):
         """Return the annotations file for a given control dictionary, sans any partitions which don't have enough sequences
         for actual analysis."""
         keep_partitions = []
-        for partition_run in with_other_partitions(c["sample"]):
+        for partition_run in get_partitions(c["sample"]):
             annotation_list, cp = read_partition_file(partition_run, c)
             if cp:
                 keep_partitions += [
