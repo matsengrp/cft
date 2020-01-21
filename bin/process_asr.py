@@ -18,8 +18,6 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 
-import plot_tree
-
 # iterate over recognized sections in the phylip output file.
 def sections(fh):
     patterns = {
@@ -194,7 +192,6 @@ def find_node(tree, pattern):
 
 # reroot the tree on node matching regex pattern.
 # Usually this is used to root on the naive germline sequence
-# NOTE duplicates fcn in plot_tree.py
 def reroot_tree(tree, pattern):
     # find all nodes matching pattern
     node = find_node(tree, pattern)
@@ -260,7 +257,7 @@ def get_args():
     )
     parser.add_argument("--inferred-naive-name", type=str, required=True)
     parser.add_argument(
-        "--seed", type=str, help="id of leaf [default 'seed']", default="seed"
+        "--seed", type=str, help="id of seed sequence, default: 'seed'", default="seed"
     )
     return parser.parse_args()
 
@@ -310,10 +307,6 @@ def main():
     # write newick file
     fname = outbase + ".nwk"
     tree.write(format=1, format_root_node=True, outfile=fname)
-
-    plot_tree.render_tree(
-        outbase + ".svg", tree, args.seqmeta, args.seed, args.inferred_naive_name
-    )
 
 
 if __name__ == "__main__":

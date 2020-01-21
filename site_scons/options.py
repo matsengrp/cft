@@ -47,12 +47,11 @@ Script.AddOption(
 )
 
 Script.AddOption(
-    "--asr-progs",
-    dest="asr_progs",
-    metavar="LIST",
-    default="dnaml",
-    help="""Specify ':' separated list of ancestral state reconstruction programs to run. Options are `dnaml` and
-        `dnapars`. Defaults to running dnaml.""",
+    "--run-dnaml",
+    dest="run_dnaml",
+    action="store_true",
+    default=False,
+    help="""Use dnaml for maximum likelihood tree building and ancestral state reconstruction instead of default: raxml-ng.""",
 )
 
 Script.AddOption(
@@ -157,7 +156,7 @@ def get_options(env):
         ignore_seed_indels=env.GetOption("ignore_seed_indels"),
         match_indels_in_uid=env.GetOption("match_indels_in_uid"),
         test_run=test_run,
-        asr_progs=env.GetOption("asr_progs").split(":"),
+        run_dnaml=env.GetOption("run_dnaml"),
         prune_strategies=env.GetOption("prune_strategies").split(":"),
         dataset_tag=tag,
         always_build_metadata=not env.GetOption("lazy_metadata"),
