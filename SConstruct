@@ -347,7 +347,11 @@ def partition_metadata(part, annotation_list, cp, i_step, seed=None, other_id=No
                 part["partition-file"], annotation_list, cp, i_step
             )
         except ValueError, e:
-            warn("Due to the following error: {},\n no annotation was found in {} for seed cluster {}. Skipping this cluster".format(" ".join(e.args), part["partition-file"], seed))
+            warn(
+                "Due to the following error: {},\n no annotation was found in {} for seed cluster {}. Skipping this cluster".format(
+                    " ".join(e.args), part["partition-file"], seed
+                )
+            )
             return None
 
     meta = {
@@ -422,7 +426,9 @@ def valid_seed_partition(
     """If seed cluster size is less than max_size_to_check, read the corresponding cluster annotation and return True iff after applying our health metric filters
     we still have greater than 2 sequences (otherwise, we can't build a tree downstream)."""
     seed_cluster_unique_ids = seed_cluster(cp, i_step, seed_id)
-    if seed_cluster_unique_ids is not None and meets_cluster_size_reqs(seed_cluster_unique_ids, is_seed_cluster=True):
+    if seed_cluster_unique_ids is not None and meets_cluster_size_reqs(
+        seed_cluster_unique_ids, is_seed_cluster=True
+    ):
         if len(seed_cluster_unique_ids) > max_size_to_check:
             return True
         return valid_cluster(
@@ -828,7 +834,9 @@ def add_cluster_analysis(w):
                     [c["partition"]["partition-file"], c["pruned_ids"]],
                     "python bin/write_subset_partis_outfile.py $SOURCES $TARGET"
                     + " --partition-step={}".format(c["partition"]["step"])
-                    + " --original-cluster-unique-ids={}".format(":".join(c["cluster"]["unique_ids"]))
+                    + " --original-cluster-unique-ids={}".format(
+                        ":".join(c["cluster"]["unique_ids"])
+                    )
                     + " --sw-cache={}".format(c["sample"]["sw-cache"])
                     + (
                         " --glfo-dir={}".format(c["sample"]["glfo-dir"])
