@@ -4,7 +4,9 @@ id: test-input
 samples:
   # each sample must be keyed by a per-dataset unique identifier
   simulation-test:
-    locus: igh
+    meta:
+      timepoint: 100dayspostinfection
+      locus: igh
     glfo-dir: tests/parameters/simu/hmm/germline-sets
     parameter-dir: tests/parameters/simu
     per-sequence-meta-file: 
@@ -18,6 +20,5 @@ samples:
       # other seeds, as applicable...
   # another sample in our dataset...
   # Hs-LN-D-5RACE-IgK:
-  #   # etc.
-
+    #   # etc.
   # etc.
