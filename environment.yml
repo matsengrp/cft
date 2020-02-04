@@ -1,0 +1,14 @@
+name: cft_yml
+dependencies:
+  - python=2.7
+  - bioconda::pplacer
+  - bioconda::seqmagick
+  - bioconda::phylip
+  - bioconda::raxml-ng
+  - bioconda::ete3
+  - bioconda::fasttree
+  - bioconda::weblogo
+  - bioconda::blast
+  - conda-forge::scons
+  - conda-forge::nestly
+  - conda-forge::pyyaml
