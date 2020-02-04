@@ -130,72 +130,10 @@ Note that you can install tree with `sudo apt-get install tree` on Ubuntu for a 
 
 ## Setting up the build environment
 
-First, you'll need a number bioinformatics executables installed in order to run the pipeline:
-
-* `phylip`
-* `seqmagick`
-* `muscle`
-* `rppr` (from the `pplacer` suite)
-* `xvfb-run`
-* `R` (and `Rscript`)
-* `prank`
-
-If you are running on Fredhutch's compute nodes, you can use scicomp's module system to gain access to these dependencies. Start by loading these modules, which should allow you most of what you might need. When in doubt, check if you can install it with conda before resorting to loading the module.
-
-```
-module load phylip seqmagick 
-ml pplacer
-ml unload python2/2.7.8 
-ml unload GCCcore/5.4.0
-```
-
-Otherwise, you'll need to install each as you wish on whatever system you run.
-
-### Python dependencies
-
-We'll also need a number of python libraries.
-The instructions below illustrate how one might set these dependencies up via `conda`.
-One should however be able to complete the setup with `virtualenv` or whatever else as well.
-
-First, you'll need to have `conda` installed.
-If you are at the hutch you can load conda with `module load matsengrp-anaconda`.
-Otherwise, Google is your friend.
-
-Next, initialize and activate the conda environment:
-
-```
-conda create -n cft
-source activate cft
-```
-
-Now install the python packages.
-These are mostly installed via the `conda` command; `pip` is only used for packages not yet available via conda.
-
-```
-conda install python=2.7
-conda install biopython pyqt scons
-conda install -c r r-rcolorbrewer 
-conda install -c bioconda ete3
-conda install -c conda-forge nestly
-conda install -c conda-forge yaml
-conda install --force scipy=0.17.0
-conda install -c bioconda fasttree
-conda install -c anaconda gcc
-pip install weblogo
-```
-
-Some have found it necessary to add the anaconda-installed GNU compiler (GCC) to their paths similar to this:
-```
-export PATH=/miniconda2/envs/cft_min/lib/gcc:$PATH
-```
-
-Your mileage may vary, but some have found it necessary to reactivate the environment and rehash the path, especially after installing `scons` and `nestly`.
-
-```
-source deactivate
-source activate cft
-hash -r
-```
+1. [Install conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/).
+2. Run `conda env create -f environment.yml`.
+3. [Activate the environment](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#activating-an-environment).
+4. Make sure you have cloned the [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) (see below).
 
 ### Git submodules
 
