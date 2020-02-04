@@ -1,4 +1,4 @@
-name: cft_yml
+name: cft
 dependencies:
   - python=2.7
   - bioconda::pplacer
