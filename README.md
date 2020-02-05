@@ -223,9 +223,6 @@ If you are running on Fredhutch's servers, this should all be set up for you, an
 If you're not at the Hutch, setting up such a cluster is _way_ out of scope for this document, but if you're inspired, good luck figuring it out!
 
 
-## Executing CFTWeb
+## Visualization
 
-Once the data is built, you can consume the fruits of this labor by passing the data off to the cftweb application.
-For instructions on doing this please see the [cftweb](https://github.com/matsengrp/cftweb) repository.
-
-
+Once the data is built, you can consume the fruits of this labor by passing the data off to [Olmsted](https://github.com/matsengrp/olmsted).
