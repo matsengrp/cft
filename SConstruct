@@ -381,16 +381,19 @@ def meets_cluster_size_reqs(unique_ids, is_seed_cluster=False):
     """By default just checks for >= 4 sequences for seed clusters (otherwise, we can't build a tree downstream) and >= 6 for unseeded (somewhat arbitrary, though we often dont see smaller especially without processing all partition steps). This simple function exists just to track different min cluster sizes in one place"""
     size = len(unique_ids)
     if size > 10000:
-        raise Exception(
-            """
-                            cluster size limit exceeded
-                            clusters are limited to 10,000 sequences in order to make tree building
-                            possible in reasonable time and not exceed memory resources. Downsample
-                            this cluster or rerun partis with --max-cluster-size.
-                        """.format(
-                unique_ids
-            )
+        message = """
+                    cluster size limit exceeded: {}
+                    clusters are limited to 10,000 sequences in order to make tree building
+                    possible in reasonable time and not exceed memory resources. Downsample
+                    this cluster or rerun partis with --max-cluster-size.
+                  """.format(
+            len(unique_ids)
         )
+        if not options["skip_large_clusters"]:
+            message += " To skip large clusters and build the rest, run again with --skip-large-clusters."
+            raise Exception(message)
+        warn("Skipping a cluster!" + message)
+        return False
     return size >= (4 if is_seed_cluster else 6)
 
 

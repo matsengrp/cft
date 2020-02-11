@@ -25,6 +25,12 @@ Script.AddOption(
 )
 
 Script.AddOption(
+    "--skip-large-clusters",
+    dest="skip_large_clusters",
+    action="store_true",
+    help="""If set, leave out clusters exceeding 10,000 sequences instead of crashing.""",
+)
+Script.AddOption(
     "--only-seeds",
     dest="only_seeds",
     metavar="LIST",
@@ -147,6 +153,7 @@ def get_options(env):
     return dict(
         infiles=env.GetOption("infiles").split(":"),
         depth=int(env.GetOption("depth") or (3 if test_run else 30)),
+        skip_large_clusters=env.GetOption("skip_large_clusters"),
         process_all_partis_partition_steps=env.GetOption(
             "process_all_partis_partition_steps"
         ),
