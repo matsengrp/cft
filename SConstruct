@@ -522,6 +522,7 @@ def add_cluster_analysis(w):
                 if partisutils.getsuffix(c["partition"]["partition-file"]) == ".csv"
                 else ""
             )
+            + " --ignore-seed-indels "
             + " --locus "
             + locus(c)
             + " --paths-relative-to "
@@ -575,6 +576,11 @@ def add_cluster_analysis(w):
             + " --namespace cft.cluster"
             + " --inferred-naive-name "
             + options["inferred_naive_name"]
+            + (
+                (" --show-indels-in-trees " + options["show_indels_in_trees"])
+                if options["show_indels_in_trees"] is not None
+                else ""
+            )
             + (
                 (" --match-indels-in-uid " + options["match_indels_in_uid"])
                 if options["match_indels_in_uid"] is not None
@@ -773,27 +779,52 @@ def add_cluster_analysis(w):
             + " $SOURCE $TARGET",
         )
 
-    if options["fasttree_png"]:
-        # create png showing included seqs (kept in pruning) as red
+    if options["show_indels_in_trees"]:
+
         @w.add_target()
-        def pruned_cluster_fasttree_png(outdir, c):
-            cluster = c["cluster"]
-            max_cluster_size = 4500
-            if cluster.get("size") < max_cluster_size:
+        def indel_matching_ids(outdir, c):
+            def write_indel_matching_ids(target, source, env):
+                with open(source[0]) as seqmeta:
+                    reader = csv.DictReader(seqmeta)
+                    uids = [row["unique_id"] for row in reader if row["indel_match"]]
+                with open(target[0], "w") as indel_matches_file:
+                    for uid in uids:
+                        indel_matching_file.write(uid + "\n")
+
+            return env.Command(
+                os.path.join(
+                    outdir,
+                    "uids_matching_indel_{}.txt".format(
+                        options["show_indels_in_trees"]
+                    ),
+                ),
+                c["partis_seqmeta"],
+                write_indel_matching_ids,
+            )
+
+    if options["fasttree_png"] or options["show_indels_in_trees"]:
+
+        @w.add_target()
+        def fasttree_png(outdir, c):
+            ids_file = (
+                c["pruned_ids"]
+                if not options["show_indels_in_trees"]
+                else c["indel_matching_ids"]
+            )
+            if c["cluster"].get("size") < 4500:
                 pruned_cluster_fasttree_png = env.Command(
                     path.join(outdir, "pruned_cluster_fasttree.png"),
-                    [c["fasttree"], c["pruned_ids"]],
+                    [c["fasttree"], ids_file],
                     # The `-` at the start here tells scons to ignore if it doesn't build; this may occasionally be
                     # the case for large clusters. Also, redirect stdin/out to dev/null because the errors messages
                     # here can be pretty noisy.
-                    "- xvfb-run -a bin/annotate_fasttree_tree.py $SOURCES "
+                    "- xvfb-run -a bin/annotate_tree.py $SOURCES "
                     + " --naive %s" % options["inferred_naive_name"]
                     + (" --seed " + c["seed"]["id"] if "seed" in c else "")
-                    + " --output-path $TARGET &>> /dev/null",
+                    + " --output-path $TARGET &>> /dev/null"
+                    + " --set-root",
                 )
-                env.Depends(
-                    pruned_cluster_fasttree_png, "bin/annotate_fasttree_tree.py"
-                )
+                env.Depends(pruned_cluster_fasttree_png, "bin/annotate_tree.py")
                 return pruned_cluster_fasttree_png
 
     @w.add_target()

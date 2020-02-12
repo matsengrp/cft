@@ -6,11 +6,14 @@ from ete3 import Tree, TextFace, TreeStyle
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Annotate FastTree tree with prune ids."
-    )
-    parser.add_argument("tree_path", type=str, help="Path to FastTree tree file.")
+    parser = argparse.ArgumentParser(description="Annotate tree with ids.")
+    parser.add_argument("tree_path", type=str, help="Path to tree file.")
     parser.add_argument("ids_path", type=str, help="Path to prune id file.")
+    parser.add_argument(
+        "--set-root",
+        action="store_true",
+        help="Set the root using the naive name passed.",
+    )
     parser.add_argument(
         "--naive", type=str, required=True, help="The name of the naive sequence."
     )
@@ -23,7 +26,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     tree = Tree(args.tree_path, format=1)
-    tree.set_outgroup(tree & args.naive)
+    if args.set_root:
+        tree.set_outgroup(tree & args.naive)
 
     with open(args.ids_path) as f:
         ids = f.readlines()

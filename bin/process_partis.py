@@ -143,6 +143,10 @@ def get_cluster_seqs_dict(cluster_line, seed_id, args):
         "timepoints": [[dummy_timepoint_name]] + cluster_line["duplicate_timepoints"],
         "timepoint_multiplicities": [[1]] + cluster_line["duplicate_multiplicities"],
     }
+    if args.show_indels_in_trees:
+        cluster_sequences["indel_match"] = [False] + cluster_line["indel_match"],
+        print(len(cluster_line["indel_match"]))
+        print(len(cluster_line["unique_ids"]))
     return as_dict_rows(cluster_sequences)
 
 
@@ -318,6 +322,12 @@ def process_cluster(args, cluster_line, seed_id, glfo):
         check_seed_for_indels(cluster_line, seed_id, args.partition_file)
     # assume we want all seqs in cluster
     iseqs_to_keep = set(range(len(cluster_line["input_seqs"])))
+    # write out matching indel-containing seqs for visualization if --show-indels-in-trees
+    if args.show_indels_in_trees:
+        matching_iseqs = set(
+            match_indels_in_uid_seq(cluster_line, args.show_indels_in_trees)
+        )
+        match_info = {"indel_match": [iseq in matching_iseqs for iseq in iseqs_to_keep]}
     # various cases where we downsample cluster sequences
     if args.match_indels_in_uid:
         iseqs_to_keep = iseqs_to_keep & set(
@@ -360,6 +370,8 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     cluster_line = add_additional_info(
         cluster_line, multiplicity_seqmeta, iseqs_to_keep
     )
+    if args.show_indels_in_trees:
+        cluster_line = add_additional_info(cluster_line, match_info, iseqs_to_keep)
 
     cluster_line["total_read_count"] = sum(
         cluster_line["multiplicities"]
@@ -651,6 +663,11 @@ def parse_args():
 
     seqs_args = parser.add_argument_group(
         title="Options regarding methods for choosing sequences to be included or left out of the cluster of interest."
+    )
+    seqs_args.add_argument(
+        "--show-indels-in-trees",
+        help="create tree graphics highlighting in red any sequences on the tree with indels matching the indel in the sequence corresponding to the uid passed here in the annotation chosen in choose_cluster()",
+        type=str,
     )
     seqs_args.add_argument(
         "--match-indels-in-uid",

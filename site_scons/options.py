@@ -39,10 +39,17 @@ Script.AddOption(
 )
 
 Script.AddOption(
+    "--show-indels-in-trees",
+    dest="show_indels_in_trees",
+    default=None,
+    help="""create tree graphics highlighting in red any sequences on the tree with indels matching the indel in the sequence corresponding to the uid passed here in the annotation chosen in process_partis.choose_cluster()""",
+)
+
+Script.AddOption(
     "--match-indels-in-uid",
     dest="match_indels_in_uid",
     default=None,
-    help="""process only sequences matching the one indel in the sequence corresponding to the uid passed here in the annotation chosen in choose_cluster()""",
+    help="""process only sequences matching the one indel in the sequence corresponding to the uid passed here in the annotation chosen in process_partis.choose_cluster()""",
 )
 
 Script.AddOption(
@@ -162,6 +169,7 @@ def get_options(env):
         else None,
         ignore_seed_indels=env.GetOption("ignore_seed_indels"),
         match_indels_in_uid=env.GetOption("match_indels_in_uid"),
+        show_indels_in_trees=env.GetOption("show_indels_in_trees"),
         test_run=test_run,
         run_dnaml=env.GetOption("run_dnaml"),
         prune_strategies=env.GetOption("prune_strategies").split(":"),
