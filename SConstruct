@@ -1046,8 +1046,8 @@ def add_cluster_analysis(w):
 
         tree_metrics = env.Command(
             [path.join(outdir, "selection-metrics.yaml")],
-            c["asr_tree"],  # sources
-            "%s/bin/get-tree-metrics.py ${SOURCES[0]} ${TARGETS[0]}" % (partis_path),
+            [c["partition"]["partition-file"], c["asr_tree"]],  # sources
+            "%s/bin/partis get-selection-metrics --outfname ${SOURCES[0]} --treefname ${SOURCES[1]} --selection-metric-fname ${TARGETS[0]}" % (partis_path),
         )
         env.Depends(tree_metrics, "partis/bin/get-tree-metrics.py")
         return tree_metrics
