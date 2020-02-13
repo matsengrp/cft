@@ -36,7 +36,7 @@ def get_args():
     parser.add_argument("tip_seqmeta", type=seqmeta_reader)
     parser.add_argument("sel_metric_info", type=yaml_reader)
     parser.add_argument("seqmeta_out", type=argparse.FileType("w"))
-    parser.add_argument("metrics", default=['lbi', 'lbr', 'cons-dist-aa'])
+    parser.add_argument("metrics", nargs="?", default=['lbi', 'lbr', 'cons-dist-aa'])
     args = parser.parse_args()
     return args
 
@@ -47,7 +47,7 @@ def main():
         print 'merge_selection_metrics.py: no clusters in input file'
     elif len(args.sel_metric_info) > 1:
         print 'merge_selection_metrics.py warning: info for multiple clusters in input file, arbitrarily taking the first one'
-    sinfo = args.sel_metric_info[0]
+    sinfo = args.sel_metric_info[0].get("lb", {})
     if len(set(args.metrics) - set(sinfo)) > 0:
         print 'merge_selection_metrics.py: requested metrics %s not found in input file' % ' '.join(set(args.metrics) - set(sinfo))
         args.metrics = [m for m in args.metrics if m in sinfo]
