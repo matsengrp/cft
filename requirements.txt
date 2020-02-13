@@ -26,6 +26,7 @@ lcms2=2.9=hbd6801e_1
 libblas=3.8.0=14_openblas
 libcblas=3.8.0=14_openblas
 libcurl=7.65.3=hda55be3_0
+libdeflate=1.0=h14c3975_1
 libedit=3.1.20170329=hf8c457e_1001
 libffi=3.2.1=he1b5a44_1006
 libgcc=7.2.0=h69d50b8_2
@@ -126,6 +127,7 @@ pip=20.0.2=py27_1
 pplacer=1.1.alpha19=1
 pthread-stubs=0.4=h14c3975_1001
 pyqt=4.11.4=py27_3
+pysam=0.15.3=py27hda2845c_1
 python=2.7.15=h5a48372_1009
 pyyaml=5.3=py27h516909a_0
 qt=4.8.7=2
