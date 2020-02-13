@@ -1049,7 +1049,6 @@ def add_cluster_analysis(w):
             [c["partition"]["partition-file"], c["asr_tree"]],  # sources
             "%s/bin/partis get-selection-metrics --outfname ${SOURCES[0]} --treefname ${SOURCES[1]} --selection-metric-fname ${TARGETS[0]}" % (partis_path),
         )
-        env.Depends(tree_metrics, "partis/bin/get-tree-metrics.py")
         return tree_metrics
 
     @w.add_target(
