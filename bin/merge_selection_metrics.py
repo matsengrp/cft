@@ -36,7 +36,7 @@ def get_args():
     parser.add_argument("tip_seqmeta", type=seqmeta_reader)
     parser.add_argument("sel_metric_info", type=yaml_reader)
     parser.add_argument("seqmeta_out", type=argparse.FileType("w"))
-    parser.add_argument("metrics", nargs="?", default=['lbi', 'lbr', 'cons-dist-aa'])
+    parser.add_argument("metrics", nargs="?", default=["lbi", "lbr", "cons-dist-aa"])
     args = parser.parse_args()
     return args
 
@@ -44,12 +44,14 @@ def get_args():
 def main():
     args = get_args()
     if len(args.sel_metric_info) == 0:
-        print 'merge_selection_metrics.py: no clusters in input file'
+        print "merge_selection_metrics.py: no clusters in input file"
     elif len(args.sel_metric_info) > 1:
-        print 'merge_selection_metrics.py warning: info for multiple clusters in input file, arbitrarily taking the first one'
+        print "merge_selection_metrics.py warning: info for multiple clusters in input file, arbitrarily taking the first one"
     sinfo = args.sel_metric_info[0].get("lb", {})
     if len(set(args.metrics) - set(sinfo)) > 0:
-        print 'merge_selection_metrics.py: requested metrics %s not found in input file' % ' '.join(set(args.metrics) - set(sinfo))
+        print "merge_selection_metrics.py: requested metrics %s not found in input file" % " ".join(
+            set(args.metrics) - set(sinfo)
+        )
         args.metrics = [m for m in args.metrics if m in sinfo]
 
     out_fields = args.tip_seqmeta.values()[0].keys() + args.metrics
@@ -67,9 +69,7 @@ def main():
     )
     for metric in args.metrics:
         for seqid, val in sinfo[metric].items():
-            seqmeta[seqid].update(
-                {"sequence": seqid, "unique_id": seqid, metric: val}
-            )
+            seqmeta[seqid].update({"sequence": seqid, "unique_id": seqid, metric: val})
     for _, row in seqmeta.items():
         writer.writerow(row)
 

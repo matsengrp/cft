@@ -62,13 +62,20 @@ def write_ancestors_naive_and_seed(
         "fasta",
     )
 
+
 def without_ambiguous_nucleotides(seq):
     """Replaces anything other than ACGT with N"""
-    return re.sub(r'[^ACGT]', 'N', seq)
+    return re.sub(r"[^ACGT]", "N", seq)
+
 
 def parse_raxmlng_ancestral_state(line):
     asr_seqid, asr_seq = line.strip().split()
-    return SeqRecord(Seq(without_ambiguous_nucleotides(asr_seq)), id=asr_seqid, name="", description="")
+    return SeqRecord(
+        Seq(without_ambiguous_nucleotides(asr_seq)),
+        id=asr_seqid,
+        name="",
+        description="",
+    )
 
 
 def write_tree_fastas(
