@@ -134,6 +134,7 @@ Note that you can install tree with `sudo apt-get install tree` on Ubuntu for a 
 2. Run `conda create -y -c bioconda -c conda-forge --name cft --file requirements.txt`.
 3. [Activate the environment](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#activating-an-environment).
 4. Make sure you have cloned the [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) (see below).
+5. [Install](https://github.com/psathyrella/partis/blob/master/docs/install.md) the partis submodule.
 
 ### Git submodules
 
