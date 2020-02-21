@@ -56,7 +56,7 @@ def iter_edges(fh):
             break
 
 
-def without_ambiguous_nucleotides(seq):
+def replace_ambiguous_nucleotides(seq):
     """Replaces anything other than ACGT with N"""
     return re.sub(r"[^ACGT]", "N", seq)
 
@@ -76,7 +76,7 @@ def parse_seqdict(fh, mode="dnaml"):
     for line in fh:
         m = patterns[mode].match(line)
         if m:
-            seqs[m.group("id")] += without_ambiguous_nucleotides(
+            seqs[m.group("id")] += replace_ambiguous_nucleotides(
                 m.group("seq").replace(" ", "")
             )
         elif line.rstrip() == "":

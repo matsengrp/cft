@@ -14,8 +14,6 @@ from Bio.Seq import Seq
 from ete3 import Tree
 import argparse
 
-# TODO (do this last): run black
-
 
 class TreeFileParsingError(Exception):
     """When ete3 fails to read the input tree."""
@@ -63,7 +61,7 @@ def write_ancestors_naive_and_seed(
     )
 
 
-def without_ambiguous_nucleotides(seq):
+def replace_ambiguous_nucleotides(seq):
     """Replaces anything other than ACGT with N"""
     return re.sub(r"[^ACGT]", "N", seq)
 
@@ -71,7 +69,7 @@ def without_ambiguous_nucleotides(seq):
 def parse_raxmlng_ancestral_state(line):
     asr_seqid, asr_seq = line.strip().split()
     return SeqRecord(
-        Seq(without_ambiguous_nucleotides(asr_seq)),
+        Seq(replace_ambiguous_nucleotides(asr_seq)),
         id=asr_seqid,
         name="",
         description="",

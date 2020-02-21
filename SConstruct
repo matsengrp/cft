@@ -939,7 +939,6 @@ def add_cluster_analysis(w):
                 + " --inferred-naive-name {}".format(options["inferred_naive_name"])
                 + (" --seed " + c["seed"]["id"] if "seed" in c else ""),
             )
-            # TODO (do this last): run black
             return [rooted_asr_tree, asr_seqs, ancestors_naive_and_seed]
         elif asr_prog == "dnaml":
             # Seqname translations for reinterpretting dnaml output in terms of original seqnames, due to phylip name length constraints.
