@@ -939,7 +939,6 @@ def add_cluster_analysis(w):
                 + " --inferred-naive-name {}".format(options["inferred_naive_name"])
                 + (" --seed " + c["seed"]["id"] if "seed" in c else ""),
             )
-            # TODO (do this last): run black
             return [rooted_asr_tree, asr_seqs, ancestors_naive_and_seed]
         elif asr_prog == "dnaml":
             # Seqname translations for reinterpretting dnaml output in terms of original seqnames, due to phylip name length constraints.
@@ -1046,10 +1045,10 @@ def add_cluster_analysis(w):
 
         tree_metrics = env.Command(
             [path.join(outdir, "selection-metrics.yaml")],
-            c["asr_tree"],  # sources
-            "%s/bin/get-tree-metrics.py ${SOURCES[0]} ${TARGETS[0]}" % (partis_path),
+            [c["asr_seqs"], c["sample"]["parameter-dir"], c["asr_tree"]],  # sources
+            "%s/bin/partis annotate --get-selection-metrics --all-seqs-simultaneous --infname ${SOURCES[0]} --parameter-dir ${SOURCES[1]}  --treefname ${SOURCES[2]} --selection-metric-fname ${TARGETS[0]}"
+            % (partis_path),
         )
-        env.Depends(tree_metrics, "partis/bin/get-tree-metrics.py")
         return tree_metrics
 
     @w.add_target(

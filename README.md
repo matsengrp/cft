@@ -128,29 +128,25 @@ find output
 Note that you can install tree with `sudo apt-get install tree` on Ubuntu for a nice ASCII-art file tree display of the output contents.
 
 
-## Setting up the build environment
+## Setting up the environment
 
 1. [Install conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/).
 2. Run `conda create -y -c bioconda -c conda-forge --name cft --file requirements.txt`.
 3. [Activate the environment](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#activating-an-environment).
 4. Make sure you have cloned the [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) (see below).
+5. Follow instructions below for submodules and slurm.
+6. [Install](https://github.com/psathyrella/partis/blob/master/docs/install.md) the partis submodule.
 
 ### Git submodules
 
 Finally, there is some python code needed for the build script to execute which can be found in a number of git submodules.
 In particular, this repository has a partis submodule which should be kept in sync to avoid build issues.
-To check out these submodules, execute `git submodule init` then `git submodule update`.
 
-If there are updates to the submodules, you can have those reflected in your checkouts by executing `git submodule update`.
-If you want to update the version/commit pointed to by a submodule, you can `cd <submodule> && git update-repo-as-desired && cd .. && git add <submodule> && git commit -m "Your commit message here"`.
+1. Check out these submodules: execute `git submodule init` then `git submodule update`.
+2. Set the `PARTIS` env variable: run `export PARTIS=/path/to/cft/partis` using the path to your submodule install or another install of partis.
 
-Note that if you'd like to use a different partis installation you can do so using the `PARTIS` env variable.
+[More info on how to use git submodules here](https://git-scm.com/book/en/v2/Git-Tools-Submodules).
 
-### Running partis
-
-At the moment, this part of the pipeline doesn't require running partis at all if you only need to operate on data output by partis.
-However, it might be worth compiling so you can use (at the very least) partis' `view-annotations` and/or `view-partitions` subcommands for inspecting partis' output files.
-See `$PARTIS/README.md` for instructions on this.
 
 ### Using Slurm
 
