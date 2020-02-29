@@ -1044,9 +1044,12 @@ def add_cluster_analysis(w):
         new_partis_infile = env.Command(new_partis_infname, c["asr_seqs"], fix_file)
 
         tree_metrics = env.Command(
-            [path.join(outdir, "selection-metrics.yaml")],
+            [
+                path.join(outdir, outfile)
+                for outfile in ["partition.yaml", "partis.std.out.log"]
+            ],
             [c["asr_seqs"], c["sample"]["parameter-dir"], c["asr_tree"]],  # sources
-            "%s/bin/partis annotate --get-selection-metrics --all-seqs-simultaneous --infname ${SOURCES[0]} --parameter-dir ${SOURCES[1]}  --treefname ${SOURCES[2]} --selection-metric-fname ${TARGETS[0]}"
+            "%s/bin/partis annotate --get-selection-metrics --all-seqs-simultaneous --infname ${SOURCES[0]} --parameter-dir ${SOURCES[1]}  --treefname ${SOURCES[2]} --outfname ${TARGETS[0]} > ${TARGETS[1]}"
             % (partis_path),
         )
         return tree_metrics
@@ -1071,7 +1074,7 @@ def add_cluster_analysis(w):
     def seqmeta(outdir, c):
         return env.Command(
             path.join(outdir, "seqmeta.csv"),
-            [c["tip_seqmeta"], c["selection_metrics"]],
+            [c["tip_seqmeta"], c["selection_metrics"][0]],
             "merge_selection_metrics.py $SOURCES $TARGET",
         )
 
