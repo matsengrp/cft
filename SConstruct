@@ -1049,8 +1049,19 @@ def add_cluster_analysis(w):
                 for outfile in ["partition.yaml", "partis.std.out.log"]
             ],
             [c["asr_seqs"], c["sample"]["parameter-dir"], c["asr_tree"]],  # sources
-            "%s/bin/partis annotate --get-selection-metrics --all-seqs-simultaneous --infname ${SOURCES[0]} --parameter-dir ${SOURCES[1]}  --treefname ${SOURCES[2]} --outfname ${TARGETS[0]} > ${TARGETS[1]}"
-            % (partis_path),
+            os.path.join(partis_path, "bin/partis")
+            + " annotate "
+            + " --get-selection-metrics "
+            + " --all-seqs-simultaneous "
+            + " --min-selection-metric-cluster-size %d " % c["cluster"]["size"] # we can just set the min cluster size to this cluster's size since if the cluster is getting built, we already checked against CFT's min requirement.
+            + " --no-partition-plots "
+            + " --plotdir "
+            + path.join(outdir, "partis-plot")
+            + " --infname ${SOURCES[0]} "
+            + " --parameter-dir ${SOURCES[1]} "
+            + " --treefname ${SOURCES[2]} "
+            + " --outfname ${TARGETS[0]} "
+            + " > ${TARGETS[1]}",
         )
         return tree_metrics
 
