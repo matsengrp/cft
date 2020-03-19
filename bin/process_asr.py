@@ -56,6 +56,11 @@ def iter_edges(fh):
             break
 
 
+def replace_ambiguous_nucleotides(seq):
+    """Replaces anything other than ACGT with N"""
+    return re.sub(r"[^ACGT]", "N", seq)
+
+
 # iterate over entries in the sequences section
 def parse_seqdict(fh, mode="dnaml"):
     # EH: this I'm guessing is what the lines being parsed by the regular expression will look like?
@@ -71,7 +76,9 @@ def parse_seqdict(fh, mode="dnaml"):
     for line in fh:
         m = patterns[mode].match(line)
         if m:
-            seqs[m.group("id")] += m.group("seq").replace(" ", "")
+            seqs[m.group("id")] += replace_ambiguous_nucleotides(
+                m.group("seq").replace(" ", "")
+            )
         elif line.rstrip() == "":
             continue
         else:
