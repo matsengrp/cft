@@ -7,7 +7,7 @@ import csv
 import json
 import re
 import pprint
-import yaml
+import process_partis
 
 
 def seqmeta_reader(filename):
@@ -16,13 +16,13 @@ def seqmeta_reader(filename):
         return {row["sequence"]: row for row in reader}
 
 
-def yaml_reader(filename):
-    with open(filename) as fh:
-        try:
-            result = yaml.load(fh)
-        except yaml.YAMLError, e:
-            raise
-        return result if result else {}
+def get_selection_metrics(partition_file):
+    _, annotation_list, _ = process_partis.read_partis_output(partition_file)
+    if len(annotation_list) == 0:
+        print "merge_selection_metrics.py: no clusters in input file"
+    elif len(annotation_list) > 1:
+        print "merge_selection_metrics.py warning: info for multiple clusters in input file, arbitrarily taking the first one"
+    return annotation_list[0].get("tree-info", {}).get("lb", {})
 
 
 def merge(d1, d2):
@@ -34,7 +34,7 @@ def merge(d1, d2):
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("tip_seqmeta", type=seqmeta_reader)
-    parser.add_argument("sel_metric_info", type=yaml_reader)
+    parser.add_argument("sel_metric_info", type=get_selection_metrics)
     parser.add_argument("seqmeta_out", type=argparse.FileType("w"))
     parser.add_argument("metrics", nargs="?", default=["lbi", "lbr", "cons-dist-aa"])
     args = parser.parse_args()
@@ -43,11 +43,7 @@ def get_args():
 
 def main():
     args = get_args()
-    if len(args.sel_metric_info) == 0:
-        print "merge_selection_metrics.py: no clusters in input file"
-    elif len(args.sel_metric_info) > 1:
-        print "merge_selection_metrics.py warning: info for multiple clusters in input file, arbitrarily taking the first one"
-    sinfo = args.sel_metric_info[0].get("lb", {})
+    sinfo = args.sel_metric_info
     if len(set(args.metrics) - set(sinfo)) > 0:
         print "merge_selection_metrics.py: requested metrics %s not found in input file" % " ".join(
             set(args.metrics) - set(sinfo)

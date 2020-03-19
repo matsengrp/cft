@@ -377,8 +377,15 @@ def partition_metadata(part, annotation_list, cp, i_step, seed=None, other_id=No
     return sconsutils.merge_dicts(meta, part.get("meta") or {})
 
 
+def min_cluster_size(is_seed_cluster=False):
+    """A function to track the different min cluster sizes for seed clusters vs unseeded.
+    Numbers are somewhat arbitrary, though we often dont see smaller especially without processing all partition steps."""
+    return 4 if is_seed_cluster else 6
+
+
 def meets_cluster_size_reqs(unique_ids, is_seed_cluster=False):
-    """By default just checks for >= 4 sequences for seed clusters (otherwise, we can't build a tree downstream) and >= 6 for unseeded (somewhat arbitrary, though we often dont see smaller especially without processing all partition steps). This simple function exists just to track different min cluster sizes in one place"""
+    """Takes cluster's list of unique ids and returns True if cluster is within size requirements here, otherwise false.
+    Upper bound is computational-resource-driven and lower bounds are practical use based."""
     size = len(unique_ids)
     if size > 10000:
         message = """
@@ -394,7 +401,7 @@ def meets_cluster_size_reqs(unique_ids, is_seed_cluster=False):
             raise Exception(message)
         warn("Skipping a cluster!" + message)
         return False
-    return size >= (4 if is_seed_cluster else 6)
+    return size >= min_cluster_size(is_seed_cluster=is_seed_cluster)
 
 
 def valid_cluster(annotation_list, part, unique_ids, is_seed_cluster=False):
@@ -1042,12 +1049,31 @@ def add_cluster_analysis(w):
 
         new_partis_infname = path.join(baseoutdir, "asr-with-only-Ns.fa")
         new_partis_infile = env.Command(new_partis_infname, c["asr_seqs"], fix_file)
-
+        plotdir_name = "partis-plot"
         tree_metrics = env.Command(
-            [path.join(outdir, "selection-metrics.yaml")],
+            [
+                path.join(outdir, outfile)
+                for outfile in [
+                    "partition.yaml",
+                    "partis.std.out.log",
+                    path.join(plotdir_name, "inferred-tree-metrics/overview.html"),
+                ]
+            ],
             [c["asr_seqs"], c["sample"]["parameter-dir"], c["asr_tree"]],  # sources
-            "%s/bin/partis annotate --get-selection-metrics --all-seqs-simultaneous --infname ${SOURCES[0]} --parameter-dir ${SOURCES[1]}  --treefname ${SOURCES[2]} --selection-metric-fname ${TARGETS[0]}"
-            % (partis_path),
+            os.path.join(partis_path, "bin/partis")
+            + " annotate "
+            + " --get-selection-metrics "
+            + " --all-seqs-simultaneous "
+            + " --min-selection-metric-cluster-size %d "
+            % min_cluster_size(is_seed_cluster=("seed" in c))
+            + " --no-partition-plots "
+            + " --plotdir "
+            + path.join(outdir, plotdir_name)
+            + " --infname ${SOURCES[0]} "
+            + " --parameter-dir ${SOURCES[1]} "
+            + " --treefname ${SOURCES[2]} "
+            + " --outfname ${TARGETS[0]} "
+            + " > ${TARGETS[1]}",
         )
         return tree_metrics
 
@@ -1071,7 +1097,7 @@ def add_cluster_analysis(w):
     def seqmeta(outdir, c):
         return env.Command(
             path.join(outdir, "seqmeta.csv"),
-            [c["tip_seqmeta"], c["selection_metrics"]],
+            [c["tip_seqmeta"], c["selection_metrics"][0]],
             "merge_selection_metrics.py $SOURCES $TARGET",
         )
 
