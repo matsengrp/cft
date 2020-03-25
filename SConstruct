@@ -791,12 +791,12 @@ def add_cluster_analysis(w):
         @w.add_target()
         def indel_matching_ids(outdir, c):
             def write_indel_matching_ids(target, source, env):
-                with open(source[0]) as seqmeta:
+                with open(str(source[0])) as seqmeta:
                     reader = csv.DictReader(seqmeta)
                     uids = [row["unique_id"] for row in reader if row["indel_match"]]
-                with open(target[0], "w") as indel_matches_file:
+                with open(str(target[0]), "w") as indel_matches_file:
                     for uid in uids:
-                        indel_matching_file.write(uid + "\n")
+                        indel_matches_file.write(uid + "\n")
 
             return env.Command(
                 os.path.join(
@@ -828,8 +828,8 @@ def add_cluster_analysis(w):
                     "- xvfb-run -a bin/annotate_tree.py $SOURCES "
                     + " --naive %s" % options["inferred_naive_name"]
                     + (" --seed " + c["seed"]["id"] if "seed" in c else "")
+                    + " --set-root"
                     + " --output-path $TARGET &>> /dev/null"
-                    + " --set-root",
                 )
                 env.Depends(pruned_cluster_fasttree_png, "bin/annotate_tree.py")
                 return pruned_cluster_fasttree_png
@@ -1093,6 +1093,8 @@ def add_cluster_analysis(w):
             [c["asr_seqs"], c["sample"]["parameter-dir"], c["asr_tree"]],  # sources
             os.path.join(partis_path, "bin/partis")
             + " annotate "
+            + " --locus "
+            + locus(c)
             + " --get-selection-metrics "
             + " --all-seqs-simultaneous "
             + " --min-selection-metric-cluster-size %d "

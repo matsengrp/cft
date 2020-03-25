@@ -144,9 +144,7 @@ def get_cluster_seqs_dict(cluster_line, seed_id, args):
         "timepoint_multiplicities": [[1]] + cluster_line["duplicate_multiplicities"],
     }
     if args.show_indels_in_trees:
-        cluster_sequences["indel_match"] = [False] + cluster_line["indel_match"],
-        print(len(cluster_line["indel_match"]))
-        print(len(cluster_line["unique_ids"]))
+        cluster_sequences["indel_match"] = [False] + cluster_line["indel_match"]
     return as_dict_rows(cluster_sequences)
 
 
@@ -568,6 +566,8 @@ def write_seq_meta(args, cluster_data):
         "duplicates",
         "affinity",
     ]
+    if args.show_indels_in_trees:
+        to_keep.append("indel_match")
     with open(args.seqmeta_out, "w") as outfile:
         writer = csv.DictWriter(outfile, fieldnames=to_keep, extrasaction="ignore")
         writer.writeheader()
