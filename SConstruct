@@ -792,8 +792,12 @@ def add_cluster_analysis(w):
         def indel_matching_ids(outdir, c):
             def write_indel_matching_ids(target, source, env):
                 with open(str(source[0])) as seqmeta:
-                    reader = csv.DictReader(seqmeta)
-                    uids = [row["unique_id"] for row in reader if row["indel_match"]]
+                    lines = list(csv.DictReader(seqmeta))
+                    uids = [
+                        row["unique_id"]
+                        for row in lines
+                        if row["indel_match"] == "True"
+                    ]
                 with open(str(target[0]), "w") as indel_matches_file:
                     for uid in uids:
                         indel_matches_file.write(uid + "\n")
@@ -829,7 +833,7 @@ def add_cluster_analysis(w):
                     + " --naive %s" % options["inferred_naive_name"]
                     + (" --seed " + c["seed"]["id"] if "seed" in c else "")
                     + " --set-root"
-                    + " --output-path $TARGET &>> /dev/null"
+                    + " --output-path $TARGET &>> /dev/null",
                 )
                 env.Depends(pruned_cluster_fasttree_png, "bin/annotate_tree.py")
                 return pruned_cluster_fasttree_png

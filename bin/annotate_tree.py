@@ -41,7 +41,7 @@ if __name__ == "__main__":
         else:
             color = "black"
 
-        node_face = TextFace(leaf_node.name, fsize=6, fgcolor=color)
+        node_face = TextFace(leaf_node.name, fgcolor=color)
         leaf_node.add_face(node_face, column=0, position="float")
 
     ts = TreeStyle()
