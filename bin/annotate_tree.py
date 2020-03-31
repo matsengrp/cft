@@ -19,9 +19,11 @@ if __name__ == "__main__":
     )
     parser.add_argument("--seed", type=str, help="The name of the seed sequence.")
     parser.add_argument(
-        "--output-path", type=str, required=True, help="The PNG output file path."
+        "--output-path", type=str, required=True, help="The output file path."
     )
-    parser.add_argument("--size", type=int, default=900, help="size in pixels of png")
+    parser.add_argument(
+        "--size", type=int, default=900, help="size in pixels of output image"
+    )
 
     args = parser.parse_args()
 
