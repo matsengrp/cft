@@ -39,15 +39,15 @@ Script.AddOption(
 )
 
 Script.AddOption(
-    "--show-indels-in-trees",
-    dest="show_indels_in_trees",
+    "--show-indel-in-trees",
+    dest="show_indel_in_trees",
     default=None,
     help="""create tree graphics highlighting in red any sequences on the tree with indels matching the indel in the sequence corresponding to the uid passed here in the annotation chosen in process_partis.choose_cluster()""",
 )
 
 Script.AddOption(
-    "--match-indels-in-uid",
-    dest="match_indels_in_uid",
+    "--match-indel-in-uid",
+    dest="match_indel_in_uid",
     default=None,
     help="""process only sequences matching the one indel in the sequence corresponding to the uid passed here in the annotation chosen in process_partis.choose_cluster()""",
 )
@@ -56,7 +56,7 @@ Script.AddOption(
     "--ignore-seed-indels",
     dest="ignore_seed_indels",
     action="store_true",
-    help="""If --match-indels-in-uid has not been set, this allows processing of a seed cluster (without filtering) where there is an indel in the seed sequence.""",
+    help="""If --match-indel-in-uid has not been set, this allows processing of a seed cluster (without filtering) where there is an indel in the seed sequence.""",
 )
 
 Script.AddOption(
@@ -144,19 +144,19 @@ Script.AddOption(
 
 
 def get_options(env):
-    test_run, dataset_tag, match_indels_in_uid = (
+    test_run, dataset_tag, match_indel_in_uid = (
         env.GetOption("test_run"),
         env.GetOption("dataset_tag"),
-        env.GetOption("match_indels_in_uid"),
+        env.GetOption("match_indel_in_uid"),
     )
     user_tag = dataset_tag if dataset_tag else ""
     test_tag = "test" if test_run else ""
-    match_indels_in_uid_tag = (
-        "match-indels-in-uid-{}".format(match_indels_in_uid)
-        if match_indels_in_uid
+    match_indel_in_uid_tag = (
+        "match-indels-in-uid-{}".format(match_indel_in_uid)
+        if match_indel_in_uid
         else ""
     )
-    tag = "_".join(filter(None, [user_tag, test_tag, match_indels_in_uid_tag]))
+    tag = "_".join(filter(None, [user_tag, test_tag, match_indel_in_uid_tag]))
     return dict(
         infiles=env.GetOption("infiles").split(":"),
         depth=int(env.GetOption("depth") or (3 if test_run else 30)),
@@ -168,8 +168,8 @@ def get_options(env):
         if env.GetOption("only_seeds") is not None
         else None,
         ignore_seed_indels=env.GetOption("ignore_seed_indels"),
-        match_indels_in_uid=env.GetOption("match_indels_in_uid"),
-        show_indels_in_trees=env.GetOption("show_indels_in_trees"),
+        match_indel_in_uid=env.GetOption("match_indel_in_uid"),
+        show_indel_in_trees=env.GetOption("show_indel_in_trees"),
         test_run=test_run,
         run_dnaml=env.GetOption("run_dnaml"),
         prune_strategies=env.GetOption("prune_strategies").split(":"),
@@ -179,6 +179,6 @@ def get_options(env):
         outdir_base=env.GetOption("outdir"),
         fasttree_png=env.GetOption("fasttree_png"),
         preserve_indels=env.GetOption("preserve_indels")
-        or (match_indels_in_uid is not None),
+        or (match_indel_in_uid is not None),
         write_linearham_yaml_input=env.GetOption("write_linearham_yaml_input"),
     )

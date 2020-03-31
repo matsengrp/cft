@@ -551,9 +551,9 @@ def add_cluster_analysis(w):
         if perseq_metafile:
             sources.append(perseq_metafile)
         cluster_seqs_fname = "cluster_seqs.fa"
-        if options["match_indels_in_uid"]:
+        if options["match_indel_in_uid"]:
             cluster_seqs_fname = "{}_indel_filtered_cluster_seqs.fa".format(
-                options["match_indels_in_uid"]
+                options["match_indel_in_uid"]
             )
         return env.Command(
             [
@@ -584,13 +584,13 @@ def add_cluster_analysis(w):
             + " --inferred-naive-name "
             + options["inferred_naive_name"]
             + (
-                (" --show-indels-in-trees " + options["show_indels_in_trees"])
-                if options["show_indels_in_trees"] is not None
+                (" --show-indel-in-trees " + options["show_indel_in_trees"])
+                if options["show_indel_in_trees"] is not None
                 else ""
             )
             + (
-                (" --match-indels-in-uid " + options["match_indels_in_uid"])
-                if options["match_indels_in_uid"] is not None
+                (" --match-indel-in-uid " + options["match_indel_in_uid"])
+                if options["match_indel_in_uid"] is not None
                 else ""
             )
             + (" --ignore-seed-indels" if options["ignore_seed_indels"] else "")
