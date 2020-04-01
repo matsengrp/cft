@@ -61,8 +61,16 @@ def write_ancestors_naive_and_seed(
     )
 
 
-def replace_ambiguous_nucleotides(seq):
+def replace_ambiguous_nucleotides(seq, seqrecord=False):
     """Replaces anything other than ACGT with N"""
+    if seqrecord:
+        """takes a SeqRecord and returns one, instead of default which assumes string."""
+        return SeqRecord(
+            Seq(re.sub(r"[^ACGT]", "N", str(seq.seq))),
+            id=seq.id,
+            name="",
+            description="",
+        )
     return re.sub(r"[^ACGT]", "N", seq)
 
 
@@ -80,7 +88,10 @@ def write_tree_fastas(
     asr_seqs_fname, input_seqs_fname, inferred_naive_name, seed, outbase
 ):
     """Combines RAxML-NG asr states and input sequence records."""
-    input_records = list(SeqIO.parse(input_seqs_fname, "fasta"))
+    input_records = [
+        replace_ambiguous_nucleotides(seq, seqrecord=True)
+        for seq in SeqIO.parse(input_seqs_fname, "fasta")
+    ]
     with open(asr_seqs_fname) as fh:
         asr_records = [parse_raxmlng_ancestral_state(l) for l in fh]
     # Check that ASR lengths are same as input lengths
