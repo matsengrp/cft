@@ -760,6 +760,7 @@ def add_cluster_analysis(w):
 
         @w.add_target()
         def indel_fasttree_svg(outdir, c):
+            """create graphic showing indel-matching (matching uid passed in --show-indel-in-trees) in the fasttree as red"""
             indel_svg = env.Command(
                 path.join(
                     outdir,
@@ -836,6 +837,7 @@ def add_cluster_analysis(w):
 
         @w.add_target()
         def pruned_fasttree_png(outdir, c):
+            """create png showing included seqs (kept in pruning) as red"""
             if c["cluster"].get("size") < 4500:
                 pruned_cluster_fasttree_png = env.Command(
                     path.join(outdir, "pruned_cluster_fasttree.png"),
@@ -1062,6 +1064,7 @@ def add_cluster_analysis(w):
 
         @w.add_target()
         def indel_mltree_svg(outdir, c):
+            """create graphic showing indel-matching (matching uid passed in --show-indel-in-trees) in the max-likelihood tree as red"""
             indel_svg = env.Command(
                 path.join(
                     outdir, "{}_indel_mltree.svg".format(options["show_indel_in_trees"])

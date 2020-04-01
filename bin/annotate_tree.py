@@ -8,7 +8,7 @@ from ete3 import Tree, TextFace, TreeStyle
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Annotate tree with ids.")
     parser.add_argument("tree_path", type=str, help="Path to tree file.")
-    parser.add_argument("ids_path", type=str, help="Path to prune id file.")
+    parser.add_argument("ids_path", type=str, help="Path to file containing ids to annotate.")
     parser.add_argument(
         "--set-root",
         action="store_true",

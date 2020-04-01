@@ -152,7 +152,7 @@ def get_options(env):
     user_tag = dataset_tag if dataset_tag else ""
     test_tag = "test" if test_run else ""
     match_indel_in_uid_tag = (
-        "match-indels-in-uid-{}".format(match_indel_in_uid)
+        "match-indel-in-uid-{}".format(match_indel_in_uid)
         if match_indel_in_uid
         else ""
     )

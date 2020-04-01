@@ -666,7 +666,7 @@ def parse_args():
     )
     seqs_args.add_argument(
         "--show-indel-in-trees",
-        help="create tree graphics highlighting in red any sequences on the tree with indels matching the indel in the sequence corresponding to the uid passed here in the annotation chosen in choose_cluster()",
+        help="add a column to --seqmeta-out to record which sequences have indels matching the indel in the sequence corresponding to the uid passed here in the annotation chosen in choose_cluster(). This info can be used to, for example, annotate tree graphics with indel information (as in the SConstruct pipeline).",
         type=str,
     )
     seqs_args.add_argument(
