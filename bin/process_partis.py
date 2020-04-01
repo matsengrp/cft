@@ -143,6 +143,8 @@ def get_cluster_seqs_dict(cluster_line, seed_id, args):
         "timepoints": [[dummy_timepoint_name]] + cluster_line["duplicate_timepoints"],
         "timepoint_multiplicities": [[1]] + cluster_line["duplicate_multiplicities"],
     }
+    if args.show_indel_in_trees:
+        cluster_sequences["indel_match"] = [False] + cluster_line["indel_match"]
     return as_dict_rows(cluster_sequences)
 
 
@@ -165,7 +167,7 @@ def get_cluster_meta_dict(cluster_line, seed_id, args):
         "has_seed": seed_id in cluster_line["unique_ids"],
         "mean_mut_freq": numpy.mean(cluster_line["mut_freqs"]),
         "seed_id": seed_id,
-        "match_indels_in_uid": args.match_indels_in_uid is not None,
+        "match_indel_in_uid": args.match_indel_in_uid is not None,
         "has_indels": has_indels,
         "indels_reversed": has_indels and args.indel_reversed_seqs,
     }
@@ -267,19 +269,19 @@ def get_multiplicity_seqmeta(cluster_line, upstream_seqmeta):
     return multiplicity_seqmeta
 
 
-def match_indels_in_uid_seq(cluster_line, match_indels_in_uid):
-    iseq_to_match = cluster_line["unique_ids"].index(match_indels_in_uid)
+def match_indel_in_uid_seq(cluster_line, match_indel_in_uid):
+    iseq_to_match = cluster_line["unique_ids"].index(match_indel_in_uid)
     ifos_to_match = cluster_line["indelfos"][iseq_to_match]["indels"]
     if len(ifos_to_match) > 1:
         raise Exception(
             "{} has more than 1 indel. We don't have a good way of matching more than one indel between two seqs right now. Use an id of a sequence with exactly one indel or make a suggestion for a good default in this case, or adapt get_iseqs_with_compatible_indels in partis/python/indelutils.py".format(
-                match_indels_in_uid
+                match_indel_in_uid
             )
         )
     elif len(ifos_to_match) < 1:
         raise Exception(
             "{} has no indel. Use an id of a sequence with exactly one indel.".format(
-                match_indels_in_uid
+                match_indel_in_uid
             )
         )
     else:
@@ -290,7 +292,7 @@ def match_indels_in_uid_seq(cluster_line, match_indels_in_uid):
     if len(iseqs_to_keep) < 1:
         raise Exception(
             "No indels in cluster annotation for cluster containing {} matched {}".format(
-                match_indels_in_uid, ifo_to_match
+                match_indel_in_uid, ifo_to_match
             )
         )
     return iseqs_to_keep
@@ -301,7 +303,7 @@ def check_seed_for_indels(cluster_line, seed_id, partition_file):
     if indelutils.has_indels(cluster_line["indelfos"][iseq_seed]):
         print (indelutils.get_dbg_str(cluster_line["indelfos"][iseq_seed]))
         raise Exception(
-            "indel in seed sequence {}. Options are 1. Look at the annotation for this cluster and find the indel in the seed. Rerun process_partis.py with --match-indels-in-uid <uid-of-seq-containing-indel-of-interest> to process only sequences containing that specific indel for further analysis of the indel 2. Run with --ignore-seed-indels. PS check out {}".format(
+            "indel in seed sequence {}. Options are 1. Look at the annotation for this cluster and find the indel in the seed. Rerun process_partis.py with --match-indel-in-uid <uid-of-seq-containing-indel-of-interest> to process only sequences containing that specific indel for further analysis of the indel 2. Run with --ignore-seed-indels. PS check out {}".format(
                 seed_id, partition_file
             )
         )
@@ -312,16 +314,22 @@ def process_cluster(args, cluster_line, seed_id, glfo):
 
     if (
         seed_id is not None
-        and not args.match_indels_in_uid
+        and not args.match_indel_in_uid
         and not args.ignore_seed_indels
     ):
         check_seed_for_indels(cluster_line, seed_id, args.partition_file)
     # assume we want all seqs in cluster
     iseqs_to_keep = set(range(len(cluster_line["input_seqs"])))
+    # write out matching indel-containing seqs for visualization if --show-indel-in-trees
+    if args.show_indel_in_trees:
+        matching_iseqs = set(
+            match_indel_in_uid_seq(cluster_line, args.show_indel_in_trees)
+        )
+        match_info = {"indel_match": [iseq in matching_iseqs for iseq in iseqs_to_keep]}
     # various cases where we downsample cluster sequences
-    if args.match_indels_in_uid:
+    if args.match_indel_in_uid:
         iseqs_to_keep = iseqs_to_keep & set(
-            match_indels_in_uid_seq(cluster_line, args.match_indels_in_uid)
+            match_indel_in_uid_seq(cluster_line, args.match_indel_in_uid)
         )
     if args.largest_cluster_across_partitions:
         """
@@ -360,6 +368,8 @@ def process_cluster(args, cluster_line, seed_id, glfo):
     cluster_line = add_additional_info(
         cluster_line, multiplicity_seqmeta, iseqs_to_keep
     )
+    if args.show_indel_in_trees:
+        cluster_line = add_additional_info(cluster_line, match_info, iseqs_to_keep)
 
     cluster_line["total_read_count"] = sum(
         cluster_line["multiplicities"]
@@ -556,6 +566,8 @@ def write_seq_meta(args, cluster_data):
         "duplicates",
         "affinity",
     ]
+    if args.show_indel_in_trees:
+        to_keep.append("indel_match")
     with open(args.seqmeta_out, "w") as outfile:
         writer = csv.DictWriter(outfile, fieldnames=to_keep, extrasaction="ignore")
         writer.writeheader()
@@ -653,13 +665,18 @@ def parse_args():
         title="Options regarding methods for choosing sequences to be included or left out of the cluster of interest."
     )
     seqs_args.add_argument(
-        "--match-indels-in-uid",
+        "--show-indel-in-trees",
+        help="add a column to --seqmeta-out to record which sequences have indels matching the indel in the sequence corresponding to the uid passed here in the annotation chosen in choose_cluster(). This info can be used to, for example, annotate tree graphics with indel information (as in the SConstruct pipeline).",
+        type=str,
+    )
+    seqs_args.add_argument(
+        "--match-indel-in-uid",
         help="process only sequences matching the one indel in the sequence corresponding to the uid passed here in the annotation chosen in choose_cluster()",
         type=str,
     )
     seqs_args.add_argument(
         "--ignore-seed-indels",
-        help="If --match-indels-in-uid has not been set, this allows processing of a seed cluster (without filtering) where there is an indel in the seed sequence.",
+        help="If --match-indel-in-uid has not been set, this allows processing of a seed cluster (without filtering) where there is an indel in the seed sequence.",
         action="store_true",
     )
     seqs_args.add_argument(

@@ -529,6 +529,7 @@ def add_cluster_analysis(w):
                 if partisutils.getsuffix(c["partition"]["partition-file"]) == ".csv"
                 else ""
             )
+            + " --ignore-seed-indels "
             + " --locus "
             + locus(c)
             + " --paths-relative-to "
@@ -550,9 +551,9 @@ def add_cluster_analysis(w):
         if perseq_metafile:
             sources.append(perseq_metafile)
         cluster_seqs_fname = "cluster_seqs.fa"
-        if options["match_indels_in_uid"]:
+        if options["match_indel_in_uid"]:
             cluster_seqs_fname = "{}_indel_filtered_cluster_seqs.fa".format(
-                options["match_indels_in_uid"]
+                options["match_indel_in_uid"]
             )
         return env.Command(
             [
@@ -583,8 +584,13 @@ def add_cluster_analysis(w):
             + " --inferred-naive-name "
             + options["inferred_naive_name"]
             + (
-                (" --match-indels-in-uid " + options["match_indels_in_uid"])
-                if options["match_indels_in_uid"] is not None
+                (" --show-indel-in-trees " + options["show_indel_in_trees"])
+                if options["show_indel_in_trees"] is not None
+                else ""
+            )
+            + (
+                (" --match-indel-in-uid " + options["match_indel_in_uid"])
+                if options["match_indel_in_uid"] is not None
                 else ""
             )
             + (" --ignore-seed-indels" if options["ignore_seed_indels"] else "")
@@ -727,6 +733,53 @@ def add_cluster_analysis(w):
             "FastTree -nt -quiet $SOURCE > $TARGET 2> $TARGET-.log",
         )
 
+    if options["show_indel_in_trees"]:
+
+        @w.add_target()
+        def indel_matching_ids(outdir, c):
+            def write_indel_matching_ids(target, source, env):
+                with open(str(source[0])) as seqmeta:
+                    lines = list(csv.DictReader(seqmeta))
+                    uids = [
+                        row["unique_id"]
+                        for row in lines
+                        if row["indel_match"] == "True"
+                    ]
+                with open(str(target[0]), "w") as indel_matches_file:
+                    for uid in uids:
+                        indel_matches_file.write(uid + "\n")
+
+            return env.Command(
+                os.path.join(
+                    outdir,
+                    "uids_matching_indel_{}.txt".format(options["show_indel_in_trees"]),
+                ),
+                c["partis_seqmeta"],
+                write_indel_matching_ids,
+            )
+
+        @w.add_target()
+        def indel_fasttree_svg(outdir, c):
+            """create graphic showing indel-matching (matching uid passed in --show-indel-in-trees) in the fasttree as red"""
+            indel_svg = env.Command(
+                path.join(
+                    outdir,
+                    "{}_indel_fasttree.svg".format(options["show_indel_in_trees"]),
+                ),
+                [c["fasttree"], c["indel_matching_ids"]],
+                # The `-` at the start here tells scons to ignore if it doesn't build; this may occasionally be
+                # the case for large clusters. Also, redirect stdin/out to dev/null because the errors messages
+                # here can be pretty noisy.
+                "- xvfb-run -a bin/annotate_tree.py $SOURCES "
+                + " --naive %s" % options["inferred_naive_name"]
+                + (" --seed " + c["seed"]["id"] if "seed" in c else "")
+                + " --set-root"
+                + " --size 100"
+                + " --output-path $TARGET &>> /dev/null",
+            )
+            env.Depends(indel_svg, "bin/annotate_tree.py")
+            return indel_svg
+
     # See https://nestly.readthedocs.io/en/latest/index.html for a definition of add_nest and more info on the "nestly" package which governs the nesting levels of things getting built in this pipeline
     @w.add_nest(metadata=lambda c, d: d)
     def reconstruction(c):
@@ -781,26 +834,23 @@ def add_cluster_analysis(w):
         )
 
     if options["fasttree_png"]:
-        # create png showing included seqs (kept in pruning) as red
+
         @w.add_target()
-        def pruned_cluster_fasttree_png(outdir, c):
-            cluster = c["cluster"]
-            max_cluster_size = 4500
-            if cluster.get("size") < max_cluster_size:
+        def pruned_fasttree_png(outdir, c):
+            """create png showing included seqs (kept in pruning) as red"""
+            if c["cluster"].get("size") < 4500:
                 pruned_cluster_fasttree_png = env.Command(
                     path.join(outdir, "pruned_cluster_fasttree.png"),
                     [c["fasttree"], c["pruned_ids"]],
                     # The `-` at the start here tells scons to ignore if it doesn't build; this may occasionally be
                     # the case for large clusters. Also, redirect stdin/out to dev/null because the errors messages
                     # here can be pretty noisy.
-                    "- xvfb-run -a bin/annotate_fasttree_tree.py $SOURCES "
+                    "- xvfb-run -a bin/annotate_tree.py $SOURCES "
                     + " --naive %s" % options["inferred_naive_name"]
                     + (" --seed " + c["seed"]["id"] if "seed" in c else "")
                     + " --output-path $TARGET &>> /dev/null",
                 )
-                env.Depends(
-                    pruned_cluster_fasttree_png, "bin/annotate_fasttree_tree.py"
-                )
+                env.Depends(pruned_cluster_fasttree_png, "bin/annotate_tree.py")
                 return pruned_cluster_fasttree_png
 
     @w.add_target()
@@ -1010,6 +1060,28 @@ def add_cluster_analysis(w):
     def ancestors_naive_and_seed(outdir, c):
         return c["_asr"][2]
 
+    if options["show_indel_in_trees"]:
+
+        @w.add_target()
+        def indel_mltree_svg(outdir, c):
+            """create graphic showing indel-matching (matching uid passed in --show-indel-in-trees) in the max-likelihood tree as red"""
+            indel_svg = env.Command(
+                path.join(
+                    outdir, "{}_indel_mltree.svg".format(options["show_indel_in_trees"])
+                ),
+                [c["asr_tree"], c["indel_matching_ids"]],
+                # The `-` at the start here tells scons to ignore if it doesn't build; this may occasionally be
+                # the case for large clusters. Also, redirect stdin/out to dev/null because the errors messages
+                # here can be pretty noisy.
+                "- xvfb-run -a bin/annotate_tree.py $SOURCES "
+                + " --naive %s" % options["inferred_naive_name"]
+                + (" --seed " + c["seed"]["id"] if "seed" in c else "")
+                + " --size 100"
+                + " --output-path $TARGET &>> /dev/null",
+            )
+            env.Depends(indel_svg, "bin/annotate_tree.py")
+            return indel_svg
+
     @w.add_target()
     def observed_ancestors(outdir, c):
         blast_db_files = ["blast_db.{}".format(ext) for ext in ("nin", "nhr", "nsq")]
@@ -1062,6 +1134,8 @@ def add_cluster_analysis(w):
             [c["asr_seqs"], c["sample"]["parameter-dir"], c["asr_tree"]],  # sources
             os.path.join(partis_path, "bin/partis")
             + " annotate "
+            + " --locus "
+            + locus(c)
             + " --get-selection-metrics "
             + " --all-seqs-simultaneous "
             + " --min-selection-metric-cluster-size %d "
