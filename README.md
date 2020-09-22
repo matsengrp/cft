@@ -4,6 +4,10 @@ A pipeline for producing clonal family trees and ancestral state reconstructions
 
 Output data can be run through [cftweb](https://github.com/matsengrp/cftweb) for visualization and exploration.
 
+## Note
+While this package is very useful to us, the documentation and useability are not really sufficient for widespread use.
+We are instead making this repository publicly available to help with openness and reproducibility for the papers in which we've used it.
+That said, if you'd be interested in running it and are having trouble getting it working, please submit an issue and we'd be happy to help.
 
 ## Input data
 
